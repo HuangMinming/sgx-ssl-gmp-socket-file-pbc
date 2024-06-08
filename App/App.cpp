@@ -183,7 +183,7 @@ void usgx_exit(int reason)
     exit(reason);
 }
 
-int pairing_test() {
+int pairing_test2() {
 
     /* Initialize the enclave */
     if (initialize_enclave() < 0)
@@ -246,6 +246,58 @@ int pairing_test() {
         return 1; // Test failed
     }
 
+
+    /* Destroy the enclave */
+    sgx_destroy_enclave(global_eid);
+
+    printf("Info: SampleEnclave successfully returned.\n");
+
+    // printf("Enter a character before exit ...\n");
+    // getchar();
+    return 0;
+
+}
+
+int pairing_test() {
+
+    /* Initialize the enclave */
+    if (initialize_enclave() < 0)
+    {
+        printf("Enter a character before exit ...\n");
+        getchar();
+        return -1;
+    }
+    unsigned char data1[BUF_SIZE];
+    unsigned char data2[BUF_SIZE];
+    size_t len1 = 128;
+    size_t len2 = 128;
+    printf("===========start t_sgxpbc_pairing_init==============\n");
+
+    sgx_status_t status = t_sgxpbc_pairing_init(global_eid);
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_sgxpbc_pairing_init has failed.\n");
+        return 1; // Test failed
+    }
+    printf("===========end t_sgxpbc_pairing_init==============\n");
+    
+
+    status = t_sgxpbc_pairing_generate_g_Z(global_eid);
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_sgxpbc_pairing_generate_g_Z has failed.\n");
+        return 1; // Test failed
+    }
+
+    status = t_Key_Generation(global_eid);
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_Key_Generation has failed.\n");
+        return 1; // Test failed
+    }
 
     /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);

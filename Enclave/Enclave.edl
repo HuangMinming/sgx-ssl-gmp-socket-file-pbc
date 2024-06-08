@@ -35,7 +35,10 @@ enclave {
     
     from "sgx_tsgxssl.edl" import *;
     from "sgx_pthread.edl" import *;
+    
     include "user_types.h" 
+
+    from "pbc/pre.edl" import *;
 
     /* Import ECALL/OCALL from sub-directory EDLs.
      *  [from]: specifies the location of EDL file. 
@@ -56,6 +59,7 @@ enclave {
             [in, size=len2] unsigned char *ptr2, size_t len2);
         public void t_sgxpbc_call_free_pairing();
         public void ecall_pointer_size([out, size=len] void *ptr, size_t len);
+        
 
 
         public size_t ecall_mpz_add([string, in] char *str_a, [string, in] char *str_b, 
