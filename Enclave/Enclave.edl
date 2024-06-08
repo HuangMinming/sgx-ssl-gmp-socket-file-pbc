@@ -1,0 +1,99 @@
+/*
+ * Copyright (C) 2011-2021 Intel Corporation. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ *   * Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *   * Neither the name of Intel Corporation nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ */
+
+/* Enclave.edl - Top EDL file. */
+
+enclave {
+    
+    from "sgx_tsgxssl.edl" import *;
+    from "sgx_pthread.edl" import *;
+    include "user_types.h" 
+
+    /* Import ECALL/OCALL from sub-directory EDLs.
+     *  [from]: specifies the location of EDL file. 
+     *  [import]: specifies the functions to import, 
+     *  [*]: implies to import all functions.
+     */
+
+     trusted {
+        
+        
+
+        public void t_list_built_in_curves();
+        public void t_sgxssl_call_apis();
+
+        public void t_sgxpbc_call_apis([out, size=len1] unsigned char *ptr1, size_t len1,
+            [out, size=len2] unsigned char *ptr2, size_t len2);
+        public void t_sgxpbc_call_test([in, size=len1] unsigned char *ptr1, size_t len1,
+            [in, size=len2] unsigned char *ptr2, size_t len2);
+        public void t_sgxpbc_call_free_pairing();
+        public void ecall_pointer_size([out, size=len] void *ptr, size_t len);
+
+
+        public size_t ecall_mpz_add([string, in] char *str_a, [string, in] char *str_b, 
+            [user_check]  char *str_c, size_t sz);
+        
+        /*
+        APP.cpp、Enclave.edl、Enclave.cpp中使用的数据长度完全一致才行
+        */
+        public size_t t_ecall_data_in_out([in, out] char data[8092]);
+
+         /*
+         * [in]:
+         *      buffer for the array will be allocated inside the enclave, 
+         *      content of the array will be copied into the new allocated memory inside. 
+         *      Any changes performed inside the enclave will not affect the array outside.
+         */
+         /*
+         * [out]:
+         *      buffer for the array will be allocated inside the enclave,
+         *      but the content of the array won't be copied. After ECALL returns, 
+         *      the buffer inside the enclave will copied into outside array.
+         */
+        public size_t t_ecall_data_deal([in] char data_in[4096], [out]char data_out[4096]);
+    
+    };
+    
+    
+
+    
+
+    /* 
+     * ocall_print_string - invokes OCALL to display string buffer inside the enclave.
+     *  [in]: copy the string buffer to App outside.
+     *  [string]: specifies 'str' is a NULL terminated buffer.
+     */
+    untrusted {
+        void ocall_print_string([in, string] const char *str);
+        void usgx_exit(int reason);
+    };
+
+};
