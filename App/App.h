@@ -61,6 +61,27 @@ extern "C" {
 int access_control(char *user_id, char *file_id);
 int access_control_file(int fd, char *user_id, char *file_id);
 
+// the same as pre.h
+#define ZR_ELEMENT_LENGTH_IN_BYTES 20
+#define G1_ELEMENT_LENGTH_IN_BYTES 128
+#define G2_ELEMENT_LENGTH_IN_BYTES 128
+#define GT_ELEMENT_LENGTH_IN_BYTES 128
+
+typedef struct _pk_a_t{
+    unsigned char Z_a1[GT_ELEMENT_LENGTH_IN_BYTES];
+    unsigned char g_a2[G1_ELEMENT_LENGTH_IN_BYTES];
+} pk_a_t;
+
+typedef struct _sk_a_t{
+    unsigned char a1[ZR_ELEMENT_LENGTH_IN_BYTES];
+    unsigned char a2[ZR_ELEMENT_LENGTH_IN_BYTES];
+} sk_a_t;
+
+typedef struct _key_pair_t{
+    pk_a_t pk_a;
+    sk_a_t sk_a; 
+} key_pair_t;
+
 #if defined(__cplusplus)
 }
 #endif

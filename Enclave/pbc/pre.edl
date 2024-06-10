@@ -1,0 +1,30 @@
+
+
+
+/* pre.edl */
+
+enclave {
+    
+    
+    
+    trusted {
+        public void t_sgxpbc_pairing_init();
+        public void t_sgxpbc_pairing_generate_g_Z();
+        public int t_Key_Generation([out, size=ptr_a1_len] unsigned char *ptr_a1, size_t ptr_a1_len,
+            [out, size=ptr_a2_len] unsigned char *ptr_a2, size_t ptr_a2_len,
+            [out, size=ptr_Z_a1_len] unsigned char *ptr_Z_a1, size_t ptr_Z_a1_len,
+            [out, size=ptr_g_a2_len] unsigned char *ptr_g_a2, size_t ptr_g_a2_len);
+        public int t_Re_Encryption_Key_Generation([in, size=ptr_a1_len] unsigned char *ptr_a1, size_t ptr_a1_len,
+            [in, size=ptr_g_b2_len] unsigned char *ptr_g_b2, size_t ptr_g_b2_len,
+            [out, size=ptr_rk_A_B_len] unsigned char *ptr_rk_A_B, size_t ptr_rk_A_B_len);
+    };
+
+    untrusted {
+    
+        /*
+         * [user_check|in|out|in,out|isary] can also be used in OCALLs, refer to the "User Guide" for details.
+         */
+
+    };
+
+};

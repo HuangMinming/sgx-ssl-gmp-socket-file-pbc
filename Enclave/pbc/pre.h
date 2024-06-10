@@ -1,0 +1,13 @@
+
+#ifndef __PRE__H
+#define __PRE__H
+
+
+
+#define ZR_ELEMENT_LENGTH_IN_BYTES 20
+#define G1_ELEMENT_LENGTH_IN_BYTES 128
+#define G2_ELEMENT_LENGTH_IN_BYTES 128
+#define GT_ELEMENT_LENGTH_IN_BYTES 128
+
+#endif
+

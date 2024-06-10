@@ -66,6 +66,8 @@
 #define BUF_SIZE 4096  //APP.cpp、Enclave.edl、Enclave.cpp中使用的数据长度完全一致才行
 #define BUF_SIZE_SMALL 4096  //APP.cpp、Enclave.edl、Enclave.cpp中使用的数据长度完全一致才行
 
+
+
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
 
@@ -258,6 +260,34 @@ int pairing_test2() {
 
 }
 
+
+void printf_key_pair(key_pair_t key_pair) {
+    printf("key_pair: \n");
+    printf("\tpk_a: \n");
+    printf("\t\tZ_a1: ");
+    for(int i=0;i<sizeof(key_pair.pk_a.Z_a1);i++) {
+        printf("%02x", key_pair.pk_a.Z_a1[i]);
+    }
+    printf("\n");
+    printf("\t\tg_a2: ");
+    for(int i=0;i<sizeof(key_pair.pk_a.g_a2);i++) {
+        printf("%02x", key_pair.pk_a.g_a2[i]);
+    }
+    printf("\n");
+
+    printf("\tsk_a: \n");
+    printf("\t\ta1: ");
+    for(int i=0;i<sizeof(key_pair.sk_a.a1);i++) {
+        printf("%02x", key_pair.sk_a.a1[i]);
+    }
+    printf("\n");
+    printf("\t\ta2: ");
+    for(int i=0;i<sizeof(key_pair.sk_a.a2);i++) {
+        printf("%02x", key_pair.sk_a.a2[i]);
+    }
+    printf("\n");
+
+}
 int pairing_test() {
 
     /* Initialize the enclave */
@@ -267,10 +297,7 @@ int pairing_test() {
         getchar();
         return -1;
     }
-    unsigned char data1[BUF_SIZE];
-    unsigned char data2[BUF_SIZE];
-    size_t len1 = 128;
-    size_t len2 = 128;
+    
     printf("===========start t_sgxpbc_pairing_init==============\n");
 
     sgx_status_t status = t_sgxpbc_pairing_init(global_eid);
@@ -290,15 +317,57 @@ int pairing_test() {
         printf("Call to t_sgxpbc_pairing_generate_g_Z has failed.\n");
         return 1; // Test failed
     }
-
-    status = t_Key_Generation(global_eid);
+    int ret=0;
+    key_pair_t key_pair_A;
+    status = t_Key_Generation(global_eid, &ret,
+            key_pair_A.sk_a.a1, sizeof(key_pair_A.sk_a.a1),
+            key_pair_A.sk_a.a2, sizeof(key_pair_A.sk_a.a2),
+            key_pair_A.pk_a.Z_a1, sizeof(key_pair_A.pk_a.Z_a1),
+            key_pair_A.pk_a.g_a2, sizeof(key_pair_A.pk_a.g_a2) );
     if (status != SGX_SUCCESS)
     {
         print_error_message(status);
         printf("Call to t_Key_Generation has failed.\n");
         return 1; // Test failed
     }
+    printf_key_pair(key_pair_A);
 
+    key_pair_t key_pair_B;
+    status = t_Key_Generation(global_eid, &ret,
+            key_pair_B.sk_a.a1, sizeof(key_pair_B.sk_a.a1),
+            key_pair_B.sk_a.a2, sizeof(key_pair_B.sk_a.a2),
+            key_pair_B.pk_a.Z_a1, sizeof(key_pair_B.pk_a.Z_a1),
+            key_pair_B.pk_a.g_a2, sizeof(key_pair_B.pk_a.g_a2) );
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_Key_Generation has failed.\n");
+        return 1; // Test failed
+    }
+    printf_key_pair(key_pair_B);
+
+    printf("*********start t_Re_Encryption_Key_Generation ********\n");
+
+    unsigned char rk_A_B[G1_ELEMENT_LENGTH_IN_BYTES];
+
+    status = t_Re_Encryption_Key_Generation(global_eid, &ret,
+        key_pair_A.sk_a.a1, sizeof(key_pair_A.sk_a.a1),
+        key_pair_B.pk_a.g_a2, sizeof(key_pair_B.pk_a.g_a2), 
+        rk_A_B, sizeof(rk_A_B) );
+
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_Re_Encryption_Key_Generation has failed.\n");
+        return 1; // Test failed
+    }
+
+    printf("rk_A_B = ");
+    for(int i=0;i<sizeof(rk_A_B);i++) 
+    {
+        printf("%02x", rk_A_B[i]);
+    }
+    printf("\n");
     /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);
 
