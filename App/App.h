@@ -82,6 +82,17 @@ typedef struct _key_pair_t{
     sk_a_t sk_a; 
 } key_pair_t;
 
+/*
+include c_a_1, c_a_2, c_a_r
+*/
+typedef struct _c_a_t{
+    unsigned char Z_a1_k[GT_ELEMENT_LENGTH_IN_BYTES];
+    unsigned char Z_a2_k[GT_ELEMENT_LENGTH_IN_BYTES];
+    unsigned char m_Z_k[GT_ELEMENT_LENGTH_IN_BYTES];
+    unsigned char g_k[G1_ELEMENT_LENGTH_IN_BYTES];
+    unsigned char m_Z_a1_k[GT_ELEMENT_LENGTH_IN_BYTES];
+} c_a_t;
+
 #if defined(__cplusplus)
 }
 #endif

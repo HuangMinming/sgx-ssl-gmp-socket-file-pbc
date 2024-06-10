@@ -48,6 +48,13 @@ void t_sgxpbc_pairing_generate_g_Z()
     pairing_apply(Z, g, g, pairing); // e(g,g)
 }
 
+void t_sgxpbc_pairing_destroy()
+{
+    element_clear(g);
+    element_clear(Z);
+    pairing_clear(pairing);
+}
+
 int t_Key_Generation(unsigned char *ptr_a1, size_t ptr_a1_len,
                      unsigned char *ptr_a2, size_t ptr_a2_len,
                      unsigned char *ptr_Z_a1, size_t ptr_Z_a1_len,
@@ -208,9 +215,45 @@ int t_Re_Encryption_Key_Generation(unsigned char *ptr_a1, size_t ptr_a1_len,
     return 0;
 }
 
+int t_GetGTRandom(unsigned char *ptr_m, size_t ptr_m_len)
+{
+    sgx_printf("t_GetGTRandom start ****\n");
+    element_t m;
+    element_init_GT(m, pairing);
+
+    element_random(m);
+
+    size_t m_len = element_length_in_bytes(m);
+    if (m_len != GT_ELEMENT_LENGTH_IN_BYTES)
+    {
+        sgx_printf("m_len = %d, GT_ELEMENT_LENGTH_IN_BYTES = %d\n", m_len, GT_ELEMENT_LENGTH_IN_BYTES);
+        sgx_printf("exit \n");
+        element_clear(m);
+        return -1;
+    }
+
+    unsigned char m_data[GT_ELEMENT_LENGTH_IN_BYTES];
+    element_to_bytes(m_data, m);
+    sgx_printf("\n m_data = ");
+    for (int i = 0; i < GT_ELEMENT_LENGTH_IN_BYTES; i++)
+    {
+        sgx_printf("%02x", m_data[i]);
+    }
+    sgx_printf("\n");
+    memcpy(ptr_m, m_data, sizeof(m_data));
+
+    element_clear(m);
+    return 0;
+}
+
 int t_Encryption(unsigned char *ptr_m, size_t ptr_m_len,
                  unsigned char *ptr_Z_a1, size_t ptr_Z_a1_len,
-                 unsigned char *ptr_a2, size_t ptr_a2_len)
+                 unsigned char *ptr_a2, size_t ptr_a2_len,
+                 unsigned char *ptr_Z_a1_k, size_t ptr_Z_a1_k_len,
+                 unsigned char *ptr_m_Z_k, size_t ptr_m_Z_k_len,
+                 unsigned char *ptr_Z_a2_k, size_t ptr_Z_a2_k_len,
+                 unsigned char *ptr_g_k, size_t ptr_g_k_len,
+                 unsigned char *ptr_m_Z_a1_k, size_t ptr_m_Z_a1_k_len)
 {
     element_t m, Z_a1, k;
     element_init_GT(m, pairing);
@@ -236,6 +279,8 @@ int t_Encryption(unsigned char *ptr_m, size_t ptr_m_len,
     element_init_Zr(a2, pairing);
     element_init_GT(Z_a2, pairing);
     element_init_GT(Z_a2_k, pairing);
+
+    element_from_bytes(a2, ptr_a2);
 
     element_pow_zn(Z_a2, Z, a2);
     element_pow_zn(Z_a2_k, Z_a2, k);
@@ -280,6 +325,55 @@ int t_Encryption(unsigned char *ptr_m, size_t ptr_m_len,
     }
 
     unsigned char Z_a1_k_data[GT_ELEMENT_LENGTH_IN_BYTES];
+    unsigned char m_Z_k_data[GT_ELEMENT_LENGTH_IN_BYTES];
+    unsigned char Z_a2_k_data[GT_ELEMENT_LENGTH_IN_BYTES];
+    unsigned char g_k_data[G1_ELEMENT_LENGTH_IN_BYTES];
+    unsigned char m_Z_a1_k_data[GT_ELEMENT_LENGTH_IN_BYTES];
+
+    element_to_bytes(Z_a1_k_data, Z_a1_k);
+    sgx_printf("\n Z_a1_k_data = ");
+    for (int i = 0; i < GT_ELEMENT_LENGTH_IN_BYTES; i++)
+    {
+        sgx_printf("%02x", Z_a1_k_data[i]);
+    }
+    sgx_printf("\n");
+    memcpy(ptr_Z_a1_k, Z_a1_k_data, sizeof(Z_a1_k_data));
+
+    element_to_bytes(m_Z_k_data, m_Z_k);
+    sgx_printf("\n m_Z_k_data = ");
+    for (int i = 0; i < GT_ELEMENT_LENGTH_IN_BYTES; i++)
+    {
+        sgx_printf("%02x", m_Z_k_data[i]);
+    }
+    sgx_printf("\n");
+    memcpy(ptr_m_Z_k, m_Z_k_data, sizeof(m_Z_k_data));
+
+    element_to_bytes(Z_a2_k_data, Z_a2_k);
+    sgx_printf("\n Z_a2_k_data = ");
+    for (int i = 0; i < GT_ELEMENT_LENGTH_IN_BYTES; i++)
+    {
+        sgx_printf("%02x", Z_a2_k_data[i]);
+    }
+    sgx_printf("\n");
+    memcpy(ptr_Z_a2_k, Z_a2_k_data, sizeof(Z_a2_k_data));
+
+    element_to_bytes(g_k_data, g_k);
+    sgx_printf("\n g_k_data = ");
+    for (int i = 0; i < G1_ELEMENT_LENGTH_IN_BYTES; i++)
+    {
+        sgx_printf("%02x", g_k_data[i]);
+    }
+    sgx_printf("\n");
+    memcpy(ptr_g_k, g_k_data, sizeof(g_k_data));
+
+    element_to_bytes(m_Z_a1_k_data, m_Z_a1_k);
+    sgx_printf("\n g_k_data = ");
+    for (int i = 0; i < GT_ELEMENT_LENGTH_IN_BYTES; i++)
+    {
+        sgx_printf("%02x", m_Z_a1_k_data[i]);
+    }
+    sgx_printf("\n");
+    memcpy(ptr_m_Z_a1_k, m_Z_a1_k_data, sizeof(m_Z_a1_k_data));
 
     element_clear(m);
     element_clear(Z_a1);
@@ -293,6 +387,168 @@ int t_Encryption(unsigned char *ptr_m, size_t ptr_m_len,
     element_clear(g_k);
     element_clear(m_Z_a1_k);
     return 0;
+}
+
+int t_Re_Encryption(unsigned char *ptr_g_k, size_t ptr_g_k_len,
+                    unsigned char *ptr_rk_A_B, size_t ptr_rk_A_B_len,
+                    unsigned char *ptr_m_Z_a1_k, size_t ptr_m_Z_a1_k_len,
+                    unsigned char *ptr_Z_b2_a1_k, size_t ptr_Z_b2_a1_k_len)
+{
+
+    element_t g_k, rk_A_B, m_Z_a1_k, Z_b2_a1_k;
+
+    element_init_G1(g_k, pairing);
+    element_init_G1(rk_A_B, pairing);
+    element_init_GT(m_Z_a1_k, pairing);
+    element_init_GT(Z_b2_a1_k, pairing);
+
+    element_from_bytes(g_k, ptr_g_k);
+    element_from_bytes(rk_A_B, ptr_rk_A_B);
+    element_from_bytes(m_Z_a1_k, ptr_m_Z_a1_k);
+
+    pairing_apply(Z_b2_a1_k, g_k, rk_A_B, pairing);
+
+    size_t Z_b2_a1_k_len = element_length_in_bytes(Z_b2_a1_k);
+    if (Z_b2_a1_k_len != GT_ELEMENT_LENGTH_IN_BYTES)
+    {
+        sgx_printf("Z_b2_a1_k_len = %d, GT_ELEMENT_LENGTH_IN_BYTES = %d\n", Z_b2_a1_k_len, GT_ELEMENT_LENGTH_IN_BYTES);
+        sgx_printf("exit \n");
+        element_clear(g_k);
+        element_clear(rk_A_B);
+        element_clear(m_Z_a1_k);
+        element_clear(Z_b2_a1_k);
+        return -1;
+    }
+
+    unsigned char Z_b2_a1_k_data[GT_ELEMENT_LENGTH_IN_BYTES];
+    element_to_bytes(Z_b2_a1_k_data, Z_b2_a1_k);
+    sgx_printf("\n Z_b2_a1_k_data = ");
+    for (int i = 0; i < GT_ELEMENT_LENGTH_IN_BYTES; i++)
+    {
+        sgx_printf("%02x", Z_b2_a1_k_data[i]);
+    }
+    sgx_printf("\n");
+    memcpy(ptr_Z_b2_a1_k, Z_b2_a1_k_data, sizeof(Z_b2_a1_k_data));
+
+    element_clear(g_k);
+    element_clear(rk_A_B);
+    element_clear(m_Z_a1_k);
+    element_clear(Z_b2_a1_k);
+    return 0;
+}
+
+int t_First_Level_Decryption(unsigned char *ptr_Z_a1_k, size_t ptr_Z_a1_k_len,
+                             unsigned char *ptr_m_Z_k, size_t ptr_m_Z_k_len,
+                             unsigned char *ptr_Z_a2_k, size_t ptr_Z_a2_k_len,
+                             unsigned char *ptr_a1, size_t ptr_a1_len,
+                             unsigned char *ptr_a2, size_t ptr_a2_len)
+{
+
+    element_t Z_a1_k, m_Z_k, Z_a2_k, a1, a2;
+
+    element_init_GT(Z_a1_k, pairing);
+    element_init_GT(m_Z_k, pairing);
+    element_init_GT(Z_a2_k, pairing);
+    element_init_Zr(a1, pairing);
+    element_init_Zr(a2, pairing);
+
+    element_from_bytes(Z_a1_k, ptr_Z_a1_k);
+    element_from_bytes(m_Z_k, ptr_m_Z_k);
+    element_from_bytes(Z_a2_k, ptr_Z_a2_k);
+    element_from_bytes(a1, ptr_a1);
+    element_from_bytes(a2, ptr_a2);
+
+    element_t a1_invert, a2_invert, alpha_a1_invert, alpha_a2_invert;
+    element_t beta_alpha_a1_invert, beta_alpha_a2_invert;
+
+    element_init_Zr(a1_invert, pairing);
+    element_init_Zr(a2_invert, pairing);
+    element_init_GT(alpha_a1_invert, pairing);
+    element_init_GT(alpha_a2_invert, pairing);
+    element_init_GT(beta_alpha_a1_invert, pairing);
+    element_init_GT(beta_alpha_a2_invert, pairing);
+
+    element_invert(a1_invert, a1);
+    element_invert(a2_invert, a2);
+
+    element_pow_zn(alpha_a1_invert, Z_a1_k, a1_invert);
+    element_pow_zn(alpha_a2_invert, Z_a2_k, a2_invert);
+
+    element_div(beta_alpha_a1_invert, m_Z_k, alpha_a1_invert);
+    element_div(beta_alpha_a2_invert, m_Z_k, alpha_a2_invert);
+
+    size_t beta_alpha_a1_invert_len = element_length_in_bytes(beta_alpha_a1_invert);
+    size_t beta_alpha_a2_invert_len = element_length_in_bytes(beta_alpha_a2_invert);
+    if (beta_alpha_a1_invert_len != GT_ELEMENT_LENGTH_IN_BYTES ||
+        beta_alpha_a2_invert_len != GT_ELEMENT_LENGTH_IN_BYTES)
+    {
+        sgx_printf("beta_alpha_a1_invert = %d, GT_ELEMENT_LENGTH_IN_BYTES = %d\n", beta_alpha_a1_invert, GT_ELEMENT_LENGTH_IN_BYTES);
+        sgx_printf("beta_alpha_a2_invert = %d, GT_ELEMENT_LENGTH_IN_BYTES = %d\n", beta_alpha_a2_invert, GT_ELEMENT_LENGTH_IN_BYTES);
+        sgx_printf("exit \n");
+        element_clear(Z_a1_k);
+        element_clear(m_Z_k);
+        element_clear(Z_a2_k);
+        element_clear(a1);
+        element_clear(a2);
+        element_clear(a1_invert);
+        element_clear(a2_invert);
+        element_clear(alpha_a1_invert);
+        element_clear(alpha_a2_invert);
+        element_clear(beta_alpha_a1_invert);
+        element_clear(beta_alpha_a2_invert);
+        return -1;
+    }
+
+    unsigned char beta_alpha_a1_invert_data[GT_ELEMENT_LENGTH_IN_BYTES];
+    unsigned char beta_alpha_a2_invert_data[GT_ELEMENT_LENGTH_IN_BYTES];
+
+    element_to_bytes(beta_alpha_a1_invert_data, beta_alpha_a1_invert);
+    sgx_printf("\n beta_alpha_a1_invert_data = ");
+    for (int i = 0; i < GT_ELEMENT_LENGTH_IN_BYTES; i++)
+    {
+        sgx_printf("%02x", beta_alpha_a1_invert_data[i]);
+    }
+    sgx_printf("\n");
+
+    element_to_bytes(beta_alpha_a2_invert_data, beta_alpha_a2_invert);
+    sgx_printf("\n beta_alpha_a2_invert_data = ");
+    for (int i = 0; i < GT_ELEMENT_LENGTH_IN_BYTES; i++)
+    {
+        sgx_printf("%02x", beta_alpha_a2_invert_data[i]);
+    }
+    sgx_printf("\n");
+
+    element_clear(Z_a1_k);
+    element_clear(m_Z_k);
+    element_clear(Z_a2_k);
+    element_clear(a1);
+    element_clear(a2);
+    element_clear(a1_invert);
+    element_clear(a2_invert);
+    element_clear(alpha_a1_invert);
+    element_clear(alpha_a2_invert);
+    element_clear(beta_alpha_a1_invert);
+    element_clear(beta_alpha_a2_invert);
+    return 0;
+}
+
+int t_Second_Level_Decryption(unsigned char *ptr_g_k, size_t ptr_g_k_len,
+                unsigned char *ptr_m_Z_a1_k, size_t ptr_m_Z_a1_k_len,
+                unsigned char *ptr_a1, size_t ptr_a1_len
+                )
+{
+    element_t g_k, m_Z_a1_k, a1;
+    element_init_G1(g_k, pairing);
+    element_init_GT(m_Z_a1_k, pairing);
+    element_init_G1(a1, pairing);
+
+    element_from_bytes(g_k, ptr_g_k);
+    element_from_bytes(m_Z_a1_k, ptr_m_Z_a1_k);
+    element_from_bytes(a1, ptr_a1);
+
+    element_t pair_alpha_g, pair_alpha_g_a1, beta_pair_alpha_g_a1;
+    pairing_apply(pair_alpha_g, g_k, g, pairing);
+
 }
 
 void t_sgxpbc_call_apis(unsigned char *ptr1, size_t len1, unsigned char *ptr2, size_t len2)

@@ -288,6 +288,42 @@ void printf_key_pair(key_pair_t key_pair) {
     printf("\n");
 
 }
+
+void printf_c_a(c_a_t c_a) {
+    printf("c_a: \n");
+    printf("\tZ_a1_k:");
+    for(int i=0;i<sizeof(c_a.Z_a1_k);i++) {
+        printf("%02x", c_a.Z_a1_k[i]);
+    }
+    printf("\n");
+
+    printf("\tZ_a2_k:");
+    for(int i=0;i<sizeof(c_a.Z_a2_k);i++) {
+        printf("%02x", c_a.Z_a2_k[i]);
+    }
+    printf("\n");
+
+    printf("\tm_Z_k:");
+    for(int i=0;i<sizeof(c_a.m_Z_k);i++) {
+        printf("%02x", c_a.m_Z_k[i]);
+    }
+    printf("\n");
+
+    printf("\tg_k:");
+    for(int i=0;i<sizeof(c_a.g_k);i++) {
+        printf("%02x", c_a.g_k[i]);
+    }
+    printf("\n");
+
+    printf("\tm_Z_a1_k:");
+    for(int i=0;i<sizeof(c_a.m_Z_a1_k);i++) {
+        printf("%02x", c_a.m_Z_a1_k[i]);
+    }
+    printf("\n");
+    
+
+}
+
 int pairing_test() {
 
     /* Initialize the enclave */
@@ -368,6 +404,92 @@ int pairing_test() {
         printf("%02x", rk_A_B[i]);
     }
     printf("\n");
+
+    printf("*********start t_GetGTRandom ********\n");
+    unsigned char m[GT_ELEMENT_LENGTH_IN_BYTES];
+    status = t_GetGTRandom(global_eid, &ret, m, GT_ELEMENT_LENGTH_IN_BYTES);
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_Re_Encryption_Key_Generation has failed.\n");
+        return 1; // Test failed
+    }
+    printf("m = ");
+    for(int i=0;i<sizeof(m);i++) 
+    {
+        printf("%02x", m[i]);
+    }
+    printf("\n");
+
+    printf("*********start t_Encryption ********\n");
+
+    c_a_t c_a;
+
+    status = t_Encryption(global_eid, &ret, 
+        m, sizeof(m), 
+        key_pair_A.pk_a.Z_a1, sizeof(key_pair_A.pk_a.Z_a1),
+        key_pair_A.sk_a.a2, sizeof(key_pair_A.sk_a.a2),
+        c_a.Z_a1_k, sizeof(c_a.Z_a1_k),
+        c_a.m_Z_k, sizeof(c_a.m_Z_k),
+        c_a.Z_a2_k, sizeof(c_a.Z_a2_k),
+        c_a.g_k, sizeof(c_a.g_k),
+        c_a.m_Z_a1_k, sizeof(c_a.m_Z_a1_k)
+        );
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_Re_Encryption_Key_Generation has failed.\n");
+        return 1; // Test failed
+    }
+
+    printf_c_a(c_a);
+
+    printf("*********start t_Re_Encryption ********\n");
+
+    unsigned char Z_b2_a1_k[GT_ELEMENT_LENGTH_IN_BYTES];
+    status = t_Re_Encryption(global_eid, &ret,
+        c_a.g_k, sizeof(c_a.g_k),
+        rk_A_B, sizeof(rk_A_B), 
+        c_a.m_Z_a1_k, sizeof(c_a.m_Z_a1_k),
+        Z_b2_a1_k, sizeof(Z_b2_a1_k)
+        );
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_Re_Encryption has failed.\n");
+        return 1; // Test failed
+    }
+    printf("Z_b2_a1_k = ");
+    for(int i=0;i<sizeof(Z_b2_a1_k);i++) 
+    {
+        printf("%02x", Z_b2_a1_k[i]);
+    }
+    printf("\n");
+
+    printf("*********start t_First_Level_Decryption ********\n");
+    status = t_First_Level_Decryption(global_eid, &ret,
+            c_a.Z_a1_k, sizeof(c_a.Z_a1_k),
+            c_a.m_Z_k, sizeof(c_a.m_Z_k),
+            c_a.Z_a2_k, sizeof(c_a.Z_a2_k),
+            key_pair_A.sk_a.a1, sizeof(key_pair_A.sk_a.a1),
+            key_pair_A.sk_a.a2, sizeof(key_pair_A.sk_a.a2));
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_First_Level_Decryption has failed.\n");
+        return 1; // Test failed
+    }
+
+
+    status = t_sgxpbc_pairing_destroy(global_eid);
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_Re_Encryption_Key_Generation has failed.\n");
+        return 1; // Test failed
+    }
+
+
     /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);
 
