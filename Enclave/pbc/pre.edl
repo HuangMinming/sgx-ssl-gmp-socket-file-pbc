@@ -27,6 +27,18 @@ enclave {
             [out, size=ptr_Z_a2_k_len] unsigned char *ptr_Z_a2_k, size_t ptr_Z_a2_k_len,
             [out, size=ptr_g_k_len] unsigned char *ptr_g_k, size_t ptr_g_k_len,
             [out, size=ptr_m_Z_a1_k_len] unsigned char *ptr_m_Z_a1_k, size_t ptr_m_Z_a1_k_len);
+        public int t_First_Level_Encryption(
+            [in, size=ptr_m_len] unsigned char *ptr_m, size_t ptr_m_len,
+            [in, size=ptr_Z_a1_len] unsigned char *ptr_Z_a1, size_t ptr_Z_a1_len,
+            [in, size=ptr_a2_len] unsigned char *ptr_a2, size_t ptr_a2_len,
+            [out, size=ptr_Z_a1_k_len] unsigned char *ptr_Z_a1_k, size_t ptr_Z_a1_k_len,
+            [out, size=ptr_m_Z_k_len] unsigned char *ptr_m_Z_k, size_t ptr_m_Z_k_len,
+            [out, size=ptr_Z_a2_k_len] unsigned char *ptr_Z_a2_k, size_t ptr_Z_a2_k_len);
+        public int t_Second_Level_Encryption(
+            [in, size=ptr_m_len] unsigned char *ptr_m, size_t ptr_m_len,
+            [in, size=ptr_Z_a1_len] unsigned char *ptr_Z_a1, size_t ptr_Z_a1_len,
+            [out, size=ptr_g_k_len] unsigned char *ptr_g_k, size_t ptr_g_k_len,
+            [out, size=ptr_m_Z_a1_k_len] unsigned char *ptr_m_Z_a1_k, size_t ptr_m_Z_a1_k_len);
         public int t_Re_Encryption([in, size=ptr_g_k_len] unsigned char *ptr_g_k, size_t ptr_g_k_len,
                     [in, size=ptr_rk_A_B_len] unsigned char *ptr_rk_A_B, size_t ptr_rk_A_B_len,
                     [in, size=ptr_m_Z_a1_k_len] unsigned char *ptr_m_Z_a1_k, size_t ptr_m_Z_a1_k_len,
@@ -37,6 +49,10 @@ enclave {
                  [in, size=ptr_Z_a2_k_len] unsigned char *ptr_Z_a2_k, size_t ptr_Z_a2_k_len,
                  [in, size=ptr_a1_len] unsigned char *ptr_a1, size_t ptr_a1_len,
                  [in, size=ptr_a2_len] unsigned char *ptr_a2, size_t ptr_a2_len);
+        public int t_Second_Level_Decryption(
+                [in, size=ptr_g_k_len] unsigned char *ptr_g_k, size_t ptr_g_k_len,
+                [in, size=ptr_m_Z_a1_k_len] unsigned char *ptr_m_Z_a1_k, size_t ptr_m_Z_a1_k_len,
+                [in, size=ptr_a1_len] unsigned char *ptr_a1, size_t ptr_a1_len);
     };
 
     untrusted {

@@ -421,17 +421,48 @@ int pairing_test() {
     }
     printf("\n");
 
-    printf("*********start t_Encryption ********\n");
+    // printf("*********start t_Encryption ********\n");
 
     c_a_t c_a;
 
-    status = t_Encryption(global_eid, &ret, 
+    // status = t_Encryption(global_eid, &ret, 
+    //     m, sizeof(m), 
+    //     key_pair_A.pk_a.Z_a1, sizeof(key_pair_A.pk_a.Z_a1),
+    //     key_pair_A.sk_a.a2, sizeof(key_pair_A.sk_a.a2),
+    //     c_a.Z_a1_k, sizeof(c_a.Z_a1_k),
+    //     c_a.m_Z_k, sizeof(c_a.m_Z_k),
+    //     c_a.Z_a2_k, sizeof(c_a.Z_a2_k),
+    //     c_a.g_k, sizeof(c_a.g_k),
+    //     c_a.m_Z_a1_k, sizeof(c_a.m_Z_a1_k)
+    //     );
+    // if (status != SGX_SUCCESS)
+    // {
+    //     print_error_message(status);
+    //     printf("Call to t_Re_Encryption_Key_Generation has failed.\n");
+    //     return 1; // Test failed
+    // }
+    printf("*********start t_First_Level_Encryption ********\n");
+    status = t_First_Level_Encryption(global_eid, &ret, 
         m, sizeof(m), 
         key_pair_A.pk_a.Z_a1, sizeof(key_pair_A.pk_a.Z_a1),
         key_pair_A.sk_a.a2, sizeof(key_pair_A.sk_a.a2),
         c_a.Z_a1_k, sizeof(c_a.Z_a1_k),
         c_a.m_Z_k, sizeof(c_a.m_Z_k),
-        c_a.Z_a2_k, sizeof(c_a.Z_a2_k),
+        c_a.Z_a2_k, sizeof(c_a.Z_a2_k)
+        );
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_Re_Encryption_Key_Generation has failed.\n");
+        return 1; // Test failed
+    }
+
+    printf_c_a(c_a);
+
+    printf("*********start t_Second_Level_Encryption ********\n");
+    status = t_Second_Level_Encryption(global_eid, &ret, 
+        m, sizeof(m), 
+        key_pair_A.pk_a.Z_a1, sizeof(key_pair_A.pk_a.Z_a1),
         c_a.g_k, sizeof(c_a.g_k),
         c_a.m_Z_a1_k, sizeof(c_a.m_Z_a1_k)
         );
@@ -473,6 +504,19 @@ int pairing_test() {
             c_a.Z_a2_k, sizeof(c_a.Z_a2_k),
             key_pair_A.sk_a.a1, sizeof(key_pair_A.sk_a.a1),
             key_pair_A.sk_a.a2, sizeof(key_pair_A.sk_a.a2));
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_First_Level_Decryption has failed.\n");
+        return 1; // Test failed
+    }
+
+    
+    printf("*********start t_Second_Level_Decryption ********\n");
+    status = t_Second_Level_Decryption(global_eid, &ret,
+            c_a.g_k, sizeof(c_a.g_k),
+            c_a.m_Z_a1_k, sizeof(c_a.m_Z_a1_k),
+            key_pair_A.sk_a.a1, sizeof(key_pair_A.sk_a.a1));
     if (status != SGX_SUCCESS)
     {
         print_error_message(status);
