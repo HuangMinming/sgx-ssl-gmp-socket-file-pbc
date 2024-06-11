@@ -169,6 +169,9 @@ int t_Key_Generation(unsigned char *ptr_a1, size_t ptr_a1_len,
     return 0;
 }
 
+/*
+rkA→B = g^a1^b2 ∈ G1
+*/
 int t_Re_Encryption_Key_Generation(unsigned char *ptr_a1, size_t ptr_a1_len,
                                    unsigned char *ptr_g_b2, size_t ptr_g_b2_len,
                                    unsigned char *ptr_rk_A_B, size_t ptr_rk_A_B_len)
@@ -791,6 +794,7 @@ int t_B_Decryption(
     unsigned char *ptr_b2, size_t ptr_b2_len
     ) 
 {
+
     element_t m_Z_a1_k, Z_b2_a1_k, b2;
 
     element_init_GT(m_Z_a1_k, pairing);

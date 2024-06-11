@@ -411,7 +411,7 @@ int pairing_test() {
     if (status != SGX_SUCCESS)
     {
         print_error_message(status);
-        printf("Call to t_Re_Encryption_Key_Generation has failed.\n");
+        printf("Call to t_GetGTRandom has failed.\n");
         return 1; // Test failed
     }
     printf("m = ");
@@ -453,7 +453,7 @@ int pairing_test() {
     if (status != SGX_SUCCESS)
     {
         print_error_message(status);
-        printf("Call to t_Re_Encryption_Key_Generation has failed.\n");
+        printf("Call to t_First_Level_Encryption has failed.\n");
         return 1; // Test failed
     }
 
@@ -469,7 +469,7 @@ int pairing_test() {
     if (status != SGX_SUCCESS)
     {
         print_error_message(status);
-        printf("Call to t_Re_Encryption_Key_Generation has failed.\n");
+        printf("Call to t_Second_Level_Encryption has failed.\n");
         return 1; // Test failed
     }
 
@@ -524,12 +524,25 @@ int pairing_test() {
         return 1; // Test failed
     }
 
+    
+    printf("*********start t_B_Decryption ********\n");
+    status = t_B_Decryption(global_eid, &ret,
+            c_a.m_Z_a1_k, sizeof(c_a.m_Z_a1_k),
+            Z_b2_a1_k, sizeof(Z_b2_a1_k),
+            key_pair_B.sk_a.a2, sizeof(key_pair_B.sk_a.a2));
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_B_Decryption has failed.\n");
+        return 1; // Test failed
+    }
+
 
     status = t_sgxpbc_pairing_destroy(global_eid);
     if (status != SGX_SUCCESS)
     {
         print_error_message(status);
-        printf("Call to t_Re_Encryption_Key_Generation has failed.\n");
+        printf("Call to t_sgxpbc_pairing_destroy has failed.\n");
         return 1; // Test failed
     }
 

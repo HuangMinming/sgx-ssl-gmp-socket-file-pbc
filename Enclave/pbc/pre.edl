@@ -53,6 +53,10 @@ enclave {
                 [in, size=ptr_g_k_len] unsigned char *ptr_g_k, size_t ptr_g_k_len,
                 [in, size=ptr_m_Z_a1_k_len] unsigned char *ptr_m_Z_a1_k, size_t ptr_m_Z_a1_k_len,
                 [in, size=ptr_a1_len] unsigned char *ptr_a1, size_t ptr_a1_len);
+        public int t_B_Decryption(
+                [in, size=ptr_m_Z_a1_k_len] unsigned char *ptr_m_Z_a1_k, size_t ptr_m_Z_a1_k_len,
+                [in, size=ptr_Z_b2_a1_k_len] unsigned char *ptr_Z_b2_a1_k, size_t ptr_Z_b2_a1_k_len,
+                [in, size=ptr_b2_len] unsigned char *ptr_b2, size_t ptr_b2_len);
     };
 
     untrusted {
