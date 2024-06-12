@@ -333,6 +333,15 @@ int pairing_test() {
         getchar();
         return -1;
     }
+    // printf("===========start t_sgxpbc_pairing_test==============\n");
+    // sgx_status_t status1 = t_sgxpbc_pairing_test(global_eid);
+    // if (status1 != SGX_SUCCESS)
+    // {
+    //     print_error_message(status1);
+    //     printf("Call to t_sgxpbc_pairing_test has failed.\n");
+    //     return 1; // Test failed
+    // }
+    // return 0;
     
     printf("===========start t_sgxpbc_pairing_init==============\n");
 
@@ -536,6 +545,9 @@ int pairing_test() {
         printf("Call to t_B_Decryption has failed.\n");
         return 1; // Test failed
     }
+
+    
+
 
 
     status = t_sgxpbc_pairing_destroy(global_eid);
