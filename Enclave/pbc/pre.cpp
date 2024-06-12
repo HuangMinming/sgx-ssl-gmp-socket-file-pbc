@@ -33,6 +33,14 @@ void t_sgxpbc_pairing_init()
     pbc_param_t par;
     pbc_param_init_set_str(par, param_str);
     pairing_init_pbc_param(pairing, par);
+    unsigned char rand[4];
+    sgx_read_rand(rand, 4);
+    uint32_t r=0;
+    
+    for(int i=0;i<4;i++) {
+        r = (r<<8) | rand[i];
+    }
+    pbc_random_set_deterministic((uint32_t) r);
 }
 
 void t_sgxpbc_pairing_generate_g_Z()
@@ -233,6 +241,19 @@ int t_Re_Encryption_Key_Generation(unsigned char *ptr_a1, size_t ptr_a1_len,
 int t_GetGTRandom(unsigned char *ptr_m, size_t ptr_m_len)
 {
     sgx_printf("t_GetGTRandom start ****\n");
+    element_t m1;
+    element_init_Zr(m1, pairing);
+    element_random(m1);
+    unsigned char m1_data[GT_ELEMENT_LENGTH_IN_BYTES];
+    element_to_bytes(m1_data, m1);
+    sgx_printf("\n m1_data = ");
+    for (int i = 0; i < GT_ELEMENT_LENGTH_IN_BYTES; i++)
+    {
+        sgx_printf("%02x", m1_data[i]);
+    }
+    sgx_printf("\n");
+
+
     element_t m;
     element_init_GT(m, pairing);
 
