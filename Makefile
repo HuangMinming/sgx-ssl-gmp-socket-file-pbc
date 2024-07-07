@@ -87,7 +87,7 @@ else
 	Urts_Library_Name := sgx_urts
 endif
 
-App_Cpp_Files := App/App.cpp App/wrap.cpp $(wildcard App/gmp/*.cpp)
+App_Cpp_Files := App/App.cpp App/wrap.cpp App/util.cpp $(wildcard App/gmp/*.cpp)
 App_Include_Paths := -IInclude -IApp -I$(SGX_SDK)/include -I/usr/include
 
 App_C_Flags := -fPIC -Wno-attributes $(App_Include_Paths)

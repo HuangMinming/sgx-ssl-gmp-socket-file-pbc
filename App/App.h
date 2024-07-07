@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include "util.h"
 
 #include "sgx_error.h"       /* sgx_status_t */
 #include "sgx_eid.h"     /* sgx_enclave_id_t */
@@ -52,6 +53,9 @@
 # define TOKEN_FILENAME   "enclave.token"
 # define ENCLAVE_FILENAME "enclave.signed.so"
 
+# define ERRORMSG_REQUEST_ERROR   "request error"
+# define ERRORMSG_SGX_ERROR   "call sgx error"
+
 extern sgx_enclave_id_t global_eid;    /* global enclave id */
 
 #if defined(__cplusplus)
@@ -60,6 +64,12 @@ extern "C" {
 
 int access_control(char *user_id, char *file_id);
 int access_control_file(int fd, char *user_id, char *file_id);
+int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd, 
+        unsigned char *responseMsg, size_t * responseMsgLen);
+int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
+    unsigned char *responseBody, size_t * responseBodyLength);
+int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
+    unsigned char *responseBody, size_t * responseBodyLength);
 
 // the same as pre.h
 #define ZR_ELEMENT_LENGTH_IN_BYTES 20
