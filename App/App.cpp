@@ -391,7 +391,6 @@ static bool write_buf_to_file(const char *filename, const uint8_t *buf, size_t b
 
 int c_pre_test()
 {
-
     /* Initialize the enclave */
     if (initialize_enclave() < 0)
     {
@@ -399,10 +398,11 @@ int c_pre_test()
         getchar();
         return -1;
     }
+    int ret = 0;
 
     printf("===========start c_pre_main_test==============\n");
 
-    sgx_status_t status = c_pre_main_test(global_eid);
+    sgx_status_t status = c_pre_main_test(global_eid, &ret);
     if (status != SGX_SUCCESS)
     {
         print_error_message(status);
@@ -904,9 +904,10 @@ bool loadSealedData() {
 int SGX_CDECL main(int argc, char *argv[])
 {
     printf("*******\n");
-    pairing_test();
+    // pairing_test();
     // seal_test();
     // unseal_test();
+    c_pre_test();
 
     /* Initialize the enclave , set global_eid*/
     if (initialize_enclave() < 0)
