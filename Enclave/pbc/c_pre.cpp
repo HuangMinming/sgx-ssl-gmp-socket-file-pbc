@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <pbc.h>
 #include <string.h>
+#include "../Enclave.h"
+#include "../Enclave_t.h" /* print_string */
 
 #include "c_pre.h"
 
