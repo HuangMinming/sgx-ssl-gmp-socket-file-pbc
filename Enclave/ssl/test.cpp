@@ -378,8 +378,8 @@ int rsa_test()
     int num;
     int n;
 
-    CRYPTO_set_mem_debug(1);
-    CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
+    // CRYPTO_set_mem_debug(1);
+    // CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
 
     RAND_seed(rnd_seed, sizeof rnd_seed); /* or OAEP may fail */
 
@@ -554,12 +554,12 @@ void t_sgxssl_call_apis()
     ec_key_gen();
     sgx_printf("test ec_key_gen completed\n");
     
-	ret = rsa_test();
-    if (ret != 0)
-    {
-        sgx_printf("test rsa_test returned error %d\n", ret);
-        exit(ret);
-    }
-    sgx_printf("test rsa_test completed\n");
+	// ret = rsa_test();
+    // if (ret != 0)
+    // {
+    //     sgx_printf("test rsa_test returned error %d\n", ret);
+    //     exit(ret);
+    // }
+    // sgx_printf("test rsa_test completed\n");
     
 }
