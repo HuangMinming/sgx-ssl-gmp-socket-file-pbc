@@ -3,8 +3,10 @@
 #include <string.h>
 #include "../Enclave.h"
 #include "../Enclave_t.h" /* print_string */
+#include "../sha256.h"
 
 #include "c_pre.h"
+
 
 #define g_str "31415926"
 

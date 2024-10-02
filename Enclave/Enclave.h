@@ -59,6 +59,7 @@ extern "C" {
 
 int vprintf_cb(Stream_t stream, const char * fmt, va_list arg);
 int sgx_printf(const char* fmt, ...);
+uint32_t HexStrToByteStr(const uint8_t * src_buf, int src_len, uint8_t * dest_buf);
 
 #if defined(__cplusplus)
 }

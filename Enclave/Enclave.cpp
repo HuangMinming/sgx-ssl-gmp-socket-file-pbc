@@ -34,6 +34,7 @@
 #include <stdarg.h>
 #include <stdio.h> /* vsnprintf */
 #include <string.h>
+#include <ctype.h>
 
 
 #include <sgx_trts.h>
@@ -431,4 +432,36 @@ sgx_status_t unseal_bList_U_data(const uint8_t *sealed_blob, size_t data_size)
     free(de_mac_text);
     free(decrypt_data);
     return ret;
+}
+
+
+/*
+ “233A464C52” ==>[0x23, 0x3A, 0x46, 0x4C, 0x52]
+*/
+uint32_t HexStrToByteStr(const uint8_t * src_buf, int src_len, uint8_t * dest_buf)
+{
+    uint8_t highByte, lowByte;
+    if(NULL == src_buf)
+		return 1;
+	const uint8_t * index = src_buf, * end = src_buf + src_len;
+    uint8_t * ridx = dest_buf;
+    
+    while (index < end)
+    {
+        highByte = tolower(* (index ++));
+        lowByte  = tolower(* (index ++));
+
+        if (highByte > 0x39)
+            highByte -= 0x57;
+        else
+            highByte -= 0x30;
+
+        if (lowByte > 0x39)
+            lowByte -= 0x57;
+        else
+            lowByte -= 0x30;
+
+        *ridx ++ = (highByte << 4) | lowByte;
+    }
+    return 0;
 }
