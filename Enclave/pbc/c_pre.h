@@ -5,11 +5,7 @@
 #include <string.h>
 #include <pbc.h>
 
-
-// extern pairing_t pairing;
-// extern element_t g;
-// extern int n;
-// extern element_t Z;
+#define SHA256_DIGEST_LENGTH_32 32
 
 // 结构体定义
 typedef struct {
