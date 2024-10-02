@@ -1,6 +1,6 @@
 // c_pre.h
-#ifndef C_PRE_H 
-#define C_PRE_H 
+#ifndef __C_PRE__H
+#define __C_PRE__H
 #include <stdio.h>
 #include <string.h>
 #include <pbc.h>
@@ -32,3 +32,5 @@ typedef struct {
 
 // 函数声明
 void Setup(pairing_t pairing, element_t g, element_t Z, int *p_n);
+
+#endif

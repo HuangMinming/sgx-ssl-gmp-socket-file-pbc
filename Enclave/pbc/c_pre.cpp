@@ -6,6 +6,8 @@
 
 #include "c_pre.h"
 
+#define g_str "31415926"
+
 void Setup(pairing_t pairing, element_t g, element_t Z, int *p_n)
 {
     char *param="type a\n\
@@ -24,7 +26,7 @@ sign0 1";
     pairing_init_set_buf(pairing, param, count);
     element_init_G1(g, pairing);
     // element_random(g);
-    element_from_hash(g, "31415926", strlen("31415926"));
+    element_from_hash(g, (const void*)g_str, strlen(g_str));
     element_init_GT(Z, pairing);
     pairing_apply(Z, g, g, pairing);
     (*p_n) = 50;
