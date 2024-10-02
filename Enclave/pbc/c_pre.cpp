@@ -26,7 +26,7 @@ sign0 1";
     pairing_init_set_buf(pairing, param, count);
     element_init_G1(g, pairing);
     // element_random(g);
-    element_from_hash(g, (const void*)g_str, strlen(g_str));
+    element_from_hash(g, (void*)g_str, strlen(g_str));
     element_init_GT(Z, pairing);
     pairing_apply(Z, g, g, pairing);
     (*p_n) = 50;
