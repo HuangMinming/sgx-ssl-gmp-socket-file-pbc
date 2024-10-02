@@ -3,7 +3,7 @@
 #define C_PRE_H 
 #include <stdio.h>
 #include <string.h>
-#include <pbc/pbc.h>
+#include <pbc.h>
 
 
 // extern pairing_t pairing;
