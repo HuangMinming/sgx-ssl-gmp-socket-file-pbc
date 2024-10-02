@@ -68,6 +68,17 @@ int KeyGen(unsigned char *pk, int *p_pk_len, unsigned char *sk, int *p_sk_len)
     }
     sgx_printf("\n");
 
+    unsigned char hash[SHA256_DIGEST_LENGTH_32];
+    sha256_context ctx;
+    sha256_starts( &ctx );
+    sha256_update( &ctx, (uint8 *) g_data, g_len );
+    sha256_finish( &ctx, hash );
+    sgx_printf("hash(g_data)=\n");
+    for(int i=0;i<SHA256_DIGEST_LENGTH_32;i++) {
+        sgx_printf("%02x ", hash[i]);
+    }
+    sgx_printf("\n");
+
     sgx_printf("n=%d\n", n);
 
     element_init_G1(keypair.pk, pairing);
@@ -116,16 +127,7 @@ int c_pre_main_test() {
     }
     sgx_printf("\n");
 
-    unsigned char hash[SHA256_DIGEST_LENGTH_32];
-    sha256_context ctx;
-    sha256_starts( &ctx );
-    sha256_update( &ctx, (uint8 *) sk, sk_len );
-    sha256_finish( &ctx, hash );
-    sgx_printf("hash=\n", sk_len);
-    for(int i=0;i<SHA256_DIGEST_LENGTH_32;i++) {
-        sgx_printf("%02x ", hash[i]);
-    }
-    sgx_printf("\n");
+    
 
 
     return 0;
