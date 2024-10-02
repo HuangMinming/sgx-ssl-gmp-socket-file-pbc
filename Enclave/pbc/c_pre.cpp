@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <pbc/pbc.h>
+#include <pbc.h>
 #include <string.h>
 
 #include "c_pre.h"
