@@ -39,6 +39,7 @@ enclave {
     include "user_types.h" 
 
     from "pbc/pre.edl" import *;
+    from "pbc/c_pre.edl" import *;
 
     /* Import ECALL/OCALL from sub-directory EDLs.
      *  [from]: specifies the location of EDL file. 

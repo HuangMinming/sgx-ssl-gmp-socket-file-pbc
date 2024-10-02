@@ -1,0 +1,22 @@
+
+
+
+/* c_pre.edl */
+
+enclave {
+    
+    
+    
+    trusted {
+        public int c_pre_main_test();
+    };
+
+    untrusted {
+    
+        /*
+         * [user_check|in|out|in,out|isary] can also be used in OCALLs, refer to the "User Guide" for details.
+         */
+
+    };
+
+};

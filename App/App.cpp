@@ -389,6 +389,46 @@ static bool write_buf_to_file(const char *filename, const uint8_t *buf, size_t b
     return true;
 }
 
+int c_pre_test()
+{
+
+    /* Initialize the enclave */
+    if (initialize_enclave() < 0)
+    {
+        printf("Enter a character before exit ...\n");
+        getchar();
+        return -1;
+    }
+
+    printf("===========start c_pre_main_test==============\n");
+
+    sgx_status_t status = c_pre_main_test(global_eid);
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to c_pre_main_test has failed.\n");
+        return 1; // Test failed
+    }
+    printf("===========end c_pre_main_test==============\n");
+
+    status = t_sgxpbc_pairing_destroy(global_eid);
+    if (status != SGX_SUCCESS)
+    {
+        print_error_message(status);
+        printf("Call to t_sgxpbc_pairing_destroy has failed.\n");
+        return 1; // Test failed
+    }
+
+    /* Destroy the enclave */
+    sgx_destroy_enclave(global_eid);
+
+    printf("Info: c_pre_test successfully returned.\n");
+
+    // printf("Enter a character before exit ...\n");
+    // getchar();
+    return 0;
+}
+
 int pairing_test()
 {
 
