@@ -864,7 +864,7 @@ bool loadSealedData() {
 int SGX_CDECL main(int argc, char *argv[])
 {
     printf("*******\n");
-    // pairing_test();
+    pairing_test();
     // seal_test();
     // unseal_test();
 
