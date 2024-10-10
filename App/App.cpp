@@ -411,13 +411,6 @@ int c_pre_test()
     }
     printf("===========end c_pre_main_test==============\n");
 
-    status = t_sgxpbc_pairing_destroy(global_eid);
-    if (status != SGX_SUCCESS)
-    {
-        print_error_message(status);
-        printf("Call to t_sgxpbc_pairing_destroy has failed.\n");
-        return 1; // Test failed
-    }
 
     /* Destroy the enclave */
     sgx_destroy_enclave(global_eid);
