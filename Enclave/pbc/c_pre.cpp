@@ -2267,6 +2267,87 @@ void Enc2Test()
 }
 
 
+void Enc2Test_2()
+{
+    uint8_t pk_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t sk_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];
+    int pk_Hex_len = sizeof(pk_Hex);
+    int sk_Hex_len = sizeof(sk_Hex);
+
+    memcpy(pk_Hex, "7dddc57b9c439eb04c6de3145f1c72d20a8a38e4cb4866b2930f97ed129548a4b49ac81e7257cc93e9f072f4d47b1a5e53a34b032bd268a6407f49e9d1b637ed092dd1fb730dfcfb81808f7c399ad711b76bbb4cf68018cb0bd142b987812a38f4c15267b68125ed0633ebe2a6289a2385c03d9b4909b62e3db91c9b18ba2678", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(sk_Hex, "2fff66de8fde02d7ccc0c82c487556f06db72164", ZR_ELEMENT_LENGTH_IN_BYTES * 2);
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("Enc2Test pk_Hex_len = %d, pk_Hex=\n", pk_Hex_len);
+    for(int i=0;i<pk_Hex_len;) {
+        sgx_printf("%c%c ", pk_Hex[i], pk_Hex[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+    sgx_printf("Enc2Test sk_Hex_len = %d, sk_Hex=\n", sk_Hex_len);
+    for(int i=0;i<sk_Hex_len;) {
+        sgx_printf("%c%c ", sk_Hex[i], sk_Hex[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+#endif
+    // uint8_t *m=(uint8_t *)",.cdefghij12345678901234567890ab";
+    // int m_len = strlen((char *)m);
+    uint8_t *w=(uint8_t *)"hello world js";
+    int w_len = strlen((char *)w);
+    uint8_t c1_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t c2_Hex[GT_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t c3_Hex[SHA256_DIGEST_LENGTH_32 * 8 * 2];
+    uint8_t c4_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    memcpy(c1_Hex, "47bd3b607fc70fca562e99be86ef3065d1c8343a9b4ef3c118c2b40257ee04140a62d6355b8fcbe0b9db6e65c5f663e3eb9fc47dfac4b2d92d51c21e97a28a505c46d96e0e25664668d6e0acb6de3729480430a94aba3625036abf3689e120bbdc118da5ce30c8b9ac694ac3cf137b75e8e3ca0a35c67bf1e9843fa686aa5da4", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(c2_Hex, "659d984b7eed4aa6d6320440d451ea3d2081ed6c303b1de26fbe256c95a05e9b6aaa090545d38a5d0b1df07ef03afae143aeec10c286c704a1d37dbaf92c0bf63b5060abe9f5d26f3faedde5d607d3252374b22d9dc7d117846871dd5408d6c849cd83306909a7879234459a354fd7b4551b095f6313c8167fb3ae4c24091026", GT_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(c3_Hex, "30303131303030313030303130303031313131313030303030313130313031313030313031313131313031303131313131303031313031303031313130303031313131303030313131303131313031303130303031313031303030313030303031313130313130313031303130303030313130303031303131303031313031313131313031313130313030303030303031303131303130303030313130303031303030303130313030313031303031313131313131303131303130313031303031303130303130313130303030313031313131313131313031303130303130303131303031313031303131313031303030303131313031313130303130313031", SHA256_DIGEST_LENGTH_32 * 8 * 2);
+    memcpy(c4_Hex, "3935b2a5cad46cae9277c4d9395fe926a2b389e9c6ff533ebf69d89db1d347410a772060fddd238a76905850e638cfb47c83f976e8d3dc51d6dcedbd9f9aa236909183bea1339604050288b0563d64f349fed0663e5f27c4f9f183013540e175b7b0550d0c79f6e8d915ed3ec86d0744459e0a465a3778c91682e84c99e921ac", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    // Enc2(pk_Hex, pk_Hex_len, m, m_len, w, w_len,
+    //     c1_Hex, sizeof(c1_Hex), 
+    //     c2_Hex, sizeof(c2_Hex), 
+    //     c3_Hex, sizeof(c3_Hex), 
+    //     c4_Hex, sizeof(c4_Hex));
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("Enc2Test c1:\n");
+    for(int i=0;i<sizeof(c1_Hex);) {
+        sgx_printf("%c%c ", c1_Hex[i], c1_Hex[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+    sgx_printf("Enc2Test c2:\n");
+    for(int i=0;i<sizeof(c2_Hex);) {
+        sgx_printf("%c%c ", c2_Hex[i], c2_Hex[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+    sgx_printf("Enc2Test c3:\n");
+    for(int i=0;i<sizeof(c3_Hex);) {
+        sgx_printf("%c%c ", c3_Hex[i], c3_Hex[i+1]);
+        i += 2;;
+    }
+    sgx_printf("\n");
+    sgx_printf("Enc2Test c4:\n");
+    for(int i=0;i<sizeof(c4_Hex);) {
+        sgx_printf("%c%c ", c4_Hex[i], c4_Hex[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+#endif
+
+    uint8_t m_bytes[SHA256_DIGEST_LENGTH_32 + 1];
+    Dec2(pk_Hex, sizeof(pk_Hex), sk_Hex, sizeof(sk_Hex),
+        w, w_len, c1_Hex, sizeof(c1_Hex), c2_Hex, sizeof(c2_Hex),
+        c3_Hex, sizeof(c3_Hex), c4_Hex, sizeof(c4_Hex),
+        m_bytes, sizeof(m_bytes));
+    sgx_printf("Enc2Test: m_bytes = \n");
+    for(int i=0;i<sizeof(m_bytes);i++)
+    {
+        sgx_printf("%c", m_bytes[i]);
+    }
+    sgx_printf("\n");
+
+}
+
 
 void Enc1Test()
 {
@@ -2408,26 +2489,118 @@ void ReEncTest()
 
 }
 
+void ReEncTest_2() 
+{
+    //start to test ReKeyGen
+    uint8_t pk_i_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t sk_i_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];
+    int pk_i_Hex_len = sizeof(pk_i_Hex);
+    int sk_i_Hex_len = sizeof(sk_i_Hex);
+    memcpy(pk_i_Hex, "7dddc57b9c439eb04c6de3145f1c72d20a8a38e4cb4866b2930f97ed129548a4b49ac81e7257cc93e9f072f4d47b1a5e53a34b032bd268a6407f49e9d1b637ed092dd1fb730dfcfb81808f7c399ad711b76bbb4cf68018cb0bd142b987812a38f4c15267b68125ed0633ebe2a6289a2385c03d9b4909b62e3db91c9b18ba2678", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(sk_i_Hex, "2fff66de8fde02d7ccc0c82c487556f06db72164", ZR_ELEMENT_LENGTH_IN_BYTES * 2);
+    // KeyGen(pk_i_Hex, pk_i_Hex_len, sk_i_Hex, sk_i_Hex_len);
+
+    // uint8_t *m=(uint8_t *)"89cdefghij12345678901234567890ab";
+    uint8_t *w=(uint8_t *)"hello world js";
+    // int m_len = strlen((char *)m);
+    int w_len = strlen((char *)w);
+    uint8_t c1_i_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t c2_i_Hex[GT_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t c3_i_Hex[SHA256_DIGEST_LENGTH_32 * 8 * 2];
+    uint8_t c4_i_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    memcpy(c1_i_Hex, "47bd3b607fc70fca562e99be86ef3065d1c8343a9b4ef3c118c2b40257ee04140a62d6355b8fcbe0b9db6e65c5f663e3eb9fc47dfac4b2d92d51c21e97a28a505c46d96e0e25664668d6e0acb6de3729480430a94aba3625036abf3689e120bbdc118da5ce30c8b9ac694ac3cf137b75e8e3ca0a35c67bf1e9843fa686aa5da4", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(c2_i_Hex, "659d984b7eed4aa6d6320440d451ea3d2081ed6c303b1de26fbe256c95a05e9b6aaa090545d38a5d0b1df07ef03afae143aeec10c286c704a1d37dbaf92c0bf63b5060abe9f5d26f3faedde5d607d3252374b22d9dc7d117846871dd5408d6c849cd83306909a7879234459a354fd7b4551b095f6313c8167fb3ae4c24091026", GT_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(c3_i_Hex, "30303131303030313030303130303031313131313030303030313130313031313030313031313131313031303131313131303031313031303031313130303031313131303030313131303131313031303130303031313031303030313030303031313130313130313031303130303030313130303031303131303031313031313131313031313130313030303030303031303131303130303030313130303031303030303130313030313031303031313131313131303131303130313031303031303130303130313130303030313031313131313131313031303130303130303131303031313031303131313031303030303131313031313130303130313031", SHA256_DIGEST_LENGTH_32 * 8 * 2);
+    memcpy(c4_i_Hex, "3935b2a5cad46cae9277c4d9395fe926a2b389e9c6ff533ebf69d89db1d347410a772060fddd238a76905850e638cfb47c83f976e8d3dc51d6dcedbd9f9aa236909183bea1339604050288b0563d64f349fed0663e5f27c4f9f183013540e175b7b0550d0c79f6e8d915ed3ec86d0744459e0a465a3778c91682e84c99e921ac", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    
+    // Enc2(pk_i_Hex, pk_i_Hex_len, m, m_len, w, w_len,  
+    //     c1_i_Hex, sizeof(c1_i_Hex), 
+    //     c2_i_Hex, sizeof(c2_i_Hex), 
+    //     c3_i_Hex, sizeof(c3_i_Hex), 
+    //     c4_i_Hex, sizeof(c4_i_Hex));
+
+    uint8_t pk_j_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t sk_j_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];
+    int pk_j_Hex_len = sizeof(pk_j_Hex);
+    int sk_j_Hex_len = sizeof(sk_j_Hex);
+    memcpy(pk_j_Hex, "0978cffd460bf3c892f16b7d159d3b8925e44ac22ef7b47dee2fdb16c146cdf2dc540aa96fe29b8148ec2e65805ab0a8e78b927f6780d062b504b5c151a6fc9a5a317625eecc52cea60f736d4f2a0e12a21d7ee6723b896cc9c9c7053ef668ca1931e88e7f1a426cd415103444f36bcaeb5682927c5e913da6b8d64f31e3d1da", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(sk_j_Hex, "3eb334be57c1486c08a94259837c20a80f157866", ZR_ELEMENT_LENGTH_IN_BYTES * 2);
+   
+    // KeyGen(pk_j_Hex, pk_j_Hex_len, sk_j_Hex, sk_j_Hex_len);
+
+
+    uint8_t rk1_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t rk2_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    memcpy(rk1_Hex, "240092902b023ec90128785c23564ca870fb71e6f38f55eb8713f5a61aacbea1af70b9d6e847bc873555b8afc245ac7b5dc571ed1e22f6031491cd5ae0292a0a5ed6a0f646b42a98108f6952d7cf52bb03d503e534bd2864a488a730d5a220acf8b70557e4ab7098126667296cbf9bcf0d232b99b97b3cb15219edf5a07d150c", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(rk2_Hex, "857922c0d20fda7ed1479f81bad8375165c20e7dc359c955e40d4d76cc8a1d46bb411a791460b3d1aa0e76d4e1dd48907bc87dfd4ffd332f68274f6cbc96399c1a8d7f9b00fa04ab66a172c218b31a76bf31f1da84a0e7b1a5843ea8384636449e6cd5acbf2fdb339ec264f4966b3bc19108bd7b3bbcd8035aa3dd97dbd0af25", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    // ReKeyGen(pk_j_Hex, pk_j_Hex_len, sk_i_Hex, sk_i_Hex_len, pk_i_Hex, pk_i_Hex_len, 
+    //         w, w_len, rk1_Hex, sizeof(rk1_Hex), rk2_Hex, sizeof(rk2_Hex));
+
+    uint8_t c1_j_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t c2_j_Hex[GT_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t c3_j_Hex[SHA256_DIGEST_LENGTH_32 * 8 * 2];
+    uint8_t c4_j_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+
+    memcpy(c1_j_Hex, "2841940c005a81942aef520e6f905e86f1bc154afcb4332a24bdc1679096a8538b419b2863956c97a7cc5b2ee635b1ba35dfad9243bed7474bbedd523eb3317e0eb9c0bb2978ab113bc0fe25ea5a4c0ab29627b05f9868052cf17557bdc254028b4b8db484d0b600e885380acfcd2d9885080bd77209ebd3aabb7814aeec62e1", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(c2_j_Hex, "47ecbd6bf8f1fe9364e1e85438068fec5a42d24d923934c713b6cc6621540a4a0b927df8bc85e78de3ea184dd7d51fa163d4101a1086ca4fe07cbd4c65d5a8ca7f3deead712913b32d7870334309dce37ff9288da588d38deb4a73d4bd706b3506e864125261d75bcb01972e8dda1022a6824b68948cb2221655c15744cf3804", GT_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(c3_j_Hex, "31303031313031303130303131313130313131303030303131313030303030313031313130303031303031303031303030303030303031313030313130313030303131303030303030313131303130303130303030303030303130313031303130313030303031303031313031303130313031303130303031313030303031303030313130303031303031303130303031313030303130313030303130313031303131313030303030303030303030313130303030303031303131313131313030303131313031313031313031303030313130313131303031313131303031303031303130313131313031313030313131313131313131303130303031313130", SHA256_DIGEST_LENGTH_32 * 8 * 2);
+    memcpy(c4_j_Hex, "857922c0d20fda7ed1479f81bad8375165c20e7dc359c955e40d4d76cc8a1d46bb411a791460b3d1aa0e76d4e1dd48907bc87dfd4ffd332f68274f6cbc96399c1a8d7f9b00fa04ab66a172c218b31a76bf31f1da84a0e7b1a5843ea8384636449e6cd5acbf2fdb339ec264f4966b3bc19108bd7b3bbcd8035aa3dd97dbd0af25", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    
+    // ReEnc(c1_i_Hex, sizeof(c1_i_Hex), 
+    //     c2_i_Hex, sizeof(c2_i_Hex),
+    //     c3_i_Hex, sizeof(c3_i_Hex),
+    //     c4_i_Hex, sizeof(c4_i_Hex),
+    //     rk1_Hex, sizeof(rk1_Hex),
+    //     rk2_Hex, sizeof(rk2_Hex),
+    //     c1_j_Hex, sizeof(c1_j_Hex),
+    //     c2_j_Hex, sizeof(c2_j_Hex),
+    //     c3_j_Hex, sizeof(c3_j_Hex),
+    //     c4_j_Hex, sizeof(c4_j_Hex));
+    
+    uint8_t m_bytes[SHA256_DIGEST_LENGTH_32];
+    Dec1(pk_j_Hex, sizeof(pk_j_Hex), sk_j_Hex, sizeof(sk_j_Hex),
+        c1_j_Hex, sizeof(c1_j_Hex), c2_j_Hex, sizeof(c2_j_Hex),
+        c3_j_Hex, sizeof(c3_j_Hex), c4_j_Hex, sizeof(c4_j_Hex),
+        m_bytes, sizeof(m_bytes));
+    sgx_printf("ReEncTest: m_bytes = \n");
+    for(int i=0;i<sizeof(m_bytes);i++)
+    {
+        sgx_printf("%c", m_bytes[i]);
+    }
+    sgx_printf("\n");
+
+}
+
+
 
 
 
 int c_pre_main_test() {
 
-    sgx_printf("==========================\n");
-    sgx_printf("=======Enc2Test===========\n");
-    sgx_printf("==========================\n");
-    Enc2Test();
+    // sgx_printf("==========================\n");
+    // sgx_printf("=======Enc2Test===========\n");
+    // sgx_printf("==========================\n");
+    // Enc2Test();
 
-    sgx_printf("==========================\n");
-    sgx_printf("=======Enc1Test===========\n");
-    sgx_printf("==========================\n");
-    Enc1Test();
+    // sgx_printf("==========================\n");
+    // sgx_printf("=======Enc1Test===========\n");
+    // sgx_printf("==========================\n");
+    // Enc1Test();
 
+    // sgx_printf("==========================\n");
+    // sgx_printf("=======ReEncTest==========\n");
+    // sgx_printf("==========================\n");
+    // ReEncTest();
+
+    // sgx_printf("==========================\n");
+    // sgx_printf("=======Enc2Test===========\n");
+    // sgx_printf("==========================\n");
+    // Enc2Test_2();
+    
     sgx_printf("==========================\n");
     sgx_printf("=======ReEncTest==========\n");
     sgx_printf("==========================\n");
-    ReEncTest();
-    
+    ReEncTest_2();
 
 
     return 0;
