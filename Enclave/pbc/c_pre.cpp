@@ -2577,25 +2577,25 @@ void ReEncTest_2()
 
 int c_pre_main_test() {
 
-    // sgx_printf("==========================\n");
-    // sgx_printf("=======Enc2Test===========\n");
-    // sgx_printf("==========================\n");
-    // Enc2Test();
+    sgx_printf("==========================\n");
+    sgx_printf("=======Enc2Test===========\n");
+    sgx_printf("==========================\n");
+    Enc2Test();
 
-    // sgx_printf("==========================\n");
-    // sgx_printf("=======Enc1Test===========\n");
-    // sgx_printf("==========================\n");
-    // Enc1Test();
+    sgx_printf("==========================\n");
+    sgx_printf("=======Enc1Test===========\n");
+    sgx_printf("==========================\n");
+    Enc1Test();
 
-    // sgx_printf("==========================\n");
-    // sgx_printf("=======ReEncTest==========\n");
-    // sgx_printf("==========================\n");
-    // ReEncTest();
+    sgx_printf("==========================\n");
+    sgx_printf("=======ReEncTest==========\n");
+    sgx_printf("==========================\n");
+    ReEncTest();
 
-    // sgx_printf("==========================\n");
-    // sgx_printf("=======Enc2Test===========\n");
-    // sgx_printf("==========================\n");
-    // Enc2Test_2();
+    sgx_printf("==========================\n");
+    sgx_printf("=======Enc2Test===========\n");
+    sgx_printf("==========================\n");
+    Enc2Test_2();
     
     sgx_printf("==========================\n");
     sgx_printf("=======ReEncTest==========\n");
