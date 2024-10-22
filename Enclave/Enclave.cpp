@@ -203,13 +203,13 @@ sgx_status_t unseal_data(const uint8_t *sealed_blob, size_t data_size)
     return ret;
 }
 
-sgx_status_t t_user_setup(const unsigned char *ptr_rsaPubKey, size_t rsaPubKeyLength)
+sgx_status_t t_Admin_Setting(const unsigned char *vk_A, size_t vk_A_Length)
 {
     
     memset(g_vk.vk_A, 0x00, sizeof(g_vk.vk_A));
 
-    memcpy(g_vk.vk_A, ptr_rsaPubKey, rsaPubKeyLength);
-    g_vk.vk_A_Length = rsaPubKeyLength;
+    memcpy(g_vk.vk_A, vk_A, vk_A_Length);
+    g_vk.vk_A_Length = vk_A_Length;
 
     return SGX_SUCCESS;
 
