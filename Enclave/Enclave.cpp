@@ -57,7 +57,7 @@ struct vk_t {
         size_t vk_A_Length;
 };
 
-#define bList_U_MAX_size 1024vk_t
+#define bList_U_MAX_size 1024
 #define user_id_MAX_size 21
 struct bList_U_t {
         size_t user_count = 0;
