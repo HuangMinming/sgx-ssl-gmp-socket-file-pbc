@@ -2656,13 +2656,13 @@ seal and unseal g_keyPairHex
 uint32_t get_sealed_keyPairHex_data_size()
 {
     return sgx_calc_sealed_data_size((uint32_t)strlen(aad_g_keyPairHex_mac_text), 
-        (uint32_t)(sizeof(g_keyPairHex));
+        (uint32_t)(sizeof(g_keyPairHex)));
 }
 
 sgx_status_t t_seal_keyPairHex_data(uint8_t *sealed_blob, uint32_t data_size)
 {
     uint32_t sealed_data_size = sgx_calc_sealed_data_size((uint32_t)strlen(aad_g_keyPairHex_mac_text), 
-        (uint32_t)(sizeof(g_keyPairHex));
+        (uint32_t)(sizeof(g_keyPairHex)));
     if (sealed_data_size == UINT32_MAX)
         return SGX_ERROR_UNEXPECTED;
     if (sealed_data_size > data_size)
@@ -2677,8 +2677,8 @@ sgx_status_t t_seal_keyPairHex_data(uint8_t *sealed_blob, uint32_t data_size)
     uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
     if (temp_sealed_buf == NULL)
         return SGX_ERROR_OUT_OF_MEMORY;
-    sgx_status_t err = sgx_seal_data((uint32_t)strlen(aad_vk_mac_text), 
-        (const uint8_t *)aad_vk_mac_text, (uint32_t)(sizeof(g_keyPairHex), (uint8_t *)data_buf, 
+    sgx_status_t err = sgx_seal_data((uint32_t)strlen(aad_g_keyPairHex_mac_text), 
+        (const uint8_t *)aad_g_keyPairHex_mac_text, (uint32_t)(sizeof(g_keyPairHex), (uint8_t *)data_buf, 
         sealed_data_size, (sgx_sealed_data_t *)temp_sealed_buf);
     if (err == SGX_SUCCESS)
     {
@@ -2724,7 +2724,7 @@ sgx_status_t t_unseal_keyPairHex_data(const uint8_t *sealed_blob, size_t data_si
         ret = SGX_ERROR_UNEXPECTED;
     }
 
-    if(decrypt_data_len < (sizeof(g_keyPairHex))
+    if(decrypt_data_len < (sizeof(g_keyPairHex)))
     {
         return SGX_ERROR_UNEXPECTED;
     } 
