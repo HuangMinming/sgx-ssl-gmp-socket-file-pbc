@@ -2,6 +2,7 @@
 #include "pbc.h"
 #include <string.h>
 #include <ctype.h>
+#include "sgx_tseal.h"
 #include "../Enclave.h"
 #include "../Enclave_t.h" /* print_string */
 #include "../sha256.h"
@@ -2730,9 +2731,9 @@ sgx_status_t t_unseal_keyPairHex_data(const uint8_t *sealed_blob, size_t data_si
     } 
     int offset = 0;
     memcpy(g_keyPairHex.pk_Hex, decrypt_data + offset, sizeof(g_keyPairHex.pk_Hex));
-    offset += g_keyPairHex.pk_Hex;
+    offset += sizeof(g_keyPairHex.pk_Hex);
     memcpy(g_keyPairHex.sk_Hex, decrypt_data +offset, sizeof(g_keyPairHex.sk_Hex));
-    offset += g_keyPairHex.sk_Hex;
+    offset += sizeof(g_keyPairHex.sk_Hex);
 #ifdef PRINT_DEBUG_INFO
     sgx_printf("t_unseal_keyPairHex_data pk_Hex_len = %d, pk_Hex=\n", sizeof(g_keyPairHex.pk_Hex));
     for(int i=0;i<sizeof(g_keyPairHex.pk_Hex);) {
