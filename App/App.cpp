@@ -73,6 +73,8 @@
 
 #define SEALED_VK_DATA_FILE "sealed_vk_data_blob.txt"
 #define SEALED_bListU_DATA_FILE "sealed_bList_U_data_blob.txt"
+#define SEALED_keyPairHex_DATA_FILE "sealed_keyPairHex_data_blob.txt"
+
 
 /* Global EID shared by multiple threads */
 sgx_enclave_id_t global_eid = 0;
@@ -885,10 +887,64 @@ bool loadSealed_bList_U_Data() {
     return true;
 }
 
+bool loadSealed_keyPairHex_Data() {
+
+    sgx_status_t ret;
+
+    // Read the sealed blob from the file
+    size_t fsize = get_file_size(SEALED_keyPairHex_DATA_FILE);
+    if (fsize == (size_t)-1)
+    {
+        printf("Failed to get the file size of \" %s \"\n", SEALED_keyPairHex_DATA_FILE);
+        printf("no sealed keyPairHe data need to load\n");
+        // sgx_destroy_enclave(global_eid);
+        return true;
+    }
+    uint8_t *temp_buf = (uint8_t *)malloc(fsize);
+    if (temp_buf == NULL)
+    {
+        printf("Out of memory\n");
+        // sgx_destroy_enclave(global_eid);
+        return false;
+    }
+    if (read_file_to_buf(SEALED_keyPairHex_DATA_FILE, temp_buf, fsize) == false)
+    {
+        printf("Failed to read the sealed keyPairHe data blob from \" %s \"\n");
+        free(temp_buf);
+        // sgx_destroy_enclave(global_eid);
+        return false;
+    }
+    // Unseal the sealed blob
+    sgx_status_t retval;
+    ret = t_unseal_keyPairHex_data(global_eid, &retval, temp_buf, fsize);
+    if (ret != SGX_SUCCESS)
+    {
+        printf("call t_unseal_keyPairHex_data ret error\n");
+        print_error_message(ret);
+        free(temp_buf);
+        // sgx_destroy_enclave(global_eid);
+        return false;
+    }
+    else if (retval != SGX_SUCCESS)
+    {
+        printf("call t_unseal_keyPairHex_data retval error\n");
+        print_error_message(retval);
+        free(temp_buf);
+        // sgx_destroy_enclave(global_eid);
+        return false;
+    }
+
+    free(temp_buf);
+
+    printf("Unseal keyPairHex succeeded.\n");
+    return true;
+}
+
 bool loadSealedData() {
 
     loadSealed_Vk_Data();
-    loadSealed_bList_U_Data();
+    // loadSealed_bList_U_Data();
+    loadSealed_keyPairHex_Data();
 
     return true;
 }
@@ -994,9 +1050,11 @@ int SGX_CDECL main(int argc, char *argv[])
                     handleRequest(msg, n, i, responseMsg, &responseMsgLen);
 
                     printf("responseMsg is :\n");
-                    dump_hex(responseMsg, responseMsgLen, 16);
-                    Write(i, responseMsg, responseMsgLen);
-
+                    if(responseMsgLen > 0) 
+                    {
+                        dump_hex(responseMsg, responseMsgLen, 16);
+                        Write(i, responseMsg, responseMsgLen);
+                    }
                     // memset(user_id, 0x00, sizeof(user_id));
                     // memset(file_id, 0x00, sizeof(file_id));
                     // sscanf(msg, "%s %s", user_id, file_id);
@@ -1249,17 +1307,16 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
     if (temp_sealed_buf == NULL)
     {
         printf("Out of memory\n");
-        // sgx_destroy_enclave(global_eid);
-        int len = strlen(ERRORMSG_SGX_ERROR);
+        int len = strlen(ERRORMSG_MEMORY_ERROR);
         offset = 0;
         memcpy(responseMsg + offset, "0103", 4);
         offset += 4;
         sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        memcpy(responseMsg + offset, ERRORMSG_MEMORY_ERROR, len);
         offset += len;
         (*p_responseMsgLength) = offset;
-        return -3;
+        return -2;
     }
     ret = seal_vk_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
     if (ret != SGX_SUCCESS)
@@ -1299,14 +1356,13 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         free(temp_sealed_buf);
         int len = strlen(ERRORMSG_FILE_IO_ERROR);
         offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
+        memcpy(responseMsg + offset, "0104", 4);
         offset += 4;
         sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
         memcpy(responseMsg + offset, ERRORMSG_FILE_IO_ERROR, len);
         offset += len;
         (*p_responseMsgLength) = offset;
-        return -3;
         return -2;
     }
 
@@ -1353,10 +1409,10 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     dump_hex(userId, userIdLength, 16);
 
     sgx_status_t retval;
-    sgx_status_t ret = t_user_leave(global_eid, &retval, userId, userIdLength);
+    sgx_status_t ret = t_Trusted_Setup(global_eid, &retval, userId, userIdLength);
     if (ret != SGX_SUCCESS)
     {
-        printf("Call t_user_leave failed.\n");
+        printf("Call t_Trusted_Setup failed.\n");
         int len = strlen(ERRORMSG_SGX_ERROR);
         offset = 0;
         memcpy(responseMsg + offset, "0103", 4);
@@ -1384,11 +1440,11 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     }
 
     /*
-    seal bList_U data
+    seal keyPairHex data
     */
    // Get the sealed data size
     uint32_t sealed_data_size = 0;
-    ret = get_sealed_bList_U_data_size(global_eid, &sealed_data_size);
+    ret = t_get_sealed_keyPairHex_data_size(global_eid, &sealed_data_size);
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
@@ -1421,18 +1477,18 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     if (temp_sealed_buf == NULL)
     {
         printf("Out of memory\n");
-        int len = strlen(ERRORMSG_SGX_ERROR);
+        int len = strlen(ERRORMSG_MEMORY_ERROR);
         offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
+        memcpy(responseMsg + offset, "0102", 4);
         offset += 4;
         sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        memcpy(responseMsg + offset, ERRORMSG_MEMORY_ERROR, len);
         offset += len;
         (*p_responseMsgLength) = offset;
-        return -3;
+        return -2;
     }
-    ret = seal_bList_U_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+    ret = t_seal_keyPairHex_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
@@ -1464,20 +1520,20 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
         return -3;
     }
 
-    if (write_buf_to_file(SEALED_bListU_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
+    if (write_buf_to_file(SEALED_keyPairHex_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
     {
-        std::cout << "Failed to save the sealed data blob to \"" << SEALED_bListU_DATA_FILE << "\"" << std::endl;
+        printf("Failed to save the sealed data blob to \" %s \" \n");
         free(temp_sealed_buf);
-        int len = strlen(ERRORMSG_SGX_ERROR);
+        int len = strlen(ERRORMSG_FILE_IO_ERROR);
         offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
+        memcpy(responseMsg + offset, "0104", 4);
         offset += 4;
         sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        memcpy(responseMsg + offset, ERRORMSG_FILE_IO_ERROR, len);
         offset += len;
         (*p_responseMsgLength) = offset;
-        return -3;
+        return -2;
     }
 
     free(temp_sealed_buf);

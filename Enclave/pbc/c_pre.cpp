@@ -2654,7 +2654,7 @@ sgx_status_t t_Trusted_Setup(unsigned char *pk, size_t pk_Length)
 /*
 seal and unseal g_keyPairHex
 */
-uint32_t get_sealed_keyPairHex_data_size()
+uint32_t t_get_sealed_keyPairHex_data_size()
 {
     return sgx_calc_sealed_data_size((uint32_t)strlen(aad_g_keyPairHex_mac_text), 
         (uint32_t)(sizeof(g_keyPairHex)));
