@@ -2679,7 +2679,7 @@ sgx_status_t t_seal_keyPairHex_data(uint8_t *sealed_blob, uint32_t data_size)
     if (temp_sealed_buf == NULL)
         return SGX_ERROR_OUT_OF_MEMORY;
     sgx_status_t err = sgx_seal_data((uint32_t)strlen(aad_g_keyPairHex_mac_text), 
-        (const uint8_t *)aad_g_keyPairHex_mac_text, (uint32_t)(sizeof(g_keyPairHex), (uint8_t *)data_buf, 
+        (const uint8_t *)aad_g_keyPairHex_mac_text, (uint32_t)(sizeof(g_keyPairHex)), (uint8_t *)data_buf, 
         sealed_data_size, (sgx_sealed_data_t *)temp_sealed_buf);
     if (err == SGX_SUCCESS)
     {
