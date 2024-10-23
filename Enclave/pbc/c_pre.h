@@ -34,7 +34,7 @@ typedef struct {
 typedef struct {
     uint8_t pk_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];   // 公钥 G1
     uint8_t sk_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];   // 私钥 Zr
-} KeyPair_Hex;
+} KeyPairHex;
 
 
 // 函数声明

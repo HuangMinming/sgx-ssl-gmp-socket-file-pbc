@@ -2609,40 +2609,145 @@ int c_pre_main_test() {
 /*
 generate c_pre key pair, and save pk, sk in memory
 */
-KeyPair_Hex g_keyPair_Hex;
+KeyPairHex g_keyPairHex;
+char aad_g_keyPairHex_mac_text[BUFSIZ] = "g_keyPairHex";
 sgx_status_t t_Trusted_Setup(unsigned char *pk, size_t pk_Length)
 {
     // uint8_t pk_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
     // uint8_t sk_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];
-    int pk_Hex_len = sizeof(g_keyPair_Hex.pk_Hex);
-    int sk_Hex_len = sizeof(g_keyPair_Hex.sk_Hex);
+    int pk_Hex_len = sizeof(g_keyPairHex.pk_Hex);
+    int sk_Hex_len = sizeof(g_keyPairHex.sk_Hex);
 
-    if(pk_Length < sizeof(g_keyPair_Hex.pk_Hex))
+    if(pk_Length < sizeof(g_keyPairHex.pk_Hex))
     {
         sgx_printf("t_Trusted_Setup pk_Length = %d is not enough to save pk, error\n", pk_Length);
         return SGX_ERROR_INVALID_PARAMETER;
     }
 
-    int iRet = KeyGen(g_keyPair_Hex.pk_Hex, pk_Hex_len, g_keyPair_Hex.sk_Hex, sk_Hex_len);
+    int iRet = KeyGen(g_keyPairHex.pk_Hex, pk_Hex_len, g_keyPairHex.sk_Hex, sk_Hex_len);
     if(iRet < 0)
     {
         sgx_printf("t_Trusted_Setup KeyGen error, iRet = %d\n", iRet);
         return SGX_ERROR_UNEXPECTED;
     }
-    memcpy(pk, g_keyPair_Hex.pk_Hex, pk_Hex_len);
+    memcpy(pk, g_keyPairHex.pk_Hex, pk_Hex_len);
 #ifdef PRINT_DEBUG_INFO
     sgx_printf("t_Trusted_Setup pk_Hex_len = %d, pk_Hex=\n", pk_Hex_len);
     for(int i=0;i<pk_Hex_len;) {
-        sgx_printf("%c%c ", g_keyPair_Hex.pk_Hex[i], g_keyPair_Hex.pk_Hex[i+1]);
+        sgx_printf("%c%c ", g_keyPairHex.pk_Hex[i], g_keyPairHex.pk_Hex[i+1]);
         i += 2;
     }
     sgx_printf("\n");
     sgx_printf("t_Trusted_Setup sk_Hex_len = %d, sk_Hex=\n", sk_Hex_len);
     for(int i=0;i<sk_Hex_len;) {
-        sgx_printf("%c%c ", g_keyPair_Hex.sk_Hex[i], g_keyPair_Hex.sk_Hex[i+1]);
+        sgx_printf("%c%c ", g_keyPairHex.sk_Hex[i], g_keyPairHex.sk_Hex[i+1]);
         i += 2;
     }
     sgx_printf("\n");
 #endif
     return SGX_SUCCESS;
+}
+
+
+
+/*
+seal and unseal g_keyPairHex
+*/
+uint32_t get_sealed_keyPairHex_data_size()
+{
+    return sgx_calc_sealed_data_size((uint32_t)strlen(aad_g_keyPairHex_mac_text), 
+        (uint32_t)(sizeof(g_keyPairHex));
+}
+
+sgx_status_t t_seal_keyPairHex_data(uint8_t *sealed_blob, uint32_t data_size)
+{
+    uint32_t sealed_data_size = sgx_calc_sealed_data_size((uint32_t)strlen(aad_g_keyPairHex_mac_text), 
+        (uint32_t)(sizeof(g_keyPairHex));
+    if (sealed_data_size == UINT32_MAX)
+        return SGX_ERROR_UNEXPECTED;
+    if (sealed_data_size > data_size)
+        return SGX_ERROR_INVALID_PARAMETER;
+
+    unsigned char data_buf[sizeof(g_keyPairHex)];
+
+    int offset = 0;
+    memcpy(data_buf + offset, g_keyPairHex.pk_Hex, sizeof(g_keyPairHex.pk_Hex));
+    offset += sizeof(g_keyPairHex.pk_Hex);
+    memcpy(data_buf + offset, g_keyPairHex.sk_Hex, sizeof(g_keyPairHex.sk_Hex));
+    uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
+    if (temp_sealed_buf == NULL)
+        return SGX_ERROR_OUT_OF_MEMORY;
+    sgx_status_t err = sgx_seal_data((uint32_t)strlen(aad_vk_mac_text), 
+        (const uint8_t *)aad_vk_mac_text, (uint32_t)(sizeof(g_keyPairHex), (uint8_t *)data_buf, 
+        sealed_data_size, (sgx_sealed_data_t *)temp_sealed_buf);
+    if (err == SGX_SUCCESS)
+    {
+        // Copy the sealed data to outside buffer
+        memcpy(sealed_blob, temp_sealed_buf, sealed_data_size);
+    }
+
+    free(temp_sealed_buf);
+    return err;
+}
+
+
+sgx_status_t t_unseal_keyPairHex_data(const uint8_t *sealed_blob, size_t data_size)
+{
+    uint32_t mac_text_len = sgx_get_add_mac_txt_len((const sgx_sealed_data_t *)sealed_blob);
+    uint32_t decrypt_data_len = sgx_get_encrypt_txt_len((const sgx_sealed_data_t *)sealed_blob);
+    if (mac_text_len == UINT32_MAX || decrypt_data_len == UINT32_MAX)
+        return SGX_ERROR_UNEXPECTED;
+    if (mac_text_len > data_size || decrypt_data_len > data_size)
+        return SGX_ERROR_INVALID_PARAMETER;
+
+    uint8_t *de_mac_text = (uint8_t *)malloc(mac_text_len);
+    if (de_mac_text == NULL)
+        return SGX_ERROR_OUT_OF_MEMORY;
+    uint8_t *decrypt_data = (uint8_t *)malloc(decrypt_data_len);
+    if (decrypt_data == NULL)
+    {
+        free(de_mac_text);
+        return SGX_ERROR_OUT_OF_MEMORY;
+    }
+
+    sgx_status_t ret = sgx_unseal_data((const sgx_sealed_data_t *)sealed_blob, de_mac_text, 
+        &mac_text_len, decrypt_data, &decrypt_data_len);
+    if (ret != SGX_SUCCESS)
+    {
+        free(de_mac_text);
+        free(decrypt_data);
+        return ret;
+    }
+
+    if (memcmp(de_mac_text, aad_g_keyPairHex_mac_text, strlen(aad_g_keyPairHex_mac_text)))
+    {
+        ret = SGX_ERROR_UNEXPECTED;
+    }
+
+    if(decrypt_data_len < (sizeof(g_keyPairHex))
+    {
+        return SGX_ERROR_UNEXPECTED;
+    } 
+    int offset = 0;
+    memcpy(g_keyPairHex.pk_Hex, decrypt_data + offset, sizeof(g_keyPairHex.pk_Hex));
+    offset += g_keyPairHex.pk_Hex;
+    memcpy(g_keyPairHex.sk_Hex, decrypt_data +offset, sizeof(g_keyPairHex.sk_Hex));
+    offset += g_keyPairHex.sk_Hex;
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("t_unseal_keyPairHex_data pk_Hex_len = %d, pk_Hex=\n", sizeof(g_keyPairHex.pk_Hex));
+    for(int i=0;i<sizeof(g_keyPairHex.pk_Hex);) {
+        sgx_printf("%c%c ", g_keyPairHex.pk_Hex[i], g_keyPairHex.pk_Hex[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+    sgx_printf("t_unseal_keyPairHex_data sk_Hex_len = %d, sk_Hex=\n", sizeof(g_keyPairHex.sk_Hex));
+    for(int i=0;i<sizeof(g_keyPairHex.sk_Hex);) {
+        sgx_printf("%c%c ", g_keyPairHex.sk_Hex[i], g_keyPairHex.sk_Hex[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+#endif
+    free(de_mac_text);
+    free(decrypt_data);
+    return ret;
 }
