@@ -2605,3 +2605,44 @@ int c_pre_main_test() {
 
     return 0;
 }
+
+/*
+generate c_pre key pair, and save pk, sk in memory
+*/
+KeyPair_Hex g_keyPair_Hex;
+sgx_status_t t_Trusted_Setup(unsigned char *pk, size_t pk_Length)
+{
+    // uint8_t pk_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    // uint8_t sk_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];
+    int pk_Hex_len = sizeof(g_keyPair_Hex.pk_Hex);
+    int sk_Hex_len = sizeof(g_keyPair_Hex.sk_Hex);
+
+    if(pk_Length < sizeof(g_keyPair_Hex.pk_Hex))
+    {
+        sgx_printf("t_Trusted_Setup pk_Length = %d is not enough to save pk, error\n", pk_Length);
+        return -1;
+    }
+
+    int iRet = KeyGen(g_keyPair_Hex.pk_Hex, pk_Hex_len, g_keyPair_Hex.sk_Hex, sk_Hex_len);
+    if(iRet < 0)
+    {
+        sgx_printf("t_Trusted_Setup KeyGen error, iRet = %d\n", iRet);
+        return iRet;
+    }
+    memcpy(pk, g_keyPair_Hex.pk_Hex, pk_Hex_len);
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("t_Trusted_Setup pk_Hex_len = %d, pk_Hex=\n", pk_Hex_len);
+    for(int i=0;i<g_keyPair_Hex.pk_Hex_len;) {
+        sgx_printf("%c%c ", g_keyPair_Hex.pk_Hex[i], g_keyPair_Hex.pk_Hex[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+    sgx_printf("t_Trusted_Setup sk_Hex_len = %d, sk_Hex=\n", sk_Hex_len);
+    for(int i=0;i<sk_Hex_len;) {
+        sgx_printf("%c%c ", g_keyPair_Hex.sk_Hex[i], g_keyPair_Hex.sk_Hex[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+#endif
+    return 0;
+}

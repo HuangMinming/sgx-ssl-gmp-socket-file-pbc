@@ -31,6 +31,11 @@ typedef struct {
     element_t c4;   // 密文的第四部分  G1
 } CipherText;
 
+typedef struct {
+    uint8_t pk_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];   // 公钥 G1
+    uint8_t sk_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];   // 私钥 Zr
+} KeyPair_Hex;
+
 
 // 函数声明
 

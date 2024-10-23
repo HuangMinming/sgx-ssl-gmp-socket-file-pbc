@@ -1099,21 +1099,9 @@ int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd,
     else if(memcmp(requestCode, "0002", 4) == 0) {
         memset(responseBody, 0x00, sizeof(responseBody));
         memset(responseMsg, 0x00, sizeof(responseMsg));
-        iret = handleRequest0002(requestBody, requestBodyLength, responseBody, &responseBodyLength);
-        if(iret < 0) {
-            offset = 0;
-            memcpy(responseMsg + offset, "0101", 4);
-            offset += 4;
-            sprintf((char *)(responseMsg + offset), "%04d", responseBodyLength);
-            offset += 4;
-            memcpy(responseMsg + offset, responseBody, responseBodyLength);
-            offset += responseBodyLength;
-            (*p_responseMsgLen) = offset;
-        } 
-        else {
-            memcpy(responseMsg, "00000000", 8);
-            (*p_responseMsgLen) = 8;
-        }
+        iret = handleRequest0002(requestBody, requestBodyLength, 
+            responseMsg, p_responseMsgLen);
+        
         // printf("responseMsg is : %s\n", responseMsg);
         // Write(fd, responseMsg, offset);
     } 
@@ -1323,13 +1311,15 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
     }
 
     free(temp_sealed_buf);
-    // sgx_destroy_enclave(global_eid);
+    // set successful respond
+    memcpy(responseMsg, "00000000", 8);
+    (*p_responseMsgLen) = 8;
     printf("Sealing data succeeded.\n");
     return 0;
 }
 
 int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
-    unsigned char *responseBody, size_t * responseBodyLength) {
+    unsigned char *responseMsg, size_t * p_responseMsgLength) {
     
     /*
     input:
@@ -1346,8 +1336,15 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
    if(userIdLength <= 0)
     {
         printf("error userId length, userId is %d \n", userIdLength);
-        *responseBodyLength = strlen(ERRORMSG_REQUEST_ERROR);
-        memcpy(responseBody, ERRORMSG_REQUEST_ERROR, *responseBodyLength);
+        int len = strlen(ERRORMSG_REQUEST_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0101", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_REQUEST_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
         return -1;
     }
     memcpy(userId, requestBody + 4, userIdLength);
