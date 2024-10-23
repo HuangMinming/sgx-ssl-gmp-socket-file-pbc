@@ -1027,11 +1027,13 @@ int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd,
     size_t requestBodyLength, responseBodyLength;
     memset(requestCode, 0x00, sizeof(requestCode));
     memset(requestBodyLengthStr, 0x00, sizeof(requestBodyLengthStr));
+    int offset = 0;
     if(requestMsgLen < 8) {
         char errMsg[BUFSIZ];
         responseBodyLength = sprintf(errMsg, "error request msg, len is %d, less than 4.", requestMsgLen);
         memset(responseMsg, 0x00, sizeof(responseMsg));
-        memcpy(responseMsg, "0001", 4);
+        offset = 0;
+        memcpy(responseMsg + offset, "0001", 4);
         offset += 4;
         sprintf((char *)(responseMsg + offset), "%04d", responseBodyLength);
         offset += 4;
@@ -1053,7 +1055,8 @@ int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd,
             requestBodyLengthStr,
             requestBodyLength);
         memset(responseMsg, 0x00, sizeof(responseMsg));
-        memcpy(responseMsg, "0002", 4);
+        offset = 0;
+        memcpy(responseMsg + offset, "0002", 4);
         offset += 4;
         sprintf((char *)(responseMsg + offset), "%04d", responseBodyLength);
         offset += 4;
@@ -1070,7 +1073,6 @@ int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd,
     memcpy(requestBody, requestMsg + 4 + 4, requestBodyLength);
     printf("request code: %s\n", requestCode);
     int iret = -1;
-    int offset = 0;
     if(memcmp(requestCode, "0001", 4) == 0) {
         // memset(responseBody, 0x00, sizeof(responseBody));
         memset(responseMsg, 0x00, sizeof(responseMsg));
@@ -1099,7 +1101,8 @@ int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd,
         memset(responseMsg, 0x00, sizeof(responseMsg));
         iret = handleRequest0002(requestBody, requestBodyLength, responseBody, &responseBodyLength);
         if(iret < 0) {
-            memcpy(responseMsg, "0101", 4);
+            offset = 0;
+            memcpy(responseMsg + offset, "0101", 4);
             offset += 4;
             sprintf((char *)(responseMsg + offset), "%04d", responseBodyLength);
             offset += 4;
@@ -1116,9 +1119,10 @@ int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd,
     } 
     else {
         char errMsg[BUFSIZ];
-        responseBodyLength = sprintf("error request msg, unknown request code: %s\n", requestCode);
+        responseBodyLength = sprintf(errMsg, "error request msg, unknown request code: %s\n", requestCode);
         memset(responseMsg, 0x00, sizeof(responseMsg));
-        memcpy(responseMsg, "0003", 4);
+        offset = 0;
+        memcpy(responseMsg + offset, "0003", 4);
         offset += 4;
         sprintf((char *)(responseMsg + offset), "%04d", responseBodyLength);
         offset += 4;
@@ -1155,11 +1159,11 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         offset = 0;
         memcpy(responseMsg + offset, "0101", 4);
         offset += 4;
-        sprintf(responseMsg + offset, "%04d", len);
+        sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
         memcpy(responseMsg + offset, ERRORMSG_REQUEST_ERROR, len);
         offset += len;
-        (*p_responseBodyLength) = offset;
+        (*p_responseMsgLength) = offset;
         return -1;
     }
     memcpy(userId, requestBody + 4, userIdLength);
@@ -1174,11 +1178,11 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         offset = 0;
         memcpy(responseMsg + offset, "0101", 4);
         offset += 4;
-        sprintf(responseMsg + offset, "%04d", len);
+        sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
         memcpy(responseMsg + offset, ERRORMSG_REQUEST_ERROR, len);
         offset += len;
-        (*p_responseBodyLength) = offset;
+        (*p_responseMsgLength) = offset;
         return -1;
     }
     memcpy(vk_A, requestBody + 4 + userIdLength + 4, vk_A_Length);
@@ -1195,11 +1199,11 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         offset = 0;
         memcpy(responseMsg + offset, "0102", 4);
         offset += 4;
-        sprintf(responseMsg + offset, "%04d", len);
+        sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
         offset += len;
-        (*p_responseBodyLength) = offset;
+        (*p_responseMsgLength) = offset;
         return -2;
     }
     else if (retval != SGX_SUCCESS)
@@ -1209,11 +1213,11 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         offset = 0;
         memcpy(responseMsg + offset, "0102", 4);
         offset += 4;
-        sprintf(responseMsg + offset, "%04d", len);
+        sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
         offset += len;
-        (*p_responseBodyLength) = offset;
+        (*p_responseMsgLength) = offset;
         return -2;
     }
 
@@ -1230,11 +1234,11 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         offset = 0;
         memcpy(responseMsg + offset, "0103", 4);
         offset += 4;
-        sprintf(responseMsg + offset, "%04d", len);
+        sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
         offset += len;
-        (*p_responseBodyLength) = offset;
+        (*p_responseMsgLength) = offset;
         return -3;
     }
     else if (sealed_data_size == UINT32_MAX)
@@ -1245,11 +1249,11 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         offset = 0;
         memcpy(responseMsg + offset, "0103", 4);
         offset += 4;
-        sprintf(responseMsg + offset, "%04d", len);
+        sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
         offset += len;
-        (*p_responseBodyLength) = offset;
+        (*p_responseMsgLength) = offset;
         return -3;
     }
 
@@ -1262,11 +1266,11 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         offset = 0;
         memcpy(responseMsg + offset, "0103", 4);
         offset += 4;
-        sprintf(responseMsg + offset, "%04d", len);
+        sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
         offset += len;
-        (*p_responseBodyLength) = offset;
+        (*p_responseMsgLength) = offset;
         return -3;
     }
     ret = seal_vk_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
@@ -1278,11 +1282,11 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         offset = 0;
         memcpy(responseMsg + offset, "0103", 4);
         offset += 4;
-        sprintf(responseMsg + offset, "%04d", len);
+        sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
         offset += len;
-        (*p_responseBodyLength) = offset;
+        (*p_responseMsgLength) = offset;
         return -3;
     }
     else if (retval != SGX_SUCCESS)
@@ -1293,11 +1297,11 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         offset = 0;
         memcpy(responseMsg + offset, "0103", 4);
         offset += 4;
-        sprintf(responseMsg + offset, "%04d", len);
+        sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
         offset += len;
-        (*p_responseBodyLength) = offset;
+        (*p_responseMsgLength) = offset;
         return -3;
     }
 
@@ -1309,11 +1313,11 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         offset = 0;
         memcpy(responseMsg + offset, "0103", 4);
         offset += 4;
-        sprintf(responseMsg + offset, "%04d", len);
+        sprintf((char *)(responseMsg + offset), "%04d", len);
         offset += 4;
         memcpy(responseMsg + offset, ERRORMSG_FILE_IO_ERROR, len);
         offset += len;
-        (*p_responseBodyLength) = offset;
+        (*p_responseMsgLength) = offset;
         return -3;
         return -2;
     }
