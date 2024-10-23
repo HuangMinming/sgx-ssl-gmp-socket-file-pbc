@@ -55,6 +55,7 @@
 
 # define ERRORMSG_REQUEST_ERROR   "request error"
 # define ERRORMSG_SGX_ERROR   "call sgx error"
+# define ERRORMSG_FILE_IO_ERROR   "file io error"
 
 extern sgx_enclave_id_t global_eid;    /* global enclave id */
 
