@@ -2632,7 +2632,7 @@ sgx_status_t t_Trusted_Setup(unsigned char *pk, size_t pk_Length)
     memcpy(pk, g_keyPair_Hex.pk_Hex, pk_Hex_len);
 #ifdef PRINT_DEBUG_INFO
     sgx_printf("t_Trusted_Setup pk_Hex_len = %d, pk_Hex=\n", pk_Hex_len);
-    for(int i=0;i<g_keyPair_Hex.pk_Hex_len;) {
+    for(int i=0;i<pk_Hex_len;) {
         sgx_printf("%c%c ", g_keyPair_Hex.pk_Hex[i], g_keyPair_Hex.pk_Hex[i+1]);
         i += 2;
     }
