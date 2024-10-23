@@ -1313,7 +1313,7 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
     free(temp_sealed_buf);
     // set successful respond
     memcpy(responseMsg, "00000000", 8);
-    (*p_responseMsgLen) = 8;
+    (*p_responseMsgLength) = 8;
     printf("Sealing data succeeded.\n");
     return 0;
 }
@@ -1329,6 +1329,7 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
    size_t userIdLength;
    char userIdLengthStr[5];
    unsigned char userId[20];
+   int offset = 0;
 
    memset(userIdLengthStr, 0x00, sizeof(userIdLengthStr));
    memcpy(userIdLengthStr, requestBody, 4);
@@ -1356,15 +1357,29 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_user_leave failed.\n");
-        *responseBodyLength = strlen(ERRORMSG_REQUEST_ERROR);
-        memcpy(responseBody, ERRORMSG_REQUEST_ERROR, *responseBodyLength);
-        return -2; // Test failed
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -2;
     }
     else if (retval != SGX_SUCCESS)
     {
         print_error_message(retval);
-        *responseBodyLength = strlen(ERRORMSG_SGX_ERROR);
-        memcpy(responseBody, ERRORMSG_SGX_ERROR, *responseBodyLength);
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
         return -2;
     }
 
@@ -1377,62 +1392,98 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
-        // sgx_destroy_enclave(global_eid);
-        *responseBodyLength = strlen(ERRORMSG_SGX_ERROR);
-        memcpy(responseBody, ERRORMSG_SGX_ERROR, *responseBodyLength);
-        return -2;
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -3;
     }
     else if (sealed_data_size == UINT32_MAX)
     {
-        // sgx_destroy_enclave(global_eid);
-        *responseBodyLength = strlen(ERRORMSG_SGX_ERROR);
-        memcpy(responseBody, ERRORMSG_SGX_ERROR, *responseBodyLength);
-        return -2;
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -3;
     }
 
     uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
     if (temp_sealed_buf == NULL)
     {
-        std::cout << "Out of memory" << std::endl;
-        // sgx_destroy_enclave(global_eid);
-        *responseBodyLength = strlen(ERRORMSG_SGX_ERROR);
-        memcpy(responseBody, ERRORMSG_SGX_ERROR, *responseBodyLength);
-        return -2;
+        printf("Out of memory\n");
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -3;
     }
     ret = seal_bList_U_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
         free(temp_sealed_buf);
-        // sgx_destroy_enclave(global_eid);
-        *responseBodyLength = strlen(ERRORMSG_SGX_ERROR);
-        memcpy(responseBody, ERRORMSG_SGX_ERROR, *responseBodyLength);
-        return -2;
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -3;
     }
     else if (retval != SGX_SUCCESS)
     {
         print_error_message(retval);
         free(temp_sealed_buf);
-        // sgx_destroy_enclave(global_eid);
-        *responseBodyLength = strlen(ERRORMSG_SGX_ERROR);
-        memcpy(responseBody, ERRORMSG_SGX_ERROR, *responseBodyLength);
-
-        return -2;
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -3;
     }
 
     if (write_buf_to_file(SEALED_bListU_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
     {
         std::cout << "Failed to save the sealed data blob to \"" << SEALED_bListU_DATA_FILE << "\"" << std::endl;
         free(temp_sealed_buf);
-        // sgx_destroy_enclave(global_eid);
-        *responseBodyLength = strlen(ERRORMSG_SGX_ERROR);
-        memcpy(responseBody, ERRORMSG_SGX_ERROR, *responseBodyLength);
-        return -2;
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -3;
     }
 
     free(temp_sealed_buf);
     // sgx_destroy_enclave(global_eid);
-    std::cout << "Sealing data succeeded." << std::endl;
+    // todo: add return msg
+    printf("Sealing data succeeded.\n");
     return 0;
 }
 
