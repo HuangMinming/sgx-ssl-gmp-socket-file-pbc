@@ -2620,14 +2620,14 @@ sgx_status_t t_Trusted_Setup(unsigned char *pk, size_t pk_Length)
     if(pk_Length < sizeof(g_keyPair_Hex.pk_Hex))
     {
         sgx_printf("t_Trusted_Setup pk_Length = %d is not enough to save pk, error\n", pk_Length);
-        return -1;
+        return SGX_ERROR_INVALID_PARAMETER;
     }
 
     int iRet = KeyGen(g_keyPair_Hex.pk_Hex, pk_Hex_len, g_keyPair_Hex.sk_Hex, sk_Hex_len);
     if(iRet < 0)
     {
         sgx_printf("t_Trusted_Setup KeyGen error, iRet = %d\n", iRet);
-        return iRet;
+        return SGX_ERROR_UNEXPECTED;
     }
     memcpy(pk, g_keyPair_Hex.pk_Hex, pk_Hex_len);
 #ifdef PRINT_DEBUG_INFO
@@ -2644,5 +2644,5 @@ sgx_status_t t_Trusted_Setup(unsigned char *pk, size_t pk_Length)
     }
     sgx_printf("\n");
 #endif
-    return 0;
+    return SGX_SUCCESS;
 }
