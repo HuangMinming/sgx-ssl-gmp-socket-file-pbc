@@ -132,7 +132,7 @@ void ecall_pointer_size(void *ptr, size_t len)
 char encrypt_data[BUFSIZ] = "Data to encrypt";
 char aad_mac_text[BUFSIZ] = "aad mac text";
 
-vk_A_t g_vk_a;
+vk_A_t g_vk_A;
 char aad_vk_mac_text[BUFSIZ] = "vk";
 
 bList_U_t g_bList_U;
