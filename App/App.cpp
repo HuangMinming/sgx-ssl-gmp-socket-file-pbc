@@ -812,7 +812,7 @@ bool loadSealed_Vk_Data() {
 
     // Unseal the sealed blob
     sgx_status_t retval;
-    ret = unseal_vk_data(global_eid, &retval, temp_buf, fsize);
+    ret = unseal_vk_A_data(global_eid, &retval, temp_buf, fsize);
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
@@ -1320,7 +1320,7 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         (*p_responseMsgLength) = offset;
         return -2;
     }
-    ret = t_seal_vk_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+    ret = t_seal_vk_A_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
