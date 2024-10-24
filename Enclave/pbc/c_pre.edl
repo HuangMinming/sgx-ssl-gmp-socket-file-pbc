@@ -10,7 +10,7 @@ enclave {
     trusted {
         public int c_pre_main_test();
 
-        public int t_Trusted_Setup([out, size=pk_Length] unsigned char *pk, size_t pk_Length);
+        public sgx_status_t t_Trusted_Setup([out, size=pk_Length] unsigned char *pk, size_t pk_Length);
         public uint32_t t_get_sealed_keyPairHex_data_size();
         public sgx_status_t t_seal_keyPairHex_data([out, size=data_size] uint8_t* sealed_blob, uint32_t data_size);
         public sgx_status_t t_unseal_keyPairHex_data([in, size=data_size] const uint8_t *sealed_blob, size_t data_size);
