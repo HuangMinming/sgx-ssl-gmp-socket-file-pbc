@@ -71,7 +71,7 @@
 
 #define SEALED_DATA_FILE "sealed_data_blob.txt"
 
-#define SEALED_VK_DATA_FILE "sealed_vk_data_blob.txt"
+#define SEALED_VK_DATA_FILE "sealed_vk_A_data_blob.txt"
 #define SEALED_bListU_DATA_FILE "sealed_bList_U_data_blob.txt"
 #define SEALED_keyPairHex_DATA_FILE "sealed_keyPairHex_data_blob.txt"
 
@@ -1233,7 +1233,9 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
     }
     memcpy(vk_A, requestBody + 4 + userIdLength + 4, vk_A_Length);
 
+    printf("userIdLength is %d, userId is :\n", userIdLength);
     dump_hex(userId, userIdLength, 16);
+    printf("vk_A_Length is %d, vk_A is :\n", vk_A_Length);
     dump_hex(vk_A, vk_A_Length, 16);
 
     sgx_status_t retval;

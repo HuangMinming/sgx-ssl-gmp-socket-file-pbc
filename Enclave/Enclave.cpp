@@ -52,7 +52,7 @@
 
 #define ADD_ENTROPY_SIZE 32
 
-struct vk_t {
+struct vk_A_t {
         unsigned char vk_A[BUF_SIZE];
         size_t vk_A_Length;
 };
@@ -132,7 +132,7 @@ void ecall_pointer_size(void *ptr, size_t len)
 char encrypt_data[BUFSIZ] = "Data to encrypt";
 char aad_mac_text[BUFSIZ] = "aad mac text";
 
-vk_t g_vk;
+vk_A_t g_vk_a;
 char aad_vk_mac_text[BUFSIZ] = "vk";
 
 bList_U_t g_bList_U;
@@ -206,41 +206,41 @@ sgx_status_t unseal_data(const uint8_t *sealed_blob, size_t data_size)
 sgx_status_t t_Admin_Setting(const unsigned char *vk_A, size_t vk_A_Length)
 {
     
-    memset(g_vk.vk_A, 0x00, sizeof(g_vk.vk_A));
+    memset(g_vk_A.vk_A, 0x00, sizeof(g_vk_A.vk_A));
 
-    memcpy(g_vk.vk_A, vk_A, vk_A_Length);
-    g_vk.vk_A_Length = vk_A_Length;
+    memcpy(g_vk_A.vk_A, vk_A, vk_A_Length);
+    g_vk_A.vk_A_Length = vk_A_Length;
 
     return SGX_SUCCESS;
 
 }
 
-uint32_t get_sealed_vk_data_size()
+uint32_t t_get_sealed_vk_A_data_size()
 {
-    return sgx_calc_sealed_data_size((uint32_t)strlen(aad_vk_mac_text), (uint32_t)(sizeof(g_vk.vk_A) + 4));
+    return sgx_calc_sealed_data_size((uint32_t)strlen(aad_vk_mac_text), (uint32_t)(sizeof(g_vk_A.vk_A) + 4));
 }
 
-sgx_status_t seal_vk_data(uint8_t *sealed_blob, uint32_t data_size)
+sgx_status_t t_seal_vk_A_data(uint8_t *sealed_blob, uint32_t data_size)
 {
-    uint32_t sealed_data_size = sgx_calc_sealed_data_size((uint32_t)strlen(aad_vk_mac_text), (uint32_t)(sizeof(g_vk.vk_A) + 4));
+    uint32_t sealed_data_size = sgx_calc_sealed_data_size((uint32_t)strlen(aad_vk_mac_text), (uint32_t)(sizeof(g_vk_A.vk_A) + 4));
     if (sealed_data_size == UINT32_MAX)
         return SGX_ERROR_UNEXPECTED;
     if (sealed_data_size > data_size)
         return SGX_ERROR_INVALID_PARAMETER;
 
-    unsigned char data_buf[sizeof(g_vk.vk_A) + 4];
+    unsigned char data_buf[sizeof(g_vk_A.vk_A) + 4];
     char vk_A_LengthStr[5];
     memset(data_buf, 0x00, sizeof(data_buf));
     memset(vk_A_LengthStr, 0x00, sizeof(vk_A_LengthStr));
-    sprintf_s(vk_A_LengthStr, 5, "%04d", g_vk.vk_A_Length);
+    sprintf_s(vk_A_LengthStr, 5, "%04d", g_vk_A.vk_A_Length);
 
-    memcpy(data_buf, g_vk.vk_A, sizeof(g_vk.vk_A));
-    memcpy(data_buf + sizeof(g_vk.vk_A), vk_A_LengthStr, 4);
+    memcpy(data_buf, g_vk_A.vk_A, sizeof(g_vk_A.vk_A));
+    memcpy(data_buf + sizeof(g_vk_A.vk_A), vk_A_LengthStr, 4);
     uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
     if (temp_sealed_buf == NULL)
         return SGX_ERROR_OUT_OF_MEMORY;
     sgx_status_t err = sgx_seal_data((uint32_t)strlen(aad_vk_mac_text), 
-        (const uint8_t *)aad_vk_mac_text, (uint32_t)(sizeof(g_vk.vk_A) + 4), (uint8_t *)data_buf, 
+        (const uint8_t *)aad_vk_mac_text, (uint32_t)(sizeof(g_vk_A.vk_A) + 4), (uint8_t *)data_buf, 
         sealed_data_size, (sgx_sealed_data_t *)temp_sealed_buf);
     if (err == SGX_SUCCESS)
     {
@@ -253,7 +253,7 @@ sgx_status_t seal_vk_data(uint8_t *sealed_blob, uint32_t data_size)
 }
 
 
-sgx_status_t unseal_vk_data(const uint8_t *sealed_blob, size_t data_size)
+sgx_status_t t_unseal_vk_A_data(const uint8_t *sealed_blob, size_t data_size)
 {
     uint32_t mac_text_len = sgx_get_add_mac_txt_len((const sgx_sealed_data_t *)sealed_blob);
     uint32_t decrypt_data_len = sgx_get_encrypt_txt_len((const sgx_sealed_data_t *)sealed_blob);
@@ -286,7 +286,7 @@ sgx_status_t unseal_vk_data(const uint8_t *sealed_blob, size_t data_size)
         ret = SGX_ERROR_UNEXPECTED;
     }
 
-    if(decrypt_data_len < (sizeof(g_vk.vk_A) + 4))
+    if(decrypt_data_len < (sizeof(g_vk_A.vk_A) + 4))
     {
         return SGX_ERROR_UNEXPECTED;
     }
@@ -294,14 +294,14 @@ sgx_status_t unseal_vk_data(const uint8_t *sealed_blob, size_t data_size)
     char vk_A_LengthStr[5];
     memset(vk_A_LengthStr, 0x00, sizeof(vk_A_LengthStr));
 
-    memcpy(g_vk.vk_A, decrypt_data, sizeof(g_vk.vk_A));
-    memcpy(vk_A_LengthStr, decrypt_data + sizeof(g_vk.vk_A), 4);
+    memcpy(g_vk_A.vk_A, decrypt_data, sizeof(g_vk_A.vk_A));
+    memcpy(vk_A_LengthStr, decrypt_data + sizeof(g_vk_A.vk_A), 4);
 
-    g_vk.vk_A_Length = atoi(vk_A_LengthStr);
+    g_vk_A.vk_A_Length = atoi(vk_A_LengthStr);
 
-    sgx_printf("g_vk is: %d\n", g_vk.vk_A_Length);
-    for(int i=0;i<g_vk.vk_A_Length;i++) {
-        sgx_printf("%c", g_vk.vk_A[i]);
+    sgx_printf("g_vk_A is: %d\n", g_vk_A.vk_A_Length);
+    for(int i=0;i<g_vk_A.vk_A_Length;i++) {
+        sgx_printf("%c", g_vk_A.vk_A[i]);
     }
     sgx_printf("\n");
 
