@@ -73,11 +73,12 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
 int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     unsigned char *responseBody, size_t * responseBodyLength);
 
-// the same as pre.h
+// the same as pre.h c_pre.h
 #define ZR_ELEMENT_LENGTH_IN_BYTES 20
 #define G1_ELEMENT_LENGTH_IN_BYTES 128
 #define G2_ELEMENT_LENGTH_IN_BYTES 128
 #define GT_ELEMENT_LENGTH_IN_BYTES 128
+#define SHA256_DIGEST_LENGTH_32 32
 
 typedef struct _pk_a_t{
     unsigned char Z_a1[GT_ELEMENT_LENGTH_IN_BYTES];

@@ -1411,7 +1411,8 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     dump_hex(userId, userIdLength, 16);
 
     sgx_status_t retval;
-    sgx_status_t ret = t_Trusted_Setup(global_eid, &retval, userId, userIdLength);
+    unsigned char ek_TEE[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    sgx_status_t ret = t_Trusted_Setup(global_eid, &retval, ek_TEE, sizeof(ek_TEE));
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_Trusted_Setup failed.\n");
@@ -1540,7 +1541,18 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
 
     free(temp_sealed_buf);
     // sgx_destroy_enclave(global_eid);
-    // todo: add return msg
+    // add return msg
+    offset = 0;
+    memcpy(responseMsg + offset, "0000", 4);
+    offset += 4;
+    sprintf((char *)(responseMsg + offset), "%04d", (sizeof(ek_TEE) + 4));
+    offset += 4;
+    sprintf((char *)(responseMsg + offset), "%04d", sizeof(ek_TEE));
+    offset += 4;
+    memcpy(responseMsg + offset, ek_TEE, sizeof(ek_TEE));
+    offset += len;
+    (*p_responseMsgLength) = offset;
+
     printf("Sealing data succeeded.\n");
     return 0;
 }
