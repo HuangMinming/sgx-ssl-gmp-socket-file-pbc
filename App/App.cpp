@@ -812,7 +812,7 @@ bool loadSealed_Vk_Data() {
 
     // Unseal the sealed blob
     sgx_status_t retval;
-    ret = unseal_vk_A_data(global_eid, &retval, temp_buf, fsize);
+    ret = t_unseal_vk_A_data(global_eid, &retval, temp_buf, fsize);
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
