@@ -1550,7 +1550,7 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     sprintf((char *)(responseMsg + offset), "%04d", sizeof(ek_TEE));
     offset += 4;
     memcpy(responseMsg + offset, ek_TEE, sizeof(ek_TEE));
-    offset += len;
+    offset += sizeof(ek_TEE);
     (*p_responseMsgLength) = offset;
 
     printf("Sealing data succeeded.\n");
