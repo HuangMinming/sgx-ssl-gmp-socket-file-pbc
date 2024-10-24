@@ -1274,7 +1274,7 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
     */
    // Get the sealed data size
     uint32_t sealed_data_size = 0;
-    ret = get_sealed_vk_data_size(global_eid, &sealed_data_size);
+    ret = t_get_sealed_vk_data_size(global_eid, &sealed_data_size);
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
@@ -1320,7 +1320,7 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         (*p_responseMsgLength) = offset;
         return -2;
     }
-    ret = seal_vk_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+    ret = t_seal_vk_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
