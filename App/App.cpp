@@ -1641,11 +1641,9 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
 
     printf("userIdLength is %d, userId is :\n", userIdLength);
     dump_hex(userId, userIdLength, 16);
-    printf("vk_A_Length is %d, vk_A is :\n", vk_A_Length);
-    dump_hex(vk_A, vk_A_Length, 16);
 
     sgx_status_t retval;
-    sgx_status_t ret = t_Admin_Setting(global_eid, &retval, vk_A, vk_A_Length);
+    sgx_status_t ret = t_Admin_Setting(global_eid, &retval, userId, userIdLength);
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_Admin_Setting failed.\n");
