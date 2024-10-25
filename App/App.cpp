@@ -1078,6 +1078,21 @@ int SGX_CDECL main(int argc, char *argv[])
     // end ====
 }
 
+
+int packResp(unsigned char *code, size_t codeLen, 
+    unsigned char *msg, size_t msgLen,
+    unsigned char *responseMsg, size_t * p_responseMsgLength) {
+    int offset = 0;
+    memcpy(responseMsg + offset, code, codeLen);
+    offset += codeLen;
+    sprintf((char *)(responseMsg + offset), "%04d", msgLen);
+    offset += 4;
+    memcpy(responseMsg + offset, msg, msgLen);
+    offset += msgLen;
+    (*p_responseMsgLength) = offset;
+    return 0;
+}
+
 int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd, 
         unsigned char *responseMsg, size_t *p_responseMsgLen) {
     unsigned char requestCode[5];
@@ -1162,6 +1177,13 @@ int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd,
         
         // printf("responseMsg is : %s\n", responseMsg);
         // Write(fd, responseMsg, offset);
+    } 
+    else if(memcmp(requestCode, "1001", 4) == 0) {
+        memset(responseBody, 0x00, sizeof(responseBody));
+        memset(responseMsg, 0x00, sizeof(responseMsg));
+        iret = handleRequest0002(requestBody, requestBodyLength, 
+            responseMsg, p_responseMsgLen);
+        
     } 
     else {
         char errMsg[BUFSIZ];
@@ -1557,19 +1579,6 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     return 0;
 }
 
-int packResp(unsigned char *code, size_t codeLen, 
-    unsigned char *msg, size_t msgLen,
-    unsigned char *responseMsg, size_t * p_responseMsgLength) {
-    int offset = 0;
-    memcpy(responseMsg + offset, code, codeLen);
-    offset += codeLen;
-    sprintf((char *)(responseMsg + offset), "%04d", msgLen);
-    offset += 4;
-    memcpy(responseMsg + offset, msg, msgLen);
-    offset += msgLen;
-    (*p_responseMsgLength) = offset;
-    return 0;
-}
 
 int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     unsigned char *responseMsg, size_t * p_responseMsgLength) {
@@ -1644,6 +1653,263 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     printf("userIdLength is %d, userId is :\n", userIdLength);
     dump_hex(userId, userIdLength, 16);
 
+    sgx_status_t retval;
+    sgx_status_t ret = t_Admin_Setting(global_eid, &retval, userId, userIdLength);
+    if (ret != SGX_SUCCESS)
+    {
+        printf("Call t_Admin_Setting failed.\n");
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0102", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -2;
+    }
+    else if (retval != SGX_SUCCESS)
+    {
+        print_error_message(retval);
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0102", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -2;
+    }
+
+    /*
+    seal vk_A data
+    */
+   // Get the sealed data size
+    uint32_t sealed_data_size = 0;
+    ret = t_get_sealed_vk_A_data_size(global_eid, &sealed_data_size);
+    if (ret != SGX_SUCCESS)
+    {
+        print_error_message(ret);
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -3;
+    }
+    else if (sealed_data_size == UINT32_MAX)
+    {
+        // sgx_destroy_enclave(global_eid);
+        printf("sealed_data_size equal to %ld.\n", UINT32_MAX);
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -3;
+    }
+
+    uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
+    if (temp_sealed_buf == NULL)
+    {
+        printf("Out of memory\n");
+        int len = strlen(ERRORMSG_MEMORY_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_MEMORY_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -2;
+    }
+    ret = t_seal_vk_A_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+    if (ret != SGX_SUCCESS)
+    {
+        print_error_message(ret);
+        free(temp_sealed_buf);
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -3;
+    }
+    else if (retval != SGX_SUCCESS)
+    {
+        print_error_message(retval);
+        free(temp_sealed_buf);
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -3;
+    }
+
+    if (write_buf_to_file(SEALED_VK_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
+    {
+        printf("Failed to save the sealed data blob to \" %s \" \n");
+        free(temp_sealed_buf);
+        int len = strlen(ERRORMSG_FILE_IO_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0104", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_FILE_IO_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -2;
+    }
+
+    free(temp_sealed_buf);
+    // set successful respond
+    memcpy(responseMsg, "00000000", 8);
+    (*p_responseMsgLength) = 8;
+    printf("Sealing data succeeded.\n");
+    return 0;
+}
+
+int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
+    unsigned char *responseMsg, size_t * p_responseMsgLength) {
+    
+    /*
+    wLen(4 bytes) + w(256 bytes) +
+    c1Length(4 bytes) + c1 + 
+    c2Length(4 bytes) + c2 + 
+    c3Length(4 bytes) + c3 + 
+    c4Length(4 bytes) + c4
+    */
+   
+   size_t wLen, c1Len, c2Len, c3Len, c4Len;
+   char wLenStr[5];
+   char c1LenStr[5];
+   char c2LenStr[5];
+   char c3LenStr[5];
+   char c4LenStr[5];
+
+   unsigned char w[BUFSIZ];
+   unsigned char c1[256];
+   unsigned char c2[256];
+   unsigned char c3[512];
+   unsigned char c4[256];
+
+   int offset =eqe 0;
+   int rstBodyOffset = 0;
+   //w
+   memset(wLenStr, 0x00, sizeof(wLenStr));
+   memcpy(wLenStr, requestBody + reqestBodyOffset, 4);
+   reqestBodyOffset += 4;
+   wLen = atoi(wLenStr);
+   if(wLen <= 0 || wLen > sizeof(w))
+    {
+        printf("error w length, wLen is %d \n", wLen);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(w, requestBody + reqestBodyOffset, wLen);
+    reqestBodyOffset += wLen;
+
+    //c1
+    memset(c1LenStr, 0x00, sizeof(c1LenStr));
+    memcpy(c1LenStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    c1Len = atoi(c1LenStr);
+    if(c1Len <= 0 || c1Len > sizeof(c1))
+    {
+        printf("error c1 length, c1Len is %d \n", c1Len);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(c1, requestBody + reqestBodyOffset, c1Len);
+    reqestBodyOffset += c1Len;
+
+    //c2
+    memset(c2LenStr, 0x00, sizeof(c2LenStr));
+    memcpy(c2LenStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    c2Len = atoi(c2LenStr);
+    if(c2Len <= 0 || c2Len > sizeof(c2))
+    {
+        printf("error c2 length, c2Len is %d \n", c2Len);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(c2, requestBody + reqestBodyOffset, c2Len);
+    reqestBodyOffset += c2Len;
+
+    //c3
+    memset(c3LenStr, 0x00, sizeof(c3LenStr));
+    memcpy(c3LenStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    c3Len = atoi(c3LenStr);
+    if(c3Len <= 0 || c3Len > sizeof(c3))
+    {
+        printf("error c3 length, c3Len is %d \n", c3Len);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(c3, requestBody + reqestBodyOffset, c3Len);
+    reqestBodyOffset += c3Len;
+
+    //c4
+    memset(c4LenStr, 0x00, sizeof(c4LenStr));
+    memcpy(c4LenStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    c4Len = atoi(c4LenStr);
+    if(c4Len <= 0 || c4Len > sizeof(c4))
+    {
+        printf("error c4 length, c4Len is %d \n", c4Len);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(c4, requestBody + reqestBodyOffset, c4Len);
+    reqestBodyOffset += c4Len;
+
+
+    printf("wLen is %d, w is :\n", wLen);
+    dump_hex(w, wLen, 16);
+    printf("c1Len is %d, c1 is :\n", c1Len);
+    dump_hex(c1, c1Len, 16);
+    printf("c2Len is %d, c2 is :\n", c2Len);
+    dump_hex(c2, c2Len, 16);
+    printf("c3Len is %d, c3 is :\n", c3Len);
+    dump_hex(c3, c3Len, 16);
+    printf("c4Len is %d, c4 is :\n", c4Len);
+    dump_hex(c4, c4Len, 16);
+    
+    //todo...
     sgx_status_t retval;
     sgx_status_t ret = t_Admin_Setting(global_eid, &retval, userId, userIdLength);
     if (ret != SGX_SUCCESS)
