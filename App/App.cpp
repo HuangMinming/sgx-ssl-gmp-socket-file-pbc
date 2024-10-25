@@ -1557,8 +1557,8 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     return 0;
 }
 
-int packResp(unsigned char * code, size_t, codeLen, 
-    unsigned char * unsigned msg, size_t msgLen,
+int packResp(unsigned char *code, size_t, codeLen, 
+    unsigned char *msg, size_t msgLen,
     unsigned char *responseMsg, size_t * p_responseMsgLength) {
     offset = 0;
     memcpy(responseMsg + offset, code, codeLen);
@@ -1616,7 +1616,8 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
    if(userIdLength <= 0 || userIdLength > sizeof(userId))
     {
         printf("error userId length, userId is %d \n", userIdLength);
-        packResp("0101", 4, ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
             responseMsg, p_responseMsgLength);
         return -1;
     }
@@ -1630,7 +1631,8 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     if(filenameLength <= 0 || filenameLength > sizeof(filename))
     {
         printf("error filename length, filenameLength is %d \n", filenameLength);
-        packResp("0101", 4, ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
             responseMsg, p_responseMsgLength);
         return -1;
     }
