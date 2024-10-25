@@ -1816,7 +1816,7 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
    unsigned char c4[256];
 
    int offset =eqe 0;
-   int rstBodyOffset = 0;
+   int reqestBodyOffset = 0;
    //w
    memset(wLenStr, 0x00, sizeof(wLenStr));
    memcpy(wLenStr, requestBody + reqestBodyOffset, 4);
@@ -1909,13 +1909,13 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
     printf("c4Len is %d, c4 is :\n", c4Len);
     dump_hex(c4, c4Len, 16);
 
-    unsigned char * m_bytes[SHA256_DIGEST_LENGTH_32];
+    unsigned char m_bytes[SHA256_DIGEST_LENGTH_32];
     
     //todo...
     sgx_status_t retval;
-    sgx_status_t ret = t_Dec2(global_eid, &retval, w, w_len, 
-        c1, c1_len, c2, c2_len, 
-        c3, c3_len, c4, c4_len,
+    sgx_status_t ret = t_Dec2(global_eid, &retval, w, wLen, 
+        c1, c1Len, c2, c2Len, 
+        c3, c3Len, c4, c4Len,
         m_bytes, sizeof(m_bytes));
     if (ret != SGX_SUCCESS)
     {
