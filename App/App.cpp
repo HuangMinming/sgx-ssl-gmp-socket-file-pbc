@@ -1815,7 +1815,7 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
    unsigned char c3[512];
    unsigned char c4[256];
 
-   int offset =eqe 0;
+   int offset = 0;
    int reqestBodyOffset = 0;
    //w
    memset(wLenStr, 0x00, sizeof(wLenStr));
