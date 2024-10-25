@@ -2752,3 +2752,39 @@ sgx_status_t t_unseal_keyPairHex_data(const uint8_t *sealed_blob, size_t data_si
     free(decrypt_data);
     return ret;
 }
+
+
+sgx_status_t t_Dec2(
+    uint8_t *w, int w_len, 
+    uint8_t *c1_Hex, int c1_Hex_len,
+    uint8_t *c2_Hex, int c2_Hex_len,
+    uint8_t *c3_Hex, int c3_Hex_len,
+    uint8_t *c4_Hex, int c4_Hex_len,
+    uint8_t *m_bytes, int m_bytes_len)
+{
+    uint8_t pk_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t sk_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];
+    int pk_Hex_len = sizeof(pk_Hex);
+    int sk_Hex_len = sizeof(sk_Hex);
+    memcpy(pk_Hex, g_keyPairHex.pk_Hex, pk_Hex_len);
+    memcpy(sk_Hex, g_keyPairHex.sk_Hex, sk_Hex_len);
+
+    int iRet = Dec2(pk_Hex, pk_Hex_len, sk_Hex, sk_Hex_len, w, w_len, 
+        c1_Hex, c1_Hex_len, c2_Hex, c2_Hex_len, 
+        c3_Hex, c3_Hex_len, c4_Hex, c4_Hex_len,
+        m_bytes, m_bytes_len);
+    if(iRet < 0)
+    {
+        sgx_printf("t_Dec2 Dec2 error, iRet = %d\n", iRet);
+        return SGX_ERROR_UNEXPECTED;
+    }
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("t_Dec2 m_bytes_len = %d, m_bytes=\n", m_bytes_len);
+    for(int i=0;i<m_bytes_len;) {
+        sgx_printf("%c%c ", m_bytes[i], m_bytes[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+#endif
+    return SGX_SUCCESS;
+}

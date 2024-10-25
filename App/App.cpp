@@ -1181,7 +1181,7 @@ int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd,
     else if(memcmp(requestCode, "1001", 4) == 0) {
         memset(responseBody, 0x00, sizeof(responseBody));
         memset(responseMsg, 0x00, sizeof(responseMsg));
-        iret = handleRequest0002(requestBody, requestBodyLength, 
+        iret = handleRequest1001(requestBody, requestBodyLength, 
             responseMsg, p_responseMsgLen);
         
     } 
@@ -1908,142 +1908,36 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
     dump_hex(c3, c3Len, 16);
     printf("c4Len is %d, c4 is :\n", c4Len);
     dump_hex(c4, c4Len, 16);
+
+    unsigned char * m_bytes[SHA256_DIGEST_LENGTH_32];
     
     //todo...
     sgx_status_t retval;
-    sgx_status_t ret = t_Admin_Setting(global_eid, &retval, userId, userIdLength);
+    sgx_status_t ret = t_Dec2(global_eid, &retval, w, w_len, 
+        c1, c1_len, c2, c2_len, 
+        c3, c3_len, c4, c4_len,
+        m_bytes, sizeof(m_bytes));
     if (ret != SGX_SUCCESS)
     {
-        printf("Call t_Admin_Setting failed.\n");
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0102", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
+        printf("Call t_Dec2 failed.\n");
+        packResp((unsigned char *)"0102", 4, 
+            (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
+            responseMsg, p_responseMsgLength);
         return -2;
     }
     else if (retval != SGX_SUCCESS)
     {
         print_error_message(retval);
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0102", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
+        packResp((unsigned char *)"0102", 4, 
+            (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
+            responseMsg, p_responseMsgLength);
         return -2;
     }
 
-    /*
-    seal vk_A data
-    */
-   // Get the sealed data size
-    uint32_t sealed_data_size = 0;
-    ret = t_get_sealed_vk_A_data_size(global_eid, &sealed_data_size);
-    if (ret != SGX_SUCCESS)
-    {
-        print_error_message(ret);
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -3;
-    }
-    else if (sealed_data_size == UINT32_MAX)
-    {
-        // sgx_destroy_enclave(global_eid);
-        printf("sealed_data_size equal to %ld.\n", UINT32_MAX);
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -3;
-    }
-
-    uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
-    if (temp_sealed_buf == NULL)
-    {
-        printf("Out of memory\n");
-        int len = strlen(ERRORMSG_MEMORY_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_MEMORY_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -2;
-    }
-    ret = t_seal_vk_A_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
-    if (ret != SGX_SUCCESS)
-    {
-        print_error_message(ret);
-        free(temp_sealed_buf);
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -3;
-    }
-    else if (retval != SGX_SUCCESS)
-    {
-        print_error_message(retval);
-        free(temp_sealed_buf);
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -3;
-    }
-
-    if (write_buf_to_file(SEALED_VK_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
-    {
-        printf("Failed to save the sealed data blob to \" %s \" \n");
-        free(temp_sealed_buf);
-        int len = strlen(ERRORMSG_FILE_IO_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0104", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_FILE_IO_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -2;
-    }
-
-    free(temp_sealed_buf);
     // set successful respond
-    memcpy(responseMsg, "00000000", 8);
-    (*p_responseMsgLength) = 8;
+    packResp((unsigned char *)"0000", 4, 
+            m_bytes, sizeof(m_bytes),
+            responseMsg, p_responseMsgLength);
     printf("Sealing data succeeded.\n");
     return 0;
 }

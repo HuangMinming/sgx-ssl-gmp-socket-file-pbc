@@ -14,6 +14,14 @@ enclave {
         public uint32_t t_get_sealed_keyPairHex_data_size();
         public sgx_status_t t_seal_keyPairHex_data([out, size=data_size] uint8_t* sealed_blob, uint32_t data_size);
         public sgx_status_t t_unseal_keyPairHex_data([in, size=data_size] const uint8_t *sealed_blob, size_t data_size);
+
+        public sgx_status_t t_Dec2(
+            [in, size=w_len] uint8_t *w, int w_len, 
+            [in, size=c1_Hex_len] uint8_t *c1_Hex, int c1_Hex_len,
+            [in, size=c2_Hex_len] uint8_t *c2_Hex, int c2_Hex_len,
+            [in, size=c3_Hex_len] uint8_t *c3_Hex, int c3_Hex_len,
+            [in, size=c4_Hex_len] uint8_t *c4_Hex, int c4_Hex_len,
+            [out, size=m_bytes_len] uint8_t *m_bytes, int m_bytes_len);
     };
 
     untrusted {
