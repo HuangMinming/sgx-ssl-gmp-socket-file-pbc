@@ -1557,7 +1557,7 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     return 0;
 }
 
-int packResp(unsigned char *code, size_t, codeLen, 
+int packResp(unsigned char *code, size_t codeLen, 
     unsigned char *msg, size_t msgLen,
     unsigned char *responseMsg, size_t * p_responseMsgLength) {
     offset = 0;
