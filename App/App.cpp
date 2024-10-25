@@ -1936,7 +1936,7 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
 
     // set successful respond
     unsigned char respBody[SHA256_DIGEST_LENGTH_32 + 4];
-    sprintf(respBody, "%04d", SHA256_DIGEST_LENGTH_32);
+    sprintf((char *)respBody, "%04d", SHA256_DIGEST_LENGTH_32);
     memcpy(respBody + 4, m_bytes, sizeof(m_bytes));
     packResp((unsigned char *)"0000", 4, 
             respBody, sizeof(respBody),
