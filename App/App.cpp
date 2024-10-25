@@ -1560,7 +1560,7 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
 int packResp(unsigned char *code, size_t codeLen, 
     unsigned char *msg, size_t msgLen,
     unsigned char *responseMsg, size_t * p_responseMsgLength) {
-    offset = 0;
+    int offset = 0;
     memcpy(responseMsg + offset, code, codeLen);
     offset += codeLen;
     sprintf((char *)(responseMsg + offset), "%04d", msgLen);
