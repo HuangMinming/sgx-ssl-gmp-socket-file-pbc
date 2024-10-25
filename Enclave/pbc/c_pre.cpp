@@ -1513,7 +1513,13 @@ int Dec2(uint8_t *pk_Hex, int pk_Hex_len,
         sgx_printf("Dec2 verify g^H1(m, R) == c1 success\n");
         bits_to_bytes(m, m_len, m_bytes, m_bytes_len);
 #ifdef PRINT_DEBUG_INFO
-        sgx_printf("Dec2 m_bytes = %s\n", m_bytes);
+        for(int i=0;i<m_bytes_len;)
+        {
+            sgx_printf("%c%c ", m_bytes[i], m_bytes[i+1]);
+            i += 2;
+        }
+        sgx_printf("\n");
+        
 #endif
     }
     

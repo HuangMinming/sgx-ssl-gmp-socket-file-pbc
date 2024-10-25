@@ -1911,7 +1911,7 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
 
     unsigned char m_bytes[SHA256_DIGEST_LENGTH_32];
     
-    //todo...
+
     sgx_status_t retval;
     sgx_status_t ret = t_Dec2(global_eid, &retval, w, wLen, 
         c1, c1Len, c2, c2Len, 
@@ -1935,8 +1935,11 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
     }
 
     // set successful respond
+    unsigned char respBody[SHA256_DIGEST_LENGTH_32 + 4];
+    sprintf(respBody, "%04d", SHA256_DIGEST_LENGTH_32);
+    memcpy(respBody + 4, m_bytes, sizeof(m_bytes));
     packResp((unsigned char *)"0000", 4, 
-            m_bytes, sizeof(m_bytes),
+            respBody, sizeof(respBody),
             responseMsg, p_responseMsgLength);
     printf("Sealing data succeeded.\n");
     return 0;
