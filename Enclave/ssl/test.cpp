@@ -14,6 +14,12 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
+#include <openssl/aes.h>
+
+const int DEBUG = 0;
+const int IV_LEN = 12;
+const int TAG_SIZE = 16;
+const int KEY_SIZE = 32;
 
 void rsa_key_gen()
 {
@@ -562,4 +568,221 @@ void t_sgxssl_call_apis()
     // }
     // sgx_printf("test rsa_test completed\n");
     
+}
+
+
+void handleErrors(char *x)
+{
+    if (DEBUG)
+    {
+        sgx_printf("%s error\n", x);
+        // ERR_print_errors_fp(stderr);
+    }
+    exit(1);
+}
+
+int gcm_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
+                unsigned char *iv, int iv_len, unsigned char *ciphertext,
+                unsigned char *tag)
+{
+    EVP_CIPHER_CTX *ctx;
+    int len;
+    int ciphertext_len;
+
+    /* Create and initialise the context */
+    if (!(ctx = EVP_CIPHER_CTX_new()))
+        handleErrors("EVP_CIPHER_CTX_new");
+
+    /* Initialise the encryption operation. */
+    if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL))
+        handleErrors("EVP_aes_256_gcm");
+
+    /*
+     * Set IV length if default 12 bytes (96 bits) is not appropriate
+     */
+    if (1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, iv_len, NULL))
+        handleErrors("EVP_CTRL_GCM_SET_IVLEN");
+
+    /* Initialise key and IV */
+    if (1 != EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv))
+        handleErrors("EVP_EncryptInit_ex key iv");
+
+    /*
+     * Provide the message to be encrypted, and obtain the encrypted output.
+     * EVP_EncryptUpdate can be called multiple times if necessary
+     */
+    if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, plaintext_len))
+        handleErrors("EVP_EncryptUpdate");
+    ciphertext_len = len;
+
+    /*
+     * Finalise the encryption. Normally ciphertext bytes may be written at
+     * this stage, but this does not occur in GCM mode
+     */
+    if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
+        handleErrors("EVP_EncryptFinal_ex");
+    ciphertext_len += len;
+
+    /* Get the tag */
+    if (1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, TAG_SIZE, tag))
+        handleErrors("EVP_CIPHER_CTX_ctrl");
+
+    /* Clean up */
+    EVP_CIPHER_CTX_free(ctx);
+
+    return ciphertext_len;
+}
+
+int gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
+                unsigned char *tag, unsigned char *key, unsigned char *iv,
+                int iv_len, unsigned char *plaintext)
+{
+    EVP_CIPHER_CTX *ctx;
+    int len;
+    int plaintext_len;
+    int ret;
+
+    /* Create and initialise the context */
+    if (!(ctx = EVP_CIPHER_CTX_new()))
+        handleErrors("EVP_CIPHER_CTX_new");
+
+    /* Initialise the decryption operation. */
+    if (!EVP_DecryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL))
+        handleErrors("EVP_aes_256_gcm");
+
+    /* Set IV length. Not necessary if this is 12 bytes (96 bits) */
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, iv_len, NULL))
+        handleErrors("EVP_CTRL_GCM_SET_IVLEN");
+
+    /* Initialise key and IV */
+    if (!EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv))
+        handleErrors("EVP_DecryptInit_ex key iv");
+
+    /*
+     * Provide the message to be decrypted, and obtain the plaintext output.
+     * EVP_DecryptUpdate can be called multiple times if necessary
+     */
+    if (!EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len))
+        handleErrors("EVP_DecryptUpdate");
+    plaintext_len = len;
+
+    /* Set expected tag value. Works in OpenSSL 1.0.1d and later */
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, TAG_SIZE, tag))
+        handleErrors("EVP_CTRL_GCM_SET_TAG");
+
+    /*
+     * Finalise the decryption. A positive return value indicates success,
+     * anything else is a failure - the plaintext is not trustworthy.
+     */
+    ret = EVP_DecryptFinal_ex(ctx, plaintext + len, &len);
+
+    /* Clean up */
+    EVP_CIPHER_CTX_free(ctx);
+
+    if (ret > 0)
+    {
+        /* Success */
+        plaintext_len += len;
+        return plaintext_len;
+    }
+    else
+    {
+        /* Verify failed */
+        return -1;
+    }
+}
+
+
+
+void t_sgxssl_test2()
+{
+    int ret = 0;
+    
+    sgx_printf("Start t_sgxssl_test\n");
+    unsigned char key[KEY_SIZE];
+    RAND_bytes(key, KEY_SIZE);
+
+    unsigned char iv[IV_LEN];
+    RAND_bytes(iv, IV_LEN);
+
+    unsigned char plaintext[] = "hello world";
+    unsigned char plaintext2[BUFSIZ];
+    unsigned char ciphertext[BUFSIZ];
+
+    size_t plaintext_len = strlen((const char*)plaintext);
+
+    unsigned char tag[TAG_SIZE *2 ];
+    memset(tag, 0x00, sizeof(tag));
+    int ciphertext_len =
+        gcm_encrypt(plaintext, plaintext_len, key, iv, IV_LEN, ciphertext, tag);
+
+    sgx_printf("ciphertext (len:%d) is:\n", ciphertext_len);
+	// BIO_dump_fp(stdout, (const char *)ciphertext, ciphertext_len);
+
+    sgx_printf("tag (len:%d) is:\n", TAG_SIZE);
+	// BIO_dump_fp(stdout, (const char *)tag, TAG_SIZE *2);
+
+    int result =
+      gcm_decrypt(ciphertext, ciphertext_len, tag, key, iv, IV_LEN, plaintext2);
+
+    sgx_printf("plaintext2 (len:%d) is:\n", result);
+    sgx_printf("%s:\n", plaintext2);
+	// BIO_dump_fp(stdout, (const char *)plaintext2, result);
+    
+    return;
+    
+    
+    
+}
+
+void t_sgxssl_test(){
+    sgx_printf("Start t_sgxssl_test\n");
+    unsigned char key[16] = {0x44,0x14,0x0b,0xa7,0x77,0x7d,0xc5,0xd6,0x5c,0x1f,0x66,0xa7,0xe5,0xe8,0x99,0x44};
+    // RAND_bytes(key, 16);
+    sgx_printf("key (len:%d) is:\n", 16);
+	// BIO_dump_fp(stdout, (const char *)key, 16);
+
+    unsigned char iv[12] = {0xc1,0xdd,0xb6,0x14,0x4a,0x02,0xd3,0x3b,0x64,0x1f,0x8a,0x0a};
+    // RAND_bytes(iv, IV_LEN);
+    sgx_printf("iv (len:%d) is:\n", 12);
+	// BIO_dump_fp(stdout, (const char *)iv, 12);
+
+    // unsigned char plaintext[] = "2234312";
+    unsigned char plaintext2[BUFSIZ];
+    // unsigned char ciphertext[BUFSIZ];
+    unsigned char ciphertext[] = {0x61,0x24,0x0c,0x1c,0x74,0x5f,0x17};
+
+    // size_t plaintext_len = strlen((const char*)plaintext);
+
+    unsigned char tag[] = {0x5c,0x0b,0x73,0x35,0x7e,0xc5,0x23,0x9f,0xdb,0xff,0xbb,0x01,0x96,0x08,0x40,0x84};
+    // unsigned char tag[TAG_SIZE];
+    // memset(tag, 0x00, sizeof(tag));
+    // int ciphertext_len =
+    //     gcm_encrypt(plaintext, plaintext_len, key, iv, IV_LEN, ciphertext, tag);
+
+    // sgx_printf("ciphertext (len:%d) is:\n", sizeof(ciphertext));
+	// BIO_dump_fp(stdout, (const char *)ciphertext, sizeof(ciphertext));
+    // for(int i=0;i<ciphertext_len;i++) {
+    //     sgx_printf("%02X ", ciphertext[i]);
+    // }
+    // sgx_printf("\n");
+    
+
+    // sgx_printf("tag  (len:%d) is:\n", 100);
+	// BIO_dump_fp(stdout, (const char *)tag, 100);
+    // for(int i=0;i<TAG_SIZE;i++) {
+    //     sgx_printf("%02X ", tag[i]);
+    // }
+    // sgx_printf("\n");
+
+    int result =
+      gcm_decrypt(ciphertext, sizeof(ciphertext), tag, key, iv, IV_LEN, plaintext2);
+
+    sgx_printf("plaintext2 (len:%d) is:\n", result);
+    for(int i=0;i<result;i++) {
+        sgx_printf("%c", plaintext2[i]);
+    }
+    sgx_printf("\n");
+	// BIO_dump_fp(stdout, (const char *)plaintext2, result);
+
 }

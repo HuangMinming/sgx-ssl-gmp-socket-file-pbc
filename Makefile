@@ -127,7 +127,7 @@ Crypto_Library_Name := sgx_tcrypto
 
 SGX_TGMP = /opt/gmp/6.1.2/
 SGX_TGMP_INC = $(SGX_TGMP)/include
-SGX_TPBC_INC = /usr/local/include/pbc
+SGX_TPBC_INC = /usr/local/include/sgx-pbc
 Enclave_Cpp_Files := Enclave/Enclave.cpp Enclave/sha256.cpp $(wildcard Enclave/ssl/*.cpp) $(wildcard Enclave/pbc/*.cpp)
 Enclave_GMP_C_Files := $(wildcard Enclave/gmp/*.c)
 SGX_SSL_INCLUDE_FILES = -include "tsgxsslio.h"

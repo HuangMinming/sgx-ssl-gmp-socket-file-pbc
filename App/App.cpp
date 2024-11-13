@@ -949,6 +949,32 @@ bool loadSealedData() {
     return true;
 }
 
+
+void ssl_test()
+{
+    // Load the enclave for sealing
+    sgx_status_t ret;
+    if (initialize_enclave() < 0)
+    {
+        print_error_message(ret);
+        return;
+    }
+
+    ret = t_sgxssl_test(global_eid);
+    if (ret != SGX_SUCCESS)
+    {
+        print_error_message(ret);
+        sgx_destroy_enclave(global_eid);
+        return;
+    }
+
+    sgx_destroy_enclave(global_eid);
+
+    std::cout << "Sealing data succeeded." << std::endl;
+
+    return;
+}
+
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
 {
@@ -957,6 +983,7 @@ int SGX_CDECL main(int argc, char *argv[])
     // seal_test();
     // unseal_test();
     // c_pre_test();
+    ssl_test();
 
     /* Initialize the enclave , set global_eid*/
     if (initialize_enclave() < 0)
