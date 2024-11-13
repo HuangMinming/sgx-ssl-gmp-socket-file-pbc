@@ -694,7 +694,7 @@ int gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
 
 
 
-void t_sgxssl_test2()
+void t_sgxssl_test()
 {
     int ret = 0;
     
@@ -735,7 +735,7 @@ void t_sgxssl_test2()
     
 }
 
-void t_sgxssl_test(){
+void t_sgxssl_test1(){
     sgx_printf("Start t_sgxssl_test\n");
     unsigned char key[16] = {0x44,0x14,0x0b,0xa7,0x77,0x7d,0xc5,0xd6,0x5c,0x1f,0x66,0xa7,0xe5,0xe8,0x99,0x44};
     // RAND_bytes(key, 16);
