@@ -36,6 +36,22 @@ typedef struct {
     uint8_t sk_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];   // 私钥 Zr
 } KeyPairHex;
 
+#define bList_U_MAX_size 1024
+#define user_id_MAX_size 21
+struct ShareFile_t {
+    uint8_t file_id[50 + 1];
+    uint8_t file_name[256 + 1];
+    uint8_t C_rk[568 + 1];
+    uint8_t CDEK_rk_C1[256 + 1];
+    uint8_t CDEK_rk_C2[256 + 1];
+    uint8_t CDEK_rk_C3[512 + 1];
+    uint8_t CDEK_rk_C4[256 + 1];
+    uint8_t Cert_owner_info[600 + 1];
+    uint8_t Cert_owner_info_sign_value[256 + 1];
+    uint8_t owner_grant_info[2144 + 1];
+    uint8_t owner_grant_info_sign_value[256 + 1];
+};
+
 
 // 函数声明
 

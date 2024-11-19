@@ -1865,13 +1865,48 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     printf("C_rk_length is %d, C_rk is :\n", C_rk_length);
     dump_hex(C_rk, C_rk_length, 16);
 
+    printf("CDEK_rk_C1_length is %d, CDEK_rk_C1 is :\n", CDEK_rk_C1_length);
+    dump_hex(CDEK_rk_C1, CDEK_rk_C1_length, 16);
+
+    printf("CDEK_rk_C2_length is %d, CDEK_rk_C2 is :\n", CDEK_rk_C2_length);
+    dump_hex(CDEK_rk_C2, CDEK_rk_C2_length, 16);
+
+    printf("CDEK_rk_C3_length is %d, CDEK_rk_C3 is :\n", CDEK_rk_C3_length);
+    dump_hex(CDEK_rk_C3, CDEK_rk_C3_length, 16);
+
+    printf("CDEK_rk_C4_length is %d, CDEK_rk_C4 is :\n", CDEK_rk_C4_length);
+    dump_hex(CDEK_rk_C4, CDEK_rk_C4_length, 16);
+
+    printf("Cert_owner_infoLength is %d, Cert_owner_info is :\n", Cert_owner_infoLength);
+    dump_hex(Cert_owner_info, Cert_owner_infoLength, 16);
+
+    printf("Cert_owner_info_sign_valueLength is %d, Cert_owner_info_sign_value is :\n", Cert_owner_info_sign_valueLength);
+    dump_hex(Cert_owner_info_sign_value, Cert_owner_info_sign_valueLength, 16);
+
+    printf("owner_grant_infoLength is %d, owner_grant_info is :\n", owner_grant_infoLength);
+    dump_hex(owner_grant_info, owner_grant_infoLength, 16);
+
+    printf("owner_grant_info_sign_valueLength is %d, owner_grant_info_sign_value is :\n", owner_grant_info_sign_valueLength);
+    dump_hex(owner_grant_info_sign_value, owner_grant_info_sign_valueLength, 16);
+
     //todo...
 
     sgx_status_t retval;
-    sgx_status_t ret = t_Admin_Setting(global_eid, &retval, userId, userIdLength);
+    sgx_status_t ret = t_SaveShareFile(global_eid, &retval, 
+        file_id, file_id_len,
+        file_name, file_name_len, 
+        C_rk, C_rk_len, 
+        CDEK_rk_C1, CDEK_rk_C1_len, 
+        CDEK_rk_C2, CDEK_rk_C2_len, 
+        CDEK_rk_C3, CDEK_rk_C3_len, 
+        CDEK_rk_C4, CDEK_rk_C4_len, 
+        Cert_owner_info, Cert_owner_info_len, 
+        Cert_owner_info_sign_value, Cert_owner_info_sign_value_len,
+        owner_grant_info, owner_grant_info_len,
+        owner_grant_info_sign_value, owner_grant_info_sign_value_len);
     if (ret != SGX_SUCCESS)
     {
-        printf("Call t_Admin_Setting failed.\n");
+        printf("Call t_SaveShareFile failed.\n");
         int len = strlen(ERRORMSG_SGX_ERROR);
         offset = 0;
         memcpy(responseMsg + offset, "0102", 4);
@@ -1899,7 +1934,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     }
 
     /*
-    seal vk_A data
+    seal shareFile data
     */
    // Get the sealed data size
     uint32_t sealed_data_size = 0;

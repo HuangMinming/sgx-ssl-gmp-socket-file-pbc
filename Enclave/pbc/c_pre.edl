@@ -22,6 +22,19 @@ enclave {
             [in, size=c3_Hex_len] uint8_t *c3_Hex, int c3_Hex_len,
             [in, size=c4_Hex_len] uint8_t *c4_Hex, int c4_Hex_len,
             [out, size=m_bytes_len] uint8_t *m_bytes, int m_bytes_len);
+        
+        public sgx_status_t t_SaveShareFile(
+            [in, size=file_id_len] uint8_t *file_id, int file_id_len, 
+            [in, size=file_name_len] uint8_t *file_name, int file_name_len, 
+            [in, size=C_rk_len] uint8_t *C_rk, int C_rk_len, 
+            [in, size=CDEK_rk_C1_len] uint8_t *CDEK_rk_C1, int CDEK_rk_C1_len, 
+            [in, size=CDEK_rk_C2_len] uint8_t *CDEK_rk_C2, int CDEK_rk_C2_len, 
+            [in, size=CDEK_rk_C3_len] uint8_t *CDEK_rk_C3, int CDEK_rk_C3_len, 
+            [in, size=CDEK_rk_C4_len] uint8_t *CDEK_rk_C4, int CDEK_rk_C4_len, 
+            [in, size=Cert_owner_info_len] uint8_t *Cert_owner_info, int Cert_owner_info_len, 
+            [in, size=Cert_owner_info_sign_value_len] uint8_t *Cert_owner_info_sign_value, int Cert_owner_info_sign_value_len,
+            [in, size=owner_grant_info_len] uint8_t *owner_grant_info, int owner_grant_info_len,
+            [in, size=owner_grant_info_sign_value_len] uint8_t *owner_grant_info_sign_value, int owner_grant_info_sign_value_len);
     };
 
     untrusted {

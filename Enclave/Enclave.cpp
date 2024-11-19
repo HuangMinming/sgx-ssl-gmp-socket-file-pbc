@@ -406,8 +406,8 @@ sgx_status_t unseal_bList_U_data(const uint8_t *sealed_blob, size_t data_size)
     {
         ret = SGX_ERROR_UNEXPECTED;
     }
-
-    if(decrypt_data_len <  + 4)
+    
+    if(decrypt_data_len <  4)
     {
         return SGX_ERROR_UNEXPECTED;
     }

@@ -8,6 +8,10 @@
 #include "../sha256.h"
 
 #include "c_pre.h"
+#include "list.h"
+
+list_node* shareFileList = NULL;
+char aad_shareFileList_mac_text[BUFSIZ] = "shareFileList";
 
 /*
 [0x23, 0x3A, 0x46, 0x4C, 0x52] ==> “233A464C52”
@@ -2794,3 +2798,209 @@ sgx_status_t t_Dec2(
 #endif
     return SGX_SUCCESS;
 }
+
+sgx_status_t t_SaveShareFile(
+    uint8_t *file_id, int file_id_len, 
+    uint8_t *file_name, int file_name_len, 
+    uint8_t *C_rk, int C_rk_len, 
+    uint8_t *CDEK_rk_C1, int CDEK_rk_C1_len, 
+    uint8_t *CDEK_rk_C2, int CDEK_rk_C2_len, 
+    uint8_t *CDEK_rk_C3, int CDEK_rk_C3_len, 
+    uint8_t *CDEK_rk_C4, int CDEK_rk_C4_len, 
+    uint8_t *Cert_owner_info, int Cert_owner_info_len, 
+    uint8_t *Cert_owner_info_sign_value, int Cert_owner_info_sign_value_len,
+    uint8_t *owner_grant_info, int owner_grant_info_len,
+    uint8_t *owner_grant_info_sign_value, int owner_grant_info_sign_value_len)
+{
+    ShareFile_t sf;
+    if(file_id_len <=0 || file_id_len > sizeof(sf.file_id) - 1) {
+        sgx_printf("t_SaveShareFile file_id_len error, file_id_len = %d\n", file_id_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(file_name_len <=0 || file_name_len > sizeof(sf.file_name) - 1) {
+        sgx_printf("t_SaveShareFile file_name_len error, file_name_len = %d\n", file_name_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(C_rk_len <=0 || C_rk_len > sizeof(sf.C_rk) - 1) {
+        sgx_printf("t_SaveShareFile C_rk_len error, C_rk_len = %d\n", C_rk_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(CDEK_rk_C1_len <=0 || CDEK_rk_C1_len > sizeof(sf.CDEK_rk_C1) - 1) {
+        sgx_printf("t_SaveShareFile CDEK_rk_C1_len error, CDEK_rk_C1_len = %d\n", CDEK_rk_C1_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(CDEK_rk_C2_len <=0 || CDEK_rk_C2_len > sizeof(sf.CDEK_rk_C2) - 1) {
+        sgx_printf("t_SaveShareFile CDEK_rk_C2_len error, CDEK_rk_C2_len = %d\n", CDEK_rk_C2_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(CDEK_rk_C3_len <=0 || CDEK_rk_C3_len > sizeof(sf.CDEK_rk_C3) - 1) {
+        sgx_printf("t_SaveShareFile CDEK_rk_C3_len error, CDEK_rk_C3_len = %d\n", CDEK_rk_C3_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(CDEK_rk_C4_len <=0 || CDEK_rk_C4_len > sizeof(sf.CDEK_rk_C4) - 1) {
+        sgx_printf("t_SaveShareFile CDEK_rk_C4_len error, CDEK_rk_C4_len = %d\n", CDEK_rk_C4_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(Cert_owner_info_len <=0 || Cert_owner_info_len > sizeof(sf.Cert_owner_info) - 1) {
+        sgx_printf("t_SaveShareFile Cert_owner_info_len error, Cert_owner_info_len = %d\n", Cert_owner_info_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(Cert_owner_info_sign_value_len <=0 || Cert_owner_info_sign_value_len > sizeof(sf.Cert_owner_info_sign_value) - 1) {
+        sgx_printf("t_SaveShareFile Cert_owner_info_sign_value_len error, Cert_owner_info_sign_value_len = %d\n", Cert_owner_info_sign_value_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(owner_grant_info_len <=0 || owner_grant_info_len > sizeof(sf.owner_grant_info) - 1) {
+        sgx_printf("t_SaveShareFile owner_grant_info_len error, owner_grant_info_len = %d\n", owner_grant_info_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(owner_grant_info_sign_value_len <=0 || owner_grant_info_sign_value_len > sizeof(sf.owner_grant_info_sign_value) - 1) {
+        sgx_printf("t_SaveShareFile owner_grant_info_sign_value_len error, owner_grant_info_sign_value_len = %d\n", owner_grant_info_sign_value_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    memcpy(sf.file_id, file_id, file_id_len);
+    memcpy(sf.file_name, file_name, file_name_len);
+    memcpy(sf.C_rk, C_rk, C_rk_len);
+    memcpy(sf.CDEK_rk_C1, CDEK_rk_C1, CDEK_rk_C1_len);
+    memcpy(sf.CDEK_rk_C2, CDEK_rk_C2, CDEK_rk_C2_len);
+    memcpy(sf.CDEK_rk_C3, CDEK_rk_C3, CDEK_rk_C3_len);
+    memcpy(sf.CDEK_rk_C4, CDEK_rk_C4, CDEK_rk_C4_len);
+    memcpy(sf.Cert_owner_info, Cert_owner_info, Cert_owner_info_len);
+    memcpy(sf.Cert_owner_info_sign_value, Cert_owner_info_sign_value, Cert_owner_info_sign_value_len);
+    memcpy(sf.owner_grant_info, owner_grant_info, CDEK_rk_C3_len);
+    memcpy(sf.owner_grant_info_sign_value, owner_grant_info_sign_value, owner_grant_info_sign_value_len);
+
+    // if(shareFileList == NULL) {
+    //     shareFileList = list_create(sf);
+    // }
+    // eles {
+    //     shareFileList = list_insert_end(shareFileList, sf);
+    // }
+    shareFileList = list_insert_end(shareFileList, sf);
+    //todo
+
+#ifdef PRINT_DEBUG_INFO
+
+#endif
+    return SGX_SUCCESS;
+}
+
+
+
+/*
+seal and unseal shareFileList
+*/
+uint32_t t_get_sealed_shareFileList_data_size()
+{
+    size_t size = list_size(&shareFileList);
+    return sgx_calc_sealed_data_size((uint32_t)strlen(aad_shareFileList_mac_text), 
+        (uint32_t)(size * sizeof(ShareFile_t)));
+}
+
+sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
+{
+    size_t size = list_size(&shareFileList);
+    uint32_t sealed_data_size = sgx_calc_sealed_data_size((uint32_t)strlen(aad_shareFileList_mac_text), 
+        (uint32_t)(size * sizeof(ShareFile_t)));
+    if (sealed_data_size == UINT32_MAX)
+        return SGX_ERROR_UNEXPECTED;
+    if (sealed_data_size > data_size)
+        return SGX_ERROR_INVALID_PARAMETER;
+
+    unsigned char data_buf[size * sizeof(ShareFile_t)];
+
+    int offset = 0;
+    list_node *tmp = shareFileList;
+    if(size > 0) {
+        while (tmp != NULL) {
+            if(offset > sizeof(data_buf)) {
+                sgx_printf("t_seal_shareFileList_data data_buf error, offset is %d, sizeof data_buf is = %d\n", 
+                    offset, sizeof(data_buf));
+                return SGX_ERROR_UNEXPECTED;
+            }
+            memcpy(data_buf + offfset, tmp->data, sizeof(ShareFile_t));
+            tmp = tmp->next;
+        }
+    }
+	
+    uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
+    if (temp_sealed_buf == NULL)
+        return SGX_ERROR_OUT_OF_MEMORY;
+    sgx_status_t err = sgx_seal_data((uint32_t)strlen(aad_shareFileList_mac_text), 
+        (const uint8_t *)aad_shareFileList_mac_text, (uint32_t)(size * sizeof(ShareFile_t)), 
+        (uint8_t *)data_buf, sealed_data_size, (sgx_sealed_data_t *)temp_sealed_buf);
+    if (err == SGX_SUCCESS)
+    {
+        // Copy the sealed data to outside buffer
+        memcpy(sealed_blob, temp_sealed_buf, sealed_data_size);
+    }
+
+    free(temp_sealed_buf);
+    return err;
+}
+
+
+sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data_size)
+{
+    uint32_t mac_text_len = sgx_get_add_mac_txt_len((const sgx_sealed_data_t *)sealed_blob);
+    uint32_t decrypt_data_len = sgx_get_encrypt_txt_len((const sgx_sealed_data_t *)sealed_blob);
+    if (mac_text_len == UINT32_MAX || decrypt_data_len == UINT32_MAX)
+        return SGX_ERROR_UNEXPECTED;
+    if (mac_text_len > data_size || decrypt_data_len > data_size)
+        return SGX_ERROR_INVALID_PARAMETER;
+
+    uint8_t *de_mac_text = (uint8_t *)malloc(mac_text_len);
+    if (de_mac_text == NULL)
+        return SGX_ERROR_OUT_OF_MEMORY;
+    uint8_t *decrypt_data = (uint8_t *)malloc(decrypt_data_len);
+    if (decrypt_data == NULL)
+    {
+        free(de_mac_text);
+        return SGX_ERROR_OUT_OF_MEMORY;
+    }
+
+    sgx_status_t ret = sgx_unseal_data((const sgx_sealed_data_t *)sealed_blob, de_mac_text, 
+        &mac_text_len, decrypt_data, &decrypt_data_len);
+    if (ret != SGX_SUCCESS)
+    {
+        free(de_mac_text);
+        free(decrypt_data);
+        return ret;
+    }
+
+    if (memcmp(de_mac_text, aad_shareFileList_mac_text, strlen(aad_shareFileList_mac_text)))
+    {
+        ret = SGX_ERROR_UNEXPECTED;
+    }
+
+    // if(decrypt_data_len < (sizeof(g_keyPairHex)))
+    // {
+    //     return SGX_ERROR_UNEXPECTED;
+    // } 
+    list_destroy(&shareFileList);
+    int offset = 0;
+    size_t size = decrypt_data_len / sizeof(ShareFile_t);
+    for(int i=0;i<size;i++) {
+        shareFileList = list_insert_end(shareFileList, decrypt_data + offset);
+        offset += sizeof(ShareFile_t);
+    }
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("t_unseal_shareFileList_data shareFileList size is  = %d, shareFileList is:\n", size);
+    list_node *tmp = shareFileList;
+    int index = 0;
+    if(size > 0) {
+        while (tmp != NULL) {
+            ShareFile_t *sf = (ShareFile_t)(tmp->data);
+            sgx_printf("element %d:\n", index);
+            sgx_printf("\tfild_id = %s, \n\tfile_name = %s\n", 
+                sf->file_id, sf->file_name);
+            tmp = tmp->next;
+            index ++;
+        }
+    }
+    sgx_printf("\n");
+#endif
+    free(de_mac_text);
+    // free(decrypt_data);
+    return ret;
+}
+
