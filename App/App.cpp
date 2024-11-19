@@ -1612,39 +1612,53 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     
     /*
     useridLength(4 bytes) + userid(20 bytes) + 
+    fileIdLength(4 bytes) + fileId(50 bytes) + 
     filenameLength(4 bytes) + filename(256 bytes) + 
-    rk1Length(4 bytes) + rk1(256 bytes) + 
-    rk2Length(4 bytes) + rk2(256 bytes) + 
-    Cert_owner_infoLength(4 bytes) + Cert_owner_info(2048 bytes) +  
+    C_rk_length(4 bytes) + C_rk(568 bytes) + 
+    CDEK_rk_C1_length(4 bytes) +  CDEK_rk_C1(256 bytes) + 
+    CDEK_rk_C2_length(4 bytes) +  CDEK_rk_C2(256 bytes) + 
+    CDEK_rk_C3_length(4 bytes) +  CDEK_rk_C3(512 bytes) + 
+    CDEK_rk_C4_length(4 bytes) +  CDEK_rk_C4(256 bytes) + 
+    Cert_owner_infoLength(4 bytes) + Cert_owner_info(600 bytes) +  
     Cert_owner_info_sign_valueLength(4 bytes) + Cert_owner_info_sign_value(256 bytes) + 
-    owner_grant_infoLength(4 bytes) + owner_grant_info(2048 bytes) + 
+    owner_grant_infoLength(4 bytes) + owner_grant_info(2144 bytes) + 
     owner_grant_info_sign_valueLength(4 bytes) + owner_grant_info_sign_value(256 bytes)
 
     */
    
-   size_t userIdLength, filenameLength, rk1Length, rk2Length;
+   size_t userIdLength, fileIdLength, filenameLength,C_rk_length;
+   size_t CDEK_rk_C1_length, CDEK_rk_C2_length, CDEK_rk_C3_length, CDEK_rk_C4_length;
    size_t Cert_owner_infoLength, Cert_owner_info_sign_valueLength;
    size_t owner_grant_infoLength, owner_grant_info_sign_valueLength;
    char userIdLengthStr[5];
+   char fileIdLengthStr[5];
    char filenameLengthStr[5];
-   char rk1LengthStr[5];
-   char rk2LengthStr[5];
+   char C_rk_lengthLengthStr[5];
+   char CDEK_rk_C1_lengthStr[5];
+   char CDEK_rk_C2_lengthStr[5];
+   char CDEK_rk_C3_lengthStr[5];
+   char CDEK_rk_C4_lengthStr[5];
    char Cert_owner_infoLengthStr[5];
    char Cert_owner_info_sign_valueLengthStr[5];
    char owner_grant_infoLengthStr[5];
    char owner_grant_info_sign_valueLengthStr[5];
 
    unsigned char userId[20];
+   unsigned char fileId[50];
    unsigned char filename[256];
-   unsigned char rk1[256];
-   unsigned char rk2[256];
-   unsigned char Cert_owner_info[2048];
+   unsigned char C_rk[568];
+   unsigned char CDEK_rk_C1[256];
+   unsigned char CDEK_rk_C2[256];
+   unsigned char CDEK_rk_C3[512];
+   unsigned char CDEK_rk_C4[256];
+   unsigned char Cert_owner_info[600];
    unsigned char Cert_owner_info_sign_value[256];
-   unsigned char owner_grant_info[2048];
-   unsigned char owner_grant_info_sign_value[2048];
+   unsigned char owner_grant_info[2144];
+   unsigned char owner_grant_info_sign_value[256];
 
    int offset = 0;
    int reqestBodyOffset = 0;
+   //useridLength(4 bytes) + userid(20 bytes)
    memset(userIdLengthStr, 0x00, sizeof(userIdLengthStr));
    memcpy(userIdLengthStr, requestBody + reqestBodyOffset, 4);
    reqestBodyOffset += 4;
@@ -1659,7 +1673,24 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     }
     memcpy(userId, requestBody + reqestBodyOffset, userIdLength);
     reqestBodyOffset += userIdLength;
+    
+    //fileIdLength(4 bytes) + fileId(50 bytes)
+    memset(fileIdLengthStr, 0x00, sizeof(fileIdLengthStr));
+    memcpy(fileIdLengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    fileIdLength = atoi(fileIdLengthStr);
+    if(fileIdLength <= 0 || fileIdLength > sizeof(filename))
+    {
+        printf("error fileId length, fileIdLength is %d \n", fileIdLength);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(fileId, requestBody + reqestBodyOffset, fileIdLength);
+    reqestBodyOffset += fileIdLength;
 
+    //filenameLength(4 bytes) + filename(256 bytes)
     memset(filenameLengthStr, 0x00, sizeof(filenameLengthStr));
     memcpy(filenameLengthStr, requestBody + reqestBodyOffset, 4);
     reqestBodyOffset += 4;
@@ -1675,10 +1706,166 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     memcpy(filename, requestBody + reqestBodyOffset, filenameLength);
     reqestBodyOffset += filenameLength;
 
-    //todo...
+    //C_rk_length(4 bytes) + C_rk(568 bytes) 
+    memset(C_rk_lengthStr, 0x00, sizeof(C_rk_lengthStr));
+    memcpy(C_rk_lengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    C_rk_length = atoi(C_rk_lengthStr);
+    if(C_rk_length <= 0 || C_rk_length > sizeof(C_rk))
+    {
+        printf("error C_rk length, C_rk_length is %d \n", C_rk_length);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(C_rk, requestBody + reqestBodyOffset, C_rk_length);
+    reqestBodyOffset += C_rk_length;
+
+    //CDEK_rk_C1_length(4 bytes) +  CDEK_rk_C1(256 bytes)
+    memset(CDEK_rk_C1_lengthStr, 0x00, sizeof(CDEK_rk_C1_lengthStr));
+    memcpy(CDEK_rk_C1_lengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    CDEK_rk_C1_length = atoi(CDEK_rk_C1_lengthStr);
+    if(CDEK_rk_C1_length <= 0 || CDEK_rk_C1_length > sizeof(CDEK_rk_C1))
+    {
+        printf("error CDEK_rk_C1 length, CDEK_rk_C1_length is %d \n", CDEK_rk_C1_length);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(CDEK_rk_C1, requestBody + reqestBodyOffset, CDEK_rk_C1_length);
+    reqestBodyOffset += CDEK_rk_C1_length;
+
+    //CDEK_rk_C2_length(4 bytes) +  CDEK_rk_C2(256 bytes)
+    memset(CDEK_rk_C2_lengthStr, 0x00, sizeof(CDEK_rk_C2_lengthStr));
+    memcpy(CDEK_rk_C2_lengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    CDEK_rk_C2_length = atoi(CDEK_rk_C2_lengthStr);
+    if(CDEK_rk_C2_length <= 0 || CDEK_rk_C2_length > sizeof(CDEK_rk_C2))
+    {
+        printf("error CDEK_rk_C2 length, CDEK_rk_C2_length is %d \n", CDEK_rk_C2_length);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(CDEK_rk_C2, requestBody + reqestBodyOffset, CDEK_rk_C2_length);
+    reqestBodyOffset += CDEK_rk_C2_length;
+
+    //CDEK_rk_C3_length(4 bytes) +  CDEK_rk_C3(512 bytes)
+    memset(CDEK_rk_C3_lengthStr, 0x00, sizeof(CDEK_rk_C3_lengthStr));
+    memcpy(CDEK_rk_C3_lengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    CDEK_rk_C3_length = atoi(CDEK_rk_C3_lengthStr);
+    if(CDEK_rk_C3_length <= 0 || CDEK_rk_C3_length > sizeof(CDEK_rk_C3))
+    {
+        printf("error CDEK_rk_C3 length, CDEK_rk_C3_length is %d \n", CDEK_rk_C3_length);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(CDEK_rk_C3, requestBody + reqestBodyOffset, CDEK_rk_C3_length);
+    reqestBodyOffset += CDEK_rk_C3_length;
+
+    //CDEK_rk_C4_length(4 bytes) +  CDEK_rk_C4(256 bytes)
+    memset(CDEK_rk_C4_lengthStr, 0x00, sizeof(CDEK_rk_C4_lengthStr));
+    memcpy(CDEK_rk_C4_lengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    CDEK_rk_C4_length = atoi(CDEK_rk_C4_lengthStr);
+    if(CDEK_rk_C4_length <= 0 || CDEK_rk_C4_length > sizeof(CDEK_rk_C4))
+    {
+        printf("error CDEK_rk_C4 length, CDEK_rk_C4_length is %d \n", CDEK_rk_C4_length);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(CDEK_rk_C4, requestBody + reqestBodyOffset, CDEK_rk_C4_length);
+    reqestBodyOffset += CDEK_rk_C4_length;
+
+    //Cert_owner_infoLength(4 bytes) + Cert_owner_info(600 bytes)
+    memset(Cert_owner_infoLengthStr, 0x00, sizeof(Cert_owner_infoLengthStr));
+    memcpy(Cert_owner_infoLengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    Cert_owner_infoLength = atoi(Cert_owner_infoLengthStr);
+    if(Cert_owner_infoLength <= 0 || Cert_owner_infoLength > sizeof(Cert_owner_info))
+    {
+        printf("error Cert_owner_info length, Cert_owner_infoLength is %d \n", Cert_owner_infoLength);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(Cert_owner_info, requestBody + reqestBodyOffset, Cert_owner_infoLength);
+    reqestBodyOffset += Cert_owner_infoLength;
+
+    //Cert_owner_info_sign_valueLength(4 bytes) + Cert_owner_info_sign_value(256 bytes)
+    memset(Cert_owner_info_sign_valueLengthStr, 0x00, sizeof(Cert_owner_info_sign_valueLengthStr));
+    memcpy(Cert_owner_info_sign_valueLengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    Cert_owner_info_sign_valueLength = atoi(Cert_owner_info_sign_valueLengthStr);
+    if(Cert_owner_info_sign_valueLength <= 0 || 
+        Cert_owner_info_sign_valueLength > sizeof(Cert_owner_info_sign_value))
+    {
+        printf("error Cert_owner_info_sign_value length, Cert_owner_info_sign_valueLength is %d \n", Cert_owner_info_sign_valueLength);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(Cert_owner_info_sign_value, requestBody + reqestBodyOffset, Cert_owner_info_sign_valueLength);
+    reqestBodyOffset += Cert_owner_info_sign_valueLength;
+
+    //owner_grant_infoLength(4 bytes) + owner_grant_info(2144 bytes)
+    memset(owner_grant_infoLengthStr, 0x00, sizeof(owner_grant_infoLengthStr));
+    memcpy(owner_grant_infoLengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    owner_grant_infoLength = atoi(owner_grant_infoLengthStr);
+    if(owner_grant_infoLength <= 0 || 
+        owner_grant_infoLength > sizeof(owner_grant_info))
+    {
+        printf("error owner_grant_info length, owner_grant_infoLength is %d \n", owner_grant_infoLength);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(owner_grant_info, requestBody + reqestBodyOffset, owner_grant_infoLength);
+    reqestBodyOffset += owner_grant_infoLength;
+
+    //owner_grant_info_sign_valueLength(4 bytes) + owner_grant_info_sign_value(256 bytes)
+    memset(owner_grant_info_sign_valueLengthStr, 0x00, sizeof(owner_grant_info_sign_valueLengthStr));
+    memcpy(owner_grant_info_sign_valueLengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    owner_grant_info_sign_valueLength = atoi(owner_grant_info_sign_valueLengthStr);
+    if(owner_grant_info_sign_valueLength <= 0 || 
+        owner_grant_info_sign_valueLength > sizeof(owner_grant_info_sign_value))
+    {
+        printf("error owner_grant_info_sign_value length, owner_grant_info_sign_valueLength is %d \n", owner_grant_info_sign_valueLength);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(owner_grant_info_sign_value, requestBody + reqestBodyOffset, owner_grant_info_sign_valueLength);
+    reqestBodyOffset += owner_grant_info_sign_valueLength;
 
     printf("userIdLength is %d, userId is :\n", userIdLength);
     dump_hex(userId, userIdLength, 16);
+
+    printf("fileIdLength is %d, fileId is :\n", fileIdLength);
+    dump_hex(fileId, fileIdLength, 16);
+
+    printf("filenameLength is %d, filename is :\n", filenameLength);
+    dump_hex(filename, filenameLength, 16);
+
+    printf("C_rk_length is %d, C_rk is :\n", C_rk_length);
+    dump_hex(C_rk, C_rk_length, 16);
+
+    //todo...
 
     sgx_status_t retval;
     sgx_status_t ret = t_Admin_Setting(global_eid, &retval, userId, userIdLength);
