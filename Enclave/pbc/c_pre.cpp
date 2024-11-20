@@ -2814,63 +2814,68 @@ sgx_status_t t_SaveShareFile(
 {
     sgx_printf("t_SaveShareFile start\n");
         
-    ShareFile_t sf;
-    if(file_id_len <=0 || file_id_len > sizeof(sf.file_id) - 1) {
+    ShareFile_t *sf =(ShareFile_t *)malloc(sizeof(ShareFile_t)) ;
+    if(file_id_len <=0 || file_id_len > sizeof(sf->file_id) - 1) {
         sgx_printf("t_SaveShareFile file_id_len error, file_id_len = %d\n", file_id_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    if(file_name_len <=0 || file_name_len > sizeof(sf.file_name) - 1) {
+    if(file_name_len <=0 || file_name_len > sizeof(sf->file_name) - 1) {
         sgx_printf("t_SaveShareFile file_name_len error, file_name_len = %d\n", file_name_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    if(C_rk_len <=0 || C_rk_len > sizeof(sf.C_rk) - 1) {
+    if(C_rk_len <=0 || C_rk_len > sizeof(sf->C_rk) - 1) {
         sgx_printf("t_SaveShareFile C_rk_len error, C_rk_len = %d\n", C_rk_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    if(CDEK_rk_C1_len <=0 || CDEK_rk_C1_len > sizeof(sf.CDEK_rk_C1) - 1) {
+    if(CDEK_rk_C1_len <=0 || CDEK_rk_C1_len > sizeof(sf->CDEK_rk_C1) - 1) {
         sgx_printf("t_SaveShareFile CDEK_rk_C1_len error, CDEK_rk_C1_len = %d\n", CDEK_rk_C1_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    if(CDEK_rk_C2_len <=0 || CDEK_rk_C2_len > sizeof(sf.CDEK_rk_C2) - 1) {
+    if(CDEK_rk_C2_len <=0 || CDEK_rk_C2_len > sizeof(sf->CDEK_rk_C2) - 1) {
         sgx_printf("t_SaveShareFile CDEK_rk_C2_len error, CDEK_rk_C2_len = %d\n", CDEK_rk_C2_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    if(CDEK_rk_C3_len <=0 || CDEK_rk_C3_len > sizeof(sf.CDEK_rk_C3) - 1) {
+    if(CDEK_rk_C3_len <=0 || CDEK_rk_C3_len > sizeof(sf->CDEK_rk_C3) - 1) {
         sgx_printf("t_SaveShareFile CDEK_rk_C3_len error, CDEK_rk_C3_len = %d\n", CDEK_rk_C3_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    if(CDEK_rk_C4_len <=0 || CDEK_rk_C4_len > sizeof(sf.CDEK_rk_C4) - 1) {
+    if(CDEK_rk_C4_len <=0 || CDEK_rk_C4_len > sizeof(sf->CDEK_rk_C4) - 1) {
         sgx_printf("t_SaveShareFile CDEK_rk_C4_len error, CDEK_rk_C4_len = %d\n", CDEK_rk_C4_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    if(Cert_owner_info_len <=0 || Cert_owner_info_len > sizeof(sf.Cert_owner_info) - 1) {
+    if(Cert_owner_info_len <=0 || Cert_owner_info_len > sizeof(sf->Cert_owner_info) - 1) {
         sgx_printf("t_SaveShareFile Cert_owner_info_len error, Cert_owner_info_len = %d\n", Cert_owner_info_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    if(Cert_owner_info_sign_value_len <=0 || Cert_owner_info_sign_value_len > sizeof(sf.Cert_owner_info_sign_value) - 1) {
+    if(Cert_owner_info_sign_value_len <=0 || Cert_owner_info_sign_value_len > sizeof(sf->Cert_owner_info_sign_value) - 1) {
         sgx_printf("t_SaveShareFile Cert_owner_info_sign_value_len error, Cert_owner_info_sign_value_len = %d\n", Cert_owner_info_sign_value_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    if(owner_grant_info_len <=0 || owner_grant_info_len > sizeof(sf.owner_grant_info) - 1) {
+    if(owner_grant_info_len <=0 || owner_grant_info_len > sizeof(sf->owner_grant_info) - 1) {
         sgx_printf("t_SaveShareFile owner_grant_info_len error, owner_grant_info_len = %d\n", owner_grant_info_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    if(owner_grant_info_sign_value_len <=0 || owner_grant_info_sign_value_len > sizeof(sf.owner_grant_info_sign_value) - 1) {
+    if(owner_grant_info_sign_value_len <=0 || owner_grant_info_sign_value_len > sizeof(sf->owner_grant_info_sign_value) - 1) {
         sgx_printf("t_SaveShareFile owner_grant_info_sign_value_len error, owner_grant_info_sign_value_len = %d\n", owner_grant_info_sign_value_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    memset(&sf, 0x00, sizeof(sf));
-    memcpy(sf.file_id, file_id, file_id_len);
-    memcpy(sf.file_name, file_name, file_name_len);
-    memcpy(sf.C_rk, C_rk, C_rk_len);
-    memcpy(sf.CDEK_rk_C1, CDEK_rk_C1, CDEK_rk_C1_len);
-    memcpy(sf.CDEK_rk_C2, CDEK_rk_C2, CDEK_rk_C2_len);
-    memcpy(sf.CDEK_rk_C3, CDEK_rk_C3, CDEK_rk_C3_len);
-    memcpy(sf.CDEK_rk_C4, CDEK_rk_C4, CDEK_rk_C4_len);
-    memcpy(sf.Cert_owner_info, Cert_owner_info, Cert_owner_info_len);
-    memcpy(sf.Cert_owner_info_sign_value, Cert_owner_info_sign_value, Cert_owner_info_sign_value_len);
-    memcpy(sf.owner_grant_info, owner_grant_info, CDEK_rk_C3_len);
-    memcpy(sf.owner_grant_info_sign_value, owner_grant_info_sign_value, owner_grant_info_sign_value_len);
+    sgx_printf("filename is:");
+    for(int i=0;i<file_name_len + 10;i++) {
+        sgx_printf("%c", file_name[i]);
+    }
+    sgx_printf("\n");
+    memset(sf, 0x00, sizeof(sf));
+    memcpy(sf->file_id, file_id, file_id_len);
+    memcpy(sf->file_name, file_name, file_name_len);
+    memcpy(sf->C_rk, C_rk, C_rk_len);
+    memcpy(sf->CDEK_rk_C1, CDEK_rk_C1, CDEK_rk_C1_len);
+    memcpy(sf->CDEK_rk_C2, CDEK_rk_C2, CDEK_rk_C2_len);
+    memcpy(sf->CDEK_rk_C3, CDEK_rk_C3, CDEK_rk_C3_len);
+    memcpy(sf->CDEK_rk_C4, CDEK_rk_C4, CDEK_rk_C4_len);
+    memcpy(sf->Cert_owner_info, Cert_owner_info, Cert_owner_info_len);
+    memcpy(sf->Cert_owner_info_sign_value, Cert_owner_info_sign_value, Cert_owner_info_sign_value_len);
+    memcpy(sf->owner_grant_info, owner_grant_info, CDEK_rk_C3_len);
+    memcpy(sf->owner_grant_info_sign_value, owner_grant_info_sign_value, owner_grant_info_sign_value_len);
 
     // if(shareFileList == NULL) {
     //     shareFileList = list_create(sf);
@@ -2878,13 +2883,46 @@ sgx_status_t t_SaveShareFile(
     // eles {
     //     shareFileList = list_insert_end(shareFileList, sf);
     // }
-    shareFileList = list_insert_end(shareFileList, (void *)&sf);
-    sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);
-    size_t size = list_size(&shareFileList);
-    sgx_printf("t_SaveShareFile list_size is %d\n", size);
-
+    size_t size = 0;
+    list_node *tmp = NULL;
+    int index = 0;
 #ifdef PRINT_DEBUG_INFO
+    size = list_size(&shareFileList);
+    sgx_printf("t_SaveShareFile before list_insert_end, size is %d\n", size);
+    tmp = shareFileList;
+    index = 0;
+    if(size > 0) {
+        while (tmp != NULL) {
+            ShareFile_t *sf = (ShareFile_t *)(tmp->data);
+            sgx_printf("element %d:\n", index);
+            sgx_printf("\tfild_id = %s\n\tfile_name = %s\n", 
+                sf->file_id, sf->file_name);
+            tmp = tmp->next;
+            index ++;
+        }
+    }
+    sgx_printf("\n");
+#endif
 
+    list_insert_end(shareFileList, (void *)sf);
+    sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);
+    size = list_size(&shareFileList);
+    sgx_printf("t_SaveShareFile after list_insert_end, size is %d\n", size);
+    
+#ifdef PRINT_DEBUG_INFO
+    tmp = shareFileList;
+    index = 0;
+    if(size > 0) {
+        while (tmp != NULL) {
+            ShareFile_t *sf = (ShareFile_t *)(tmp->data);
+            sgx_printf("element %d:\n", index);
+            sgx_printf("\tfild_id = %s\n\tfile_name = %s\n", 
+                sf->file_id, sf->file_name);
+            tmp = tmp->next;
+            index ++;
+        }
+    }
+    sgx_printf("\n");
 #endif
     sgx_printf("t_SaveShareFile end\n");
     return SGX_SUCCESS;
@@ -2908,6 +2946,23 @@ sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
     sgx_printf("t_seal_shareFileList_data address of shareFileList = %p\n", &shareFileList);
     size_t size = list_size(&shareFileList);
     sgx_printf("t_seal_shareFileList_data list_size is %d\n", size);
+    list_node *tmp = NULL;
+#ifdef PRINT_DEBUG_INFO
+    tmp = shareFileList;
+    int index = 0;
+    if(size > 0) {
+        while (tmp != NULL) {
+            ShareFile_t *sf = (ShareFile_t *)(tmp->data);
+            sgx_printf("element %d:\n", index);
+            sgx_printf("\tfild_id = %s\n\tfile_name = %s\n", 
+                sf->file_id, sf->file_name);
+            tmp = tmp->next;
+            index ++;
+        }
+    }
+    sgx_printf("\n");
+#endif
+
     uint32_t sealed_data_size = sgx_calc_sealed_data_size((uint32_t)strlen(aad_shareFileList_mac_text), 
         (uint32_t)(size * sizeof(ShareFile_t)));
     if (sealed_data_size == UINT32_MAX)
@@ -2919,7 +2974,7 @@ sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
     unsigned char data_buf[size * sizeof(ShareFile_t)];
 
     int offset = 0;
-    list_node *tmp = shareFileList;
+    tmp = shareFileList;
     if(size > 0) {
         while (tmp != NULL) {
             if(offset > sizeof(data_buf)) {
@@ -2989,6 +3044,10 @@ sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data
     // {
     //     return SGX_ERROR_UNEXPECTED;
     // } 
+    for(int i=0;i<100;i++) {
+        sgx_printf("%02c ", decrypt_data[i]);
+    }
+    sgx_printf("\n");
     list_destroy(&shareFileList);
     int offset = 0;
     size_t size = decrypt_data_len / sizeof(ShareFile_t);
