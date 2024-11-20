@@ -1688,7 +1688,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
    char userIdLengthStr[5];
    char fileIdLengthStr[5];
    char filenameLengthStr[5];
-   char C_rk_lengthLengthStr[5];
+   char C_rk_lengthStr[5];
    char CDEK_rk_C1_lengthStr[5];
    char CDEK_rk_C2_lengthStr[5];
    char CDEK_rk_C3_lengthStr[5];
@@ -1946,17 +1946,17 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
 
     sgx_status_t retval;
     sgx_status_t ret = t_SaveShareFile(global_eid, &retval, 
-        file_id, file_id_len,
-        file_name, file_name_len, 
-        C_rk, C_rk_len, 
-        CDEK_rk_C1, CDEK_rk_C1_len, 
-        CDEK_rk_C2, CDEK_rk_C2_len, 
-        CDEK_rk_C3, CDEK_rk_C3_len, 
-        CDEK_rk_C4, CDEK_rk_C4_len, 
-        Cert_owner_info, Cert_owner_info_len, 
-        Cert_owner_info_sign_value, Cert_owner_info_sign_value_len,
-        owner_grant_info, owner_grant_info_len,
-        owner_grant_info_sign_value, owner_grant_info_sign_value_len);
+        fileId, fileIdLength,
+        filename, filenameLength, 
+        C_rk, C_rk_length, 
+        CDEK_rk_C1, CDEK_rk_C1_length, 
+        CDEK_rk_C2, CDEK_rk_C2_length, 
+        CDEK_rk_C3, CDEK_rk_C3_length, 
+        CDEK_rk_C4, CDEK_rk_C4_length, 
+        Cert_owner_info, Cert_owner_infoLength, 
+        Cert_owner_info_sign_value, Cert_owner_info_sign_valueLength,
+        owner_grant_info, owner_grant_infoLength,
+        owner_grant_info_sign_value, owner_grant_info_sign_valueLength);
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_SaveShareFile failed.\n");

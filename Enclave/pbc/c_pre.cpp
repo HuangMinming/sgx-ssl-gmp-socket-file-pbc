@@ -2875,7 +2875,7 @@ sgx_status_t t_SaveShareFile(
     // eles {
     //     shareFileList = list_insert_end(shareFileList, sf);
     // }
-    shareFileList = list_insert_end(shareFileList, sf);
+    shareFileList = list_insert_end(shareFileList, (void *)&sf);
     //todo
 
 #ifdef PRINT_DEBUG_INFO
@@ -2917,7 +2917,8 @@ sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
                     offset, sizeof(data_buf));
                 return SGX_ERROR_UNEXPECTED;
             }
-            memcpy(data_buf + offfset, tmp->data, sizeof(ShareFile_t));
+            memcpy(data_buf + offset, tmp->data, sizeof(ShareFile_t));
+            offset += sizeof(ShareFile_t);
             tmp = tmp->next;
         }
     }
@@ -2989,7 +2990,7 @@ sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data
     int index = 0;
     if(size > 0) {
         while (tmp != NULL) {
-            ShareFile_t *sf = (ShareFile_t)(tmp->data);
+            ShareFile_t *sf = (ShareFile_t *)(tmp->data);
             sgx_printf("element %d:\n", index);
             sgx_printf("\tfild_id = %s, \n\tfile_name = %s\n", 
                 sf->file_id, sf->file_name);

@@ -9,7 +9,7 @@
  */
 list_node* list_create(void *data)
 {
-	list_node *l = malloc(sizeof(list_node));
+	list_node *l = (list_node *)malloc(sizeof(list_node));
 	if (l != NULL) {
 		l->next = NULL;
 		l->data = data;
@@ -125,7 +125,8 @@ list_node* list_find_node(list_node *list, list_node *node)
 list_node* list_find_by_data(list_node *list, void *data)
 {
 	while (list) {
-        if(strcmp((ShareFile_t)(list->data)->file_id, (ShareFile_t)data->file_id) == 0) 
+        if(strcmp((const char*)((ShareFile_t *)(list->data))->file_id, 
+			(const char*)((ShareFile_t *)data)->file_id) == 0) 
             break;
 		list = list->next;
 	}
@@ -164,7 +165,7 @@ int list_size(list_node **list)
 	if (list == NULL) return size;
 	while (*list != NULL) {
 		*list = (*list)->next;
-		size ++
+		size ++;
 	}
 	return size;
 }

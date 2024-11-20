@@ -17,5 +17,5 @@ void list_remove_by_data(list_node **list, void *data);
 list_node* list_find_node(list_node *list, list_node *node);
 list_node* list_find_by_data(list_node *list, void *data);
 list_node* list_find(list_node *list, int(*func)(list_node*,void*), void *data);
-
+int list_size(list_node **list);
 #endif
