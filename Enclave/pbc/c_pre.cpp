@@ -2800,6 +2800,7 @@ sgx_status_t t_Dec2(
 }
 
 sgx_status_t t_SaveShareFile(
+    uint8_t *share_id, int share_id_len, 
     uint8_t *file_id, int file_id_len, 
     uint8_t *file_name, int file_name_len, 
     uint8_t *C_rk, int C_rk_len, 
@@ -2815,6 +2816,11 @@ sgx_status_t t_SaveShareFile(
     sgx_printf("t_SaveShareFile start\n");
         
     ShareFile_t *sf =(ShareFile_t *)malloc(sizeof(ShareFile_t)) ;
+
+    if(share_id_len <=0 || share_id_len > sizeof(sf->share_id) - 1) {
+        sgx_printf("t_SaveShareFile share_id_len error, share_id_len = %d\n", share_id_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
     if(file_id_len <=0 || file_id_len > sizeof(sf->file_id) - 1) {
         sgx_printf("t_SaveShareFile file_id_len error, file_id_len = %d\n", file_id_len);
         return SGX_ERROR_INVALID_PARAMETER;
@@ -2865,6 +2871,7 @@ sgx_status_t t_SaveShareFile(
     }
     sgx_printf("\n");
     memset(sf, 0x00, sizeof(sf));
+    memcpy(sf->share_id, share_id, share_id_len);
     memcpy(sf->file_id, file_id, file_id_len);
     memcpy(sf->file_name, file_name, file_name_len);
     memcpy(sf->C_rk, C_rk, C_rk_len);
@@ -2916,8 +2923,8 @@ sgx_status_t t_SaveShareFile(
         while (tmp != NULL) {
             ShareFile_t *sf = (ShareFile_t *)(tmp->data);
             sgx_printf("element %d:\n", index);
-            sgx_printf("\tfild_id = %s\n\tfile_name = %s\n", 
-                sf->file_id, sf->file_name);
+            sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
+                sf->share_id, sf->file_id, sf->file_name);
             tmp = tmp->next;
             index ++;
         }
@@ -3077,3 +3084,106 @@ sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data
     return ret;
 }
 
+
+sgx_status_t t_ReEnc(
+    uint8_t *share_id, int share_id_len, 
+    uint8_t *file_id, int file_id_len, 
+    uint8_t *file_name, int file_name_len, 
+    uint8_t *Cert_user_info, int Cert_user_info_len, 
+    uint8_t *Cert_user_info_sign_value, int Cert_user_info_sign_value_len)
+{
+    sgx_printf("t_ReEnc start\n");
+        
+    ShareFile_t *sf =(ShareFile_t *)malloc(sizeof(ShareFile_t)) ;
+    
+    if(share_id_len <=0 || share_id_len > sizeof(sf->share_id) - 1) {
+        sgx_printf("t_ReEnc share_id_len error, share_id_len = %d\n", share_id_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(file_id_len <=0 || file_id_len > sizeof(sf->file_id) - 1) {
+        sgx_printf("t_ReEnc file_id_len error, file_id_len = %d\n", file_id_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(file_name_len <=0 || file_name_len > sizeof(sf->file_name) - 1) {
+        sgx_printf("t_ReEnc file_name_len error, file_name_len = %d\n", file_name_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(Cert_user_info_len <=0 || Cert_user_info_len > sizeof(sf->Cert_user_info) - 1) {
+        sgx_printf("t_ReEnc Cert_user_info error, Cert_user_info_len = %d\n", Cert_user_info_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(Cert_user_info_sign_value_len <=0 || Cert_user_info_sign_value_len > sizeof(sf->Cert_user_info_sign_value) - 1) {
+        sgx_printf("t_ReEnc Cert_user_info_sign_value error, Cert_user_info_sign_value_len = %d\n", Cert_user_info_sign_value_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    
+    sgx_printf("share id is:");
+    for(int i=0;i<share_id_len + 10;i++) {
+        sgx_printf("%c", share_id[i]);
+    }
+    sgx_printf("\n");
+    memset(sf, 0x00, sizeof(sf));
+    memcpy(sf->share_id, share_id, share_id_len);
+    memcpy(sf->file_id, file_id, file_id_len);
+    memcpy(sf->file_name, file_name, file_name_len);
+    memcpy(sf->Cert_user_info, Cert_user_info, Cert_user_info_len);
+    memcpy(sf->Cert_user_info_sign_value, Cert_user_info_sign_value, Cert_user_info_sign_value_len);
+
+    //retrive sharefile info from shareFileList
+    sgx_printf("t_ReEnc retrive sharefile info from shareFileList\n");
+    size_t size = 0;
+    list_node *tmp = NULL;
+    int index = 0;
+#ifdef PRINT_DEBUG_INFO
+    size = list_size(&shareFileList);
+    sgx_printf("t_SaveShareFile before list_find, size is %d\n", size);
+    tmp = shareFileList;
+    index = 0;
+    if(size > 0) {
+        while (tmp != NULL) {
+            ShareFile_t *sf = (ShareFile_t *)(tmp->data);
+            sgx_printf("element %d:\n", index);
+            sgx_printf("\tfild_id = %s\n\tfile_name = %s\n", 
+                sf->file_id, sf->file_name);
+            tmp = tmp->next;
+            index ++;
+        }
+    }
+    sgx_printf("\n");
+#endif
+    tmp = shareFileList;
+    list_node *result_node = NULL;
+    result_node = list_find(tmp, compare_node_and_data, (void *)sf);
+    if(NULL == result_node) {
+        sgx_printf("failed to retrive data from shareFileList\n");
+        sgx_printf("maybe it has been deleted, depends on database\n");
+        return SGX_SUCCESS;
+    }
+    shareFileList *result_sf = NULL;
+    result_sf = result_node->data;
+    list_remove(&shareFileList, result_node);
+    //todo
+    sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);
+    size = list_size(&shareFileList);
+    sgx_printf("t_SaveShareFile after list_insert_end, size is %d\n", size);
+    
+#ifdef PRINT_DEBUG_INFO
+    tmp = shareFileList;
+    index = 0;
+    if(size > 0) {
+        while (tmp != NULL) {
+            ShareFile_t *sf = (ShareFile_t *)(tmp->data);
+            sgx_printf("element %d:\n", index);
+            sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
+                sf->share_id, sf->file_id, sf->file_name);
+            tmp = tmp->next;
+            index ++;
+        }
+    }
+    sgx_printf("\n");
+#endif
+    
+    free(result_sf);
+    sgx_printf("t_SaveShareFile end\n");
+    return SGX_SUCCESS;
+}

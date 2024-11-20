@@ -118,15 +118,20 @@ list_node* list_find_node(list_node *list, list_node *node)
 /* Finds an elemt in a list by the data pointer
  * Arguments: A pointer to a list and a pointer to the data
  */
-// int compare(ShareFile_t *data1, ShareFile_t *data2) 
-// {
-//     return strcmp(data1->file_id, data2->file_id);
-// }
+int compare_by_data(ShareFile_t *data1, ShareFile_t *data2) 
+{
+    // return  (strcmp(data1->file_id, data2->file_id) == 0) &&
+	// 		(strcmp(data1->Cert_owner_info_sign_value, 
+	// 			data2->Cert_owner_info_sign_value) == 0) &&
+	// 		(strcmp(data1->owner_grant_info_sign_value, 
+	// 			data2->owner_grant_info_sign_value) == 0);
+	return  (strcmp(data1->share_id, data2->share_id) == 0);
+}
 list_node* list_find_by_data(list_node *list, void *data)
 {
 	while (list) {
-        if(strcmp((const char*)((ShareFile_t *)(list->data))->file_id, 
-			(const char*)((ShareFile_t *)data)->file_id) == 0) 
+        if(compare_by_data( (ShareFile_t *)(list->data),
+			(ShareFile_t *)data )
             break;
 		list = list->next;
 	}
@@ -146,6 +151,11 @@ list_node* list_find_by_data(list_node *list, void *data)
  * Arguments: A pointer to a list, the comparison function and a pointer to the
  * data
  */
+int compare_node_and_data(list_node *list, ShareFile_t *data) 
+{
+	ShareFile_t *sf = (ShareFile_t *)(list->data);
+	return  (strcmp(sf->share_id, data->share_id) == 0);
+}
 list_node* list_find(list_node *list, int(*func)(list_node*,void*), void *data)
 {
 	if (!func) return NULL;

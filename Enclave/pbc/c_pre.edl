@@ -24,6 +24,7 @@ enclave {
             [out, size=m_bytes_len] uint8_t *m_bytes, int m_bytes_len);
         
         public sgx_status_t t_SaveShareFile(
+            [in, size=share_id_len] uint8_t *share_id, int share_id_len, 
             [in, size=file_id_len] uint8_t *file_id, int file_id_len, 
             [in, size=file_name_len] uint8_t *file_name, int file_name_len, 
             [in, size=C_rk_len] uint8_t *C_rk, int C_rk_len, 
