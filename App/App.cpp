@@ -74,6 +74,7 @@
 #define SEALED_VK_DATA_FILE "sealed_vk_A_data_blob.txt"
 #define SEALED_bListU_DATA_FILE "sealed_bList_U_data_blob.txt"
 #define SEALED_keyPairHex_DATA_FILE "sealed_keyPairHex_data_blob.txt"
+#define SEALED_shareFileList_DATA_FILE "sealed_shareFileList_data_blob.txt"
 
 
 /* Global EID shared by multiple threads */
@@ -940,6 +941,60 @@ bool loadSealed_keyPairHex_Data() {
     return true;
 }
 
+
+bool loadSealed_shareFileList_Data() {
+
+    sgx_status_t ret;
+
+    // Read the sealed blob from the file
+    size_t fsize = get_file_size(SEALED_shareFileList_DATA_FILE);
+    if (fsize == (size_t)-1)
+    {
+        printf("Failed to get the file size of \" %s \"\n", SEALED_shareFileList_DATA_FILE);
+        printf("no sealed keyPairHe data need to load\n");
+        // sgx_destroy_enclave(global_eid);
+        return true;
+    }
+    uint8_t *temp_buf = (uint8_t *)malloc(fsize);
+    if (temp_buf == NULL)
+    {
+        printf("Out of memory\n");
+        // sgx_destroy_enclave(global_eid);
+        return false;
+    }
+    if (read_file_to_buf(SEALED_shareFileList_DATA_FILE, temp_buf, fsize) == false)
+    {
+        printf("Failed to read the sealed keyPairHe data blob from \" %s \"\n");
+        free(temp_buf);
+        // sgx_destroy_enclave(global_eid);
+        return false;
+    }
+    // Unseal the sealed blob
+    sgx_status_t retval;
+    ret = t_unseal_shareFileList_data(global_eid, &retval, temp_buf, fsize);
+    if (ret != SGX_SUCCESS)
+    {
+        printf("call t_unseal_shareFileList_data ret error\n");
+        print_error_message(ret);
+        free(temp_buf);
+        // sgx_destroy_enclave(global_eid);
+        return false;
+    }
+    else if (retval != SGX_SUCCESS)
+    {
+        printf("call t_unseal_shareFileList_data retval error\n");
+        print_error_message(retval);
+        free(temp_buf);
+        // sgx_destroy_enclave(global_eid);
+        return false;
+    }
+
+    free(temp_buf);
+
+    printf("Unseal shareFileList succeeded.\n");
+    return true;
+}
+
 bool loadSealedData() {
 
     loadSealed_Vk_Data();
@@ -983,7 +1038,7 @@ int SGX_CDECL main(int argc, char *argv[])
     // seal_test();
     // unseal_test();
     // c_pre_test();
-    ssl_test();
+    // ssl_test();
 
     /* Initialize the enclave , set global_eid*/
     if (initialize_enclave() < 0)
@@ -1403,7 +1458,7 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
 
     if (write_buf_to_file(SEALED_VK_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
     {
-        printf("Failed to save the sealed data blob to \" %s \" \n");
+        printf("Failed to save the sealed data blob to \" %s \" \n", SEALED_VK_DATA_FILE);
         free(temp_sealed_buf);
         int len = strlen(ERRORMSG_FILE_IO_ERROR);
         offset = 0;
@@ -1574,7 +1629,7 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
 
     if (write_buf_to_file(SEALED_keyPairHex_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
     {
-        printf("Failed to save the sealed data blob to \" %s \" \n");
+        printf("Failed to save the sealed data blob to \" %s \" \n", SEALED_keyPairHex_DATA_FILE);
         free(temp_sealed_buf);
         int len = strlen(ERRORMSG_FILE_IO_ERROR);
         offset = 0;
@@ -1889,8 +1944,6 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     printf("owner_grant_info_sign_valueLength is %d, owner_grant_info_sign_value is :\n", owner_grant_info_sign_valueLength);
     dump_hex(owner_grant_info_sign_value, owner_grant_info_sign_valueLength, 16);
 
-    //todo...
-
     sgx_status_t retval;
     sgx_status_t ret = t_SaveShareFile(global_eid, &retval, 
         file_id, file_id_len,
@@ -1938,7 +1991,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     */
    // Get the sealed data size
     uint32_t sealed_data_size = 0;
-    ret = t_get_sealed_vk_A_data_size(global_eid, &sealed_data_size);
+    ret = t_get_sealed_shareFileList_data_size(global_eid, &sealed_data_size);
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
@@ -1984,7 +2037,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
         (*p_responseMsgLength) = offset;
         return -2;
     }
-    ret = t_seal_vk_A_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+    ret = t_seal_shareFileList_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
@@ -2016,9 +2069,9 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
         return -3;
     }
 
-    if (write_buf_to_file(SEALED_VK_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
+    if (write_buf_to_file(SEALED_shareFileList_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
     {
-        printf("Failed to save the sealed data blob to \" %s \" \n");
+        printf("Failed to save the sealed data blob to \" %s \" \n", SEALED_shareFileList_DATA_FILE);
         free(temp_sealed_buf);
         int len = strlen(ERRORMSG_FILE_IO_ERROR);
         offset = 0;
