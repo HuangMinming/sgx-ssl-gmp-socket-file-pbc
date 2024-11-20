@@ -2812,6 +2812,8 @@ sgx_status_t t_SaveShareFile(
     uint8_t *owner_grant_info, int owner_grant_info_len,
     uint8_t *owner_grant_info_sign_value, int owner_grant_info_sign_value_len)
 {
+    sgx_printf("t_SaveShareFile start\n");
+        
     ShareFile_t sf;
     if(file_id_len <=0 || file_id_len > sizeof(sf.file_id) - 1) {
         sgx_printf("t_SaveShareFile file_id_len error, file_id_len = %d\n", file_id_len);
@@ -2857,6 +2859,7 @@ sgx_status_t t_SaveShareFile(
         sgx_printf("t_SaveShareFile owner_grant_info_sign_value_len error, owner_grant_info_sign_value_len = %d\n", owner_grant_info_sign_value_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
+    memset(&sf, 0x00, sizeof(sf));
     memcpy(sf.file_id, file_id, file_id_len);
     memcpy(sf.file_name, file_name, file_name_len);
     memcpy(sf.C_rk, C_rk, C_rk_len);
@@ -2876,11 +2879,14 @@ sgx_status_t t_SaveShareFile(
     //     shareFileList = list_insert_end(shareFileList, sf);
     // }
     shareFileList = list_insert_end(shareFileList, (void *)&sf);
-    //todo
+    sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);
+    size_t size = list_size(&shareFileList);
+    sgx_printf("t_SaveShareFile list_size is %d\n", size);
 
 #ifdef PRINT_DEBUG_INFO
 
 #endif
+    sgx_printf("t_SaveShareFile end\n");
     return SGX_SUCCESS;
 }
 
@@ -2898,7 +2904,10 @@ uint32_t t_get_sealed_shareFileList_data_size()
 
 sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
 {
+    sgx_printf("t_seal_shareFileList_data start\n");
+    sgx_printf("t_seal_shareFileList_data address of shareFileList = %p\n", &shareFileList);
     size_t size = list_size(&shareFileList);
+    sgx_printf("t_seal_shareFileList_data list_size is %d\n", size);
     uint32_t sealed_data_size = sgx_calc_sealed_data_size((uint32_t)strlen(aad_shareFileList_mac_text), 
         (uint32_t)(size * sizeof(ShareFile_t)));
     if (sealed_data_size == UINT32_MAX)
@@ -2906,6 +2915,7 @@ sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
     if (sealed_data_size > data_size)
         return SGX_ERROR_INVALID_PARAMETER;
 
+    sgx_printf("t_seal_shareFileList_data sealed_data_size is %d\n", sealed_data_size);
     unsigned char data_buf[size * sizeof(ShareFile_t)];
 
     int offset = 0;
@@ -2936,12 +2946,14 @@ sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
     }
 
     free(temp_sealed_buf);
+    sgx_printf("t_seal_shareFileList_data end, err = %d\n", err);
     return err;
 }
 
 
 sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data_size)
 {
+    sgx_printf("t_unseal_shareFileList_data start\n");
     uint32_t mac_text_len = sgx_get_add_mac_txt_len((const sgx_sealed_data_t *)sealed_blob);
     uint32_t decrypt_data_len = sgx_get_encrypt_txt_len((const sgx_sealed_data_t *)sealed_blob);
     if (mac_text_len == UINT32_MAX || decrypt_data_len == UINT32_MAX)
@@ -3002,6 +3014,7 @@ sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data
 #endif
     free(de_mac_text);
     // free(decrypt_data);
+    sgx_printf("t_unseal_shareFileList_data end\n");
     return ret;
 }
 

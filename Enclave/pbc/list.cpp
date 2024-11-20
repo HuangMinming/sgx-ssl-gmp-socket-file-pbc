@@ -163,8 +163,9 @@ int list_size(list_node **list)
 {
 	size_t size = 0;
 	if (list == NULL) return size;
-	while (*list != NULL) {
-		*list = (*list)->next;
+	list_node *tmp = *list;
+	while (tmp != NULL) {
+		tmp = tmp->next;
 		size ++;
 	}
 	return size;

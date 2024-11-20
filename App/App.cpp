@@ -951,7 +951,7 @@ bool loadSealed_shareFileList_Data() {
     if (fsize == (size_t)-1)
     {
         printf("Failed to get the file size of \" %s \"\n", SEALED_shareFileList_DATA_FILE);
-        printf("no sealed keyPairHe data need to load\n");
+        printf("no sealed shareFileList data need to load\n");
         // sgx_destroy_enclave(global_eid);
         return true;
     }
@@ -1000,6 +1000,7 @@ bool loadSealedData() {
     loadSealed_Vk_Data();
     // loadSealed_bList_U_Data();
     loadSealed_keyPairHex_Data();
+    loadSealed_shareFileList_Data();
 
     return true;
 }
@@ -1255,6 +1256,15 @@ int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd,
         memset(responseBody, 0x00, sizeof(responseBody));
         memset(responseMsg, 0x00, sizeof(responseMsg));
         iret = handleRequest0002(requestBody, requestBodyLength, 
+            responseMsg, p_responseMsgLen);
+        
+        // printf("responseMsg is : %s\n", responseMsg);
+        // Write(fd, responseMsg, offset);
+    }
+    else if(memcmp(requestCode, "0003", 4) == 0) {
+        memset(responseBody, 0x00, sizeof(responseBody));
+        memset(responseMsg, 0x00, sizeof(responseMsg));
+        iret = handleRequest0003(requestBody, requestBodyLength, 
             responseMsg, p_responseMsgLen);
         
         // printf("responseMsg is : %s\n", responseMsg);
@@ -1985,6 +1995,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
         (*p_responseMsgLength) = offset;
         return -2;
     }
+    printf("Call t_SaveShareFile success.\n");
 
     /*
     seal shareFile data
@@ -1994,6 +2005,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     ret = t_get_sealed_shareFileList_data_size(global_eid, &sealed_data_size);
     if (ret != SGX_SUCCESS)
     {
+        printf("Call t_get_sealed_shareFileList_data_size failed.\n");
         print_error_message(ret);
         int len = strlen(ERRORMSG_SGX_ERROR);
         offset = 0;
@@ -2021,6 +2033,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
         (*p_responseMsgLength) = offset;
         return -3;
     }
+    printf("Call t_get_sealed_shareFileList_data_size success.\n");
 
     uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
     if (temp_sealed_buf == NULL)
@@ -2040,6 +2053,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     ret = t_seal_shareFileList_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
     if (ret != SGX_SUCCESS)
     {
+        printf("call t_seal_shareFileList_data failed\n");
         print_error_message(ret);
         free(temp_sealed_buf);
         int len = strlen(ERRORMSG_SGX_ERROR);
@@ -2055,6 +2069,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     }
     else if (retval != SGX_SUCCESS)
     {
+        printf("call t_seal_shareFileList_data failed, retval=%d\n", retval);
         print_error_message(retval);
         free(temp_sealed_buf);
         int len = strlen(ERRORMSG_SGX_ERROR);
@@ -2068,6 +2083,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
         (*p_responseMsgLength) = offset;
         return -3;
     }
+    printf("Call t_seal_shareFileList_data success.\n");
 
     if (write_buf_to_file(SEALED_shareFileList_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
     {
@@ -2084,6 +2100,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
         (*p_responseMsgLength) = offset;
         return -2;
     }
+    printf("Call write_buf_to_file success.\n");
 
     free(temp_sealed_buf);
     // set successful respond
