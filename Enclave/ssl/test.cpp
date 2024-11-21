@@ -802,8 +802,8 @@ MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEc0oxhhjXfOFZEPR8tadGpv+lwd9Y\n\
 CJwqxd9osvTVqjOVlOK04ynnQv6Kj4YPuTWhcDzSqkkgMYA278yY88i+Lg==\n\
 -----END PUBLIC KEY-----";
     int public_key_len = strlen(public_key);
-    printf("\npublic_key_len = %d \n", public_key_len);
-    printf("\n%s\n", public_key);
+    sgx_printf("\npublic_key_len = %d \n", public_key_len);
+    sgx_printf("\n%s\n", public_key);
     BIO *verify_bio = NULL;
     verify_bio = BIO_new(BIO_s_mem());
     BIO_puts(verify_bio, public_key);
@@ -811,7 +811,7 @@ CJwqxd9osvTVqjOVlOK04ynnQv6Kj4YPuTWhcDzSqkkgMYA278yY88i+Lg==\n\
     if (NULL == (veriry_pkey = PEM_read_bio_PUBKEY(verify_bio, NULL, NULL, NULL) ))
     {
 		BIO_free(verify_bio);
-        handleErrors();
+        handleErrors("PEM_read_bio_PUBKEY");
     }
 
     EVP_MD_CTX *verify_mdctx = EVP_MD_CTX_new();
@@ -821,38 +821,38 @@ CJwqxd9osvTVqjOVlOK04ynnQv6Kj4YPuTWhcDzSqkkgMYA278yY88i+Lg==\n\
 	// verity initialize,  md must be the same as sign
     if(!EVP_VerifyInit_ex(verify_mdctx, EVP_sha256(), NULL))
     {  
-		handleErrors();
+		handleErrors("EVP_VerifyInit_ex");
 		BIO_free(verify_bio);
 		EVP_MD_CTX_free(verify_mdctx);
-        return 0;  
+        return;  
     }  
 	// add verify data
-    char *msg = "HELLO";
+    char *msg = "HELLO1";
     if(!EVP_VerifyUpdate(verify_mdctx, msg, strlen(msg)))
     {  
-        handleErrors();
+        handleErrors("EVP_VerifyUpdate");
 		BIO_free(verify_bio);
 		EVP_MD_CTX_free(verify_mdctx);
-        return 0;  
+        return;  
     }     
 	// verify
-    u_char *sigHex = "304402207145ddb2968068e031d9ff27e7f7579b4c0ebfbc0a4b2d6b7cd51eed63eb2d1902204c5dedbb077ef7bb6a8531162503f7eef9ed72a34b6350bc1e6f9318302007ce";
-    int sigHex_len = strlen(sigHex);
+    u_char *sigHex = (u_char*)"304402207145ddb2968068e031d9ff27e7f7579b4c0ebfbc0a4b2d6b7cd51eed63eb2d1902204c5dedbb077ef7bb6a8531162503f7eef9ed72a34b6350bc1e6f9318302007ce";
+    int sigHex_len = strlen((const char*)sigHex);
     u_char sig[1024];
     int sig_len = sigHex_len/2;
     HexStrToByteStr(sigHex, sigHex_len, sig);
-    printf("sig:");
+    sgx_printf("sig:");
     for(int i=0;i<sig_len;i++) {
-        printf("%c", sig[i]);
+        sgx_printf("%c", sig[i]);
     }
-    printf("\n");
-    printf("sig[%d] is:\n", sig_len);
-    BIO_dump_fp(stdout, (const char *)sig, sig_len);
+    sgx_printf("\n");
+    sgx_printf("sig[%d] is:\n", sig_len);
+    // BIO_dump_fp(stdout, (const char *)sig, sig_len);
     /*
     EVP_VerifyFinal() returns 1 for a correct signature, 
     0 for failure and -1 if some other error occurred.
     */
     int iRet = EVP_VerifyFinal(verify_mdctx,sig,sig_len,veriry_pkey);
-    printf("verify result: %d\n", iRet);
+    sgx_printf("verify result: %d\n", iRet);
 }
 

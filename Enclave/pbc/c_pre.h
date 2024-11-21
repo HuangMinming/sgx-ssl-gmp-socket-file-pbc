@@ -36,8 +36,6 @@ typedef struct {
     uint8_t sk_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];   // 私钥 Zr
 } KeyPairHex;
 
-#define bList_U_MAX_size 1024
-#define user_id_MAX_size 21
 struct ShareFile_t {
     uint8_t owner_user_id[20 + 1];
     uint8_t shared_with_user_id[20 + 1];

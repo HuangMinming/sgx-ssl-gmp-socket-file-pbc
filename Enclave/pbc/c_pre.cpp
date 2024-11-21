@@ -12,12 +12,12 @@
 
 
 
-list_node* shareFileList = NULL;
-char aad_shareFileList_mac_text[BUFSIZ] = "shareFileList";
 
 UserRevocationList_t RL;
 char aad_UserRevocationList_mac_text[BUFSIZ] = "UserRevocationList";
 
+list_node* shareFileList = NULL;
+char aad_shareFileList_mac_text[BUFSIZ] = "shareFileList";
 
 /*
 [0x23, 0x3A, 0x46, 0x4C, 0x52] ==> “233A464C52”
@@ -3141,7 +3141,7 @@ sgx_status_t t_ReEnc(
     }
     sgx_printf("\n");
     memset(sf, 0x00, sizeof(sf));
-    memcpy(sf->shared_with_user_id, user_Id, user_id_len);
+    memcpy(sf->shared_with_user_id, user_id, user_id_len);
     memcpy(sf->share_id, share_id, share_id_len);
     memcpy(sf->file_id, file_id, file_id_len);
     memcpy(sf->file_name, file_name, file_name_len);
@@ -3181,8 +3181,8 @@ sgx_status_t t_ReEnc(
         sgx_printf("maybe it has been deleted, depends on database\n");
         return SGX_SUCCESS;
     }
-    shareFileList *result_sf = NULL;
-    result_sf = result_node->data;
+    ShareFile_t *result_sf = NULL;
+    result_sf = (ShareFile_t *)result_node->data;
     list_remove(&shareFileList, result_node);
 
     sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);

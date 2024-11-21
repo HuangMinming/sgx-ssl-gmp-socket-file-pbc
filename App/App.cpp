@@ -1024,6 +1024,14 @@ void ssl_test()
         return;
     }
 
+    ret = t_sgxssl_ecdsa_test(global_eid);
+    if (ret != SGX_SUCCESS)
+    {
+        print_error_message(ret);
+        sgx_destroy_enclave(global_eid);
+        return;
+    }
+
     sgx_destroy_enclave(global_eid);
 
     std::cout << "Sealing data succeeded." << std::endl;
@@ -1039,7 +1047,7 @@ int SGX_CDECL main(int argc, char *argv[])
     // seal_test();
     // unseal_test();
     // c_pre_test();
-    // ssl_test();
+    ssl_test();
 
     /* Initialize the enclave , set global_eid*/
     if (initialize_enclave() < 0)
@@ -1740,36 +1748,36 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
    int offset = 0;
    int reqestBodyOffset = 0;
    //ownerUseridLength(4 bytes) + ownerUserid(20 bytes)
-   memset(ownerUseridLengthStr, 0x00, sizeof(ownerUseridLengthStr));
-   memcpy(ownerUseridLengthStr, requestBody + reqestBodyOffset, 4);
+   memset(ownerUserIdLengthStr, 0x00, sizeof(ownerUserIdLengthStr));
+   memcpy(ownerUserIdLengthStr, requestBody + reqestBodyOffset, 4);
    reqestBodyOffset += 4;
-   ownerUseridLength = atoi(ownerUseridLengthStr);
-   if(ownerUseridLength <= 0 || ownerUseridLength > sizeof(ownerUserid))
+   ownerUserIdLength = atoi(ownerUserIdLengthStr);
+   if(ownerUserIdLength <= 0 || ownerUserIdLength > sizeof(ownerUserId))
     {
-        printf("error ownerUserid length, ownerUseridLength is %d \n", ownerUseridLength);
+        printf("error ownerUserid length, ownerUserIdLength is %d \n", ownerUserIdLength);
         packResp((unsigned char *)"0101", 4, 
             (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
             responseMsg, p_responseMsgLength);
         return -1;
     }
-    memcpy(ownerUserid, requestBody + reqestBodyOffset, ownerUseridLength);
-    reqestBodyOffset += ownerUseridLength;
+    memcpy(ownerUserId, requestBody + reqestBodyOffset, ownerUserIdLength);
+    reqestBodyOffset += ownerUserIdLength;
 
     //sharedWithUserIdLength(4 bytes) + shareWithUserId(20 bytes) 
-   memset(shareWithUserIdLengthStr, 0x00, sizeof(shareWithUserIdLengthStr));
-   memcpy(shareWithUserIdLengthStr, requestBody + reqestBodyOffset, 4);
+   memset(sharedWithUserIdLengthStr, 0x00, sizeof(sharedWithUserIdLengthStr));
+   memcpy(sharedWithUserIdLengthStr, requestBody + reqestBodyOffset, 4);
    reqestBodyOffset += 4;
-   shareWithUserIdLength = atoi(shareWithUserIdLengthStr);
-   if(shareWithUserIdLength <= 0 || shareWithUserIdLength > sizeof(shareWithUserId))
+   sharedWithUserIdLength = atoi(sharedWithUserIdLengthStr);
+   if(sharedWithUserIdLength <= 0 || sharedWithUserIdLength > sizeof(sharedWithUserId))
     {
-        printf("error shareWithUserId length, shareWithUserIdLength is %d \n", shareWithUserIdLength);
+        printf("error shareWithUserId length, sharedWithUserIdLength is %d \n", sharedWithUserIdLength);
         packResp((unsigned char *)"0101", 4, 
             (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
             responseMsg, p_responseMsgLength);
         return -1;
     }
-    memcpy(shareWithUserId, requestBody + reqestBodyOffset, shareWithUserIdLength);
-    reqestBodyOffset += shareWithUserIdLength;
+    memcpy(sharedWithUserId, requestBody + reqestBodyOffset, sharedWithUserIdLength);
+    reqestBodyOffset += sharedWithUserIdLength;
 
     //shareIdLength(4 bytes) + shareId(50 bytes)
     memset(shareIdLengthStr, 0x00, sizeof(shareIdLengthStr));
@@ -1969,8 +1977,8 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     printf("ownerUserIdLength is %d, ownerUserId is :\n", ownerUserIdLength);
     dump_hex(ownerUserId, ownerUserIdLength, 16);
 
-    printf("shareWithUserIdLength is %d, shareWithUserId is :\n", shareWithUserIdLength);
-    dump_hex(shareWithUserId, shareWithUserIdLength, 16);
+    printf("sharedWithUserIdLength is %d, sharedWithUserId is :\n", sharedWithUserIdLength);
+    dump_hex(sharedWithUserId, sharedWithUserIdLength, 16);
     
     printf("shareIdLength is %d, fileId is :\n", shareIdLength);
     dump_hex(shareId, shareIdLength, 16);
@@ -2011,7 +2019,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     sgx_status_t retval;
     sgx_status_t ret = t_SaveShareFile(global_eid, &retval, 
         ownerUserId, ownerUserIdLength,
-        shareWithUserId, shareWithUserIdLength,
+        sharedWithUserId, sharedWithUserIdLength,
         shareId, shareIdLength,
         fileId, fileIdLength,
         filename, filenameLength, 
@@ -2298,156 +2306,156 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     dump_hex(Cert_user_info_sign_value, Cert_user_info_sign_valueLength, 16);
 
     sgx_status_t retval;
-    sgx_status_t ret = t_ReEnc(global_eid, &retval, 
-        userId, userIdLength, 
-        shareId, shareIdLength,
-        fileId, fileIdLength,
-        filename, filenameLength, 
-        C_rk, C_rk_length, 
-        CDEK_rk_C1, CDEK_rk_C1_length, 
-        CDEK_rk_C2, CDEK_rk_C2_length, 
-        CDEK_rk_C3, CDEK_rk_C3_length, 
-        CDEK_rk_C4, CDEK_rk_C4_length, 
-        Cert_owner_info, Cert_owner_infoLength, 
-        Cert_owner_info_sign_value, Cert_owner_info_sign_valueLength,
-        owner_grant_info, owner_grant_infoLength,
-        owner_grant_info_sign_value, owner_grant_info_sign_valueLength);
-    if (ret != SGX_SUCCESS)
-    {
-        printf("Call t_SaveShareFile failed.\n");
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0102", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -2;
-    }
-    else if (retval != SGX_SUCCESS)
-    {
-        print_error_message(retval);
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0102", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -2;
-    }
-    printf("Call t_SaveShareFile success.\n");
+//     sgx_status_t ret = t_ReEnc(global_eid, &retval, 
+//         userId, userIdLength, 
+//         shareId, shareIdLength,
+//         fileId, fileIdLength,
+//         filename, filenameLength, 
+//         C_rk, C_rk_length, 
+//         CDEK_rk_C1, CDEK_rk_C1_length, 
+//         CDEK_rk_C2, CDEK_rk_C2_length, 
+//         CDEK_rk_C3, CDEK_rk_C3_length, 
+//         CDEK_rk_C4, CDEK_rk_C4_length, 
+//         Cert_owner_info, Cert_owner_infoLength, 
+//         Cert_owner_info_sign_value, Cert_owner_info_sign_valueLength,
+//         owner_grant_info, owner_grant_infoLength,
+//         owner_grant_info_sign_value, owner_grant_info_sign_valueLength);
+//     if (ret != SGX_SUCCESS)
+//     {
+//         printf("Call t_SaveShareFile failed.\n");
+//         int len = strlen(ERRORMSG_SGX_ERROR);
+//         offset = 0;
+//         memcpy(responseMsg + offset, "0102", 4);
+//         offset += 4;
+//         sprintf((char *)(responseMsg + offset), "%04d", len);
+//         offset += 4;
+//         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+//         offset += len;
+//         (*p_responseMsgLength) = offset;
+//         return -2;
+//     }
+//     else if (retval != SGX_SUCCESS)
+//     {
+//         print_error_message(retval);
+//         int len = strlen(ERRORMSG_SGX_ERROR);
+//         offset = 0;
+//         memcpy(responseMsg + offset, "0102", 4);
+//         offset += 4;
+//         sprintf((char *)(responseMsg + offset), "%04d", len);
+//         offset += 4;
+//         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+//         offset += len;
+//         (*p_responseMsgLength) = offset;
+//         return -2;
+//     }
+//     printf("Call t_SaveShareFile success.\n");
 
-    /*
-    seal shareFile data
-    */
-   // Get the sealed data size
-    uint32_t sealed_data_size = 0;
-    ret = t_get_sealed_shareFileList_data_size(global_eid, &sealed_data_size);
-    if (ret != SGX_SUCCESS)
-    {
-        printf("Call t_get_sealed_shareFileList_data_size failed.\n");
-        print_error_message(ret);
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -3;
-    }
-    else if (sealed_data_size == UINT32_MAX)
-    {
-        // sgx_destroy_enclave(global_eid);
-        printf("sealed_data_size equal to %ld.\n", UINT32_MAX);
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -3;
-    }
-    printf("Call t_get_sealed_shareFileList_data_size success.\n");
+//     /*
+//     seal shareFile data
+//     */
+//    // Get the sealed data size
+//     uint32_t sealed_data_size = 0;
+//     ret = t_get_sealed_shareFileList_data_size(global_eid, &sealed_data_size);
+//     if (ret != SGX_SUCCESS)
+//     {
+//         printf("Call t_get_sealed_shareFileList_data_size failed.\n");
+//         print_error_message(ret);
+//         int len = strlen(ERRORMSG_SGX_ERROR);
+//         offset = 0;
+//         memcpy(responseMsg + offset, "0103", 4);
+//         offset += 4;
+//         sprintf((char *)(responseMsg + offset), "%04d", len);
+//         offset += 4;
+//         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+//         offset += len;
+//         (*p_responseMsgLength) = offset;
+//         return -3;
+//     }
+//     else if (sealed_data_size == UINT32_MAX)
+//     {
+//         // sgx_destroy_enclave(global_eid);
+//         printf("sealed_data_size equal to %ld.\n", UINT32_MAX);
+//         int len = strlen(ERRORMSG_SGX_ERROR);
+//         offset = 0;
+//         memcpy(responseMsg + offset, "0103", 4);
+//         offset += 4;
+//         sprintf((char *)(responseMsg + offset), "%04d", len);
+//         offset += 4;
+//         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+//         offset += len;
+//         (*p_responseMsgLength) = offset;
+//         return -3;
+//     }
+//     printf("Call t_get_sealed_shareFileList_data_size success.\n");
 
-    uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
-    if (temp_sealed_buf == NULL)
-    {
-        printf("Out of memory\n");
-        int len = strlen(ERRORMSG_MEMORY_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_MEMORY_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -2;
-    }
-    ret = t_seal_shareFileList_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
-    if (ret != SGX_SUCCESS)
-    {
-        printf("call t_seal_shareFileList_data failed\n");
-        print_error_message(ret);
-        free(temp_sealed_buf);
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -3;
-    }
-    else if (retval != SGX_SUCCESS)
-    {
-        printf("call t_seal_shareFileList_data failed, retval=%d\n", retval);
-        print_error_message(retval);
-        free(temp_sealed_buf);
-        int len = strlen(ERRORMSG_SGX_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0103", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -3;
-    }
-    printf("Call t_seal_shareFileList_data success.\n");
+//     uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
+//     if (temp_sealed_buf == NULL)
+//     {
+//         printf("Out of memory\n");
+//         int len = strlen(ERRORMSG_MEMORY_ERROR);
+//         offset = 0;
+//         memcpy(responseMsg + offset, "0103", 4);
+//         offset += 4;
+//         sprintf((char *)(responseMsg + offset), "%04d", len);
+//         offset += 4;
+//         memcpy(responseMsg + offset, ERRORMSG_MEMORY_ERROR, len);
+//         offset += len;
+//         (*p_responseMsgLength) = offset;
+//         return -2;
+//     }
+//     ret = t_seal_shareFileList_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+//     if (ret != SGX_SUCCESS)
+//     {
+//         printf("call t_seal_shareFileList_data failed\n");
+//         print_error_message(ret);
+//         free(temp_sealed_buf);
+//         int len = strlen(ERRORMSG_SGX_ERROR);
+//         offset = 0;
+//         memcpy(responseMsg + offset, "0103", 4);
+//         offset += 4;
+//         sprintf((char *)(responseMsg + offset), "%04d", len);
+//         offset += 4;
+//         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+//         offset += len;
+//         (*p_responseMsgLength) = offset;
+//         return -3;
+//     }
+//     else if (retval != SGX_SUCCESS)
+//     {
+//         printf("call t_seal_shareFileList_data failed, retval=%d\n", retval);
+//         print_error_message(retval);
+//         free(temp_sealed_buf);
+//         int len = strlen(ERRORMSG_SGX_ERROR);
+//         offset = 0;
+//         memcpy(responseMsg + offset, "0103", 4);
+//         offset += 4;
+//         sprintf((char *)(responseMsg + offset), "%04d", len);
+//         offset += 4;
+//         memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+//         offset += len;
+//         (*p_responseMsgLength) = offset;
+//         return -3;
+//     }
+//     printf("Call t_seal_shareFileList_data success.\n");
 
-    if (write_buf_to_file(SEALED_shareFileList_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
-    {
-        printf("Failed to save the sealed data blob to \" %s \" \n", SEALED_shareFileList_DATA_FILE);
-        free(temp_sealed_buf);
-        int len = strlen(ERRORMSG_FILE_IO_ERROR);
-        offset = 0;
-        memcpy(responseMsg + offset, "0104", 4);
-        offset += 4;
-        sprintf((char *)(responseMsg + offset), "%04d", len);
-        offset += 4;
-        memcpy(responseMsg + offset, ERRORMSG_FILE_IO_ERROR, len);
-        offset += len;
-        (*p_responseMsgLength) = offset;
-        return -2;
-    }
-    printf("Call write_buf_to_file success.\n");
+//     if (write_buf_to_file(SEALED_shareFileList_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
+//     {
+//         printf("Failed to save the sealed data blob to \" %s \" \n", SEALED_shareFileList_DATA_FILE);
+//         free(temp_sealed_buf);
+//         int len = strlen(ERRORMSG_FILE_IO_ERROR);
+//         offset = 0;
+//         memcpy(responseMsg + offset, "0104", 4);
+//         offset += 4;
+//         sprintf((char *)(responseMsg + offset), "%04d", len);
+//         offset += 4;
+//         memcpy(responseMsg + offset, ERRORMSG_FILE_IO_ERROR, len);
+//         offset += len;
+//         (*p_responseMsgLength) = offset;
+//         return -2;
+//     }
+//     printf("Call write_buf_to_file success.\n");
 
-    free(temp_sealed_buf);
+//     free(temp_sealed_buf);
     // set successful respond
     memcpy(responseMsg, "00000000", 8);
     (*p_responseMsgLength) = 8;
