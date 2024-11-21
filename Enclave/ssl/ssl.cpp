@@ -29,6 +29,23 @@ const int IV_LEN = 12;
 const int TAG_SIZE = 16;
 const int KEY_SIZE = 32;
 
+void exit(int status)
+{
+	usgx_exit(status);
+	// Calling to abort function to eliminate warning: ‘noreturn’ function does return [enabled by default]
+	abort();
+}
+
+void handleErrors(char *x)
+{
+    if (DEBUG)
+    {
+        sgx_printf("%s error\n", x);
+        // ERR_print_errors_fp(stderr);
+    }
+    exit(1);
+}
+
 /*
 returns 1 for a correct signature, 
 0 for failure and -1 if some other error occurred.
@@ -64,7 +81,7 @@ int ecdsa_verify(char * public_key, size_t public_key_len,
 		handleErrors("EVP_VerifyInit_ex");
 		BIO_free(verify_bio);
 		EVP_MD_CTX_free(verify_mdctx);
-        return;  
+        return -1;  
     }  
 	// add verify data
     if(!EVP_VerifyUpdate(verify_mdctx, msg, msg_len))
@@ -72,7 +89,7 @@ int ecdsa_verify(char * public_key, size_t public_key_len,
         handleErrors("EVP_VerifyUpdate");
 		BIO_free(verify_bio);
 		EVP_MD_CTX_free(verify_mdctx);
-        return;  
+        return -1;  
     }     
 	// verify
     u_char sig[1024];
@@ -90,6 +107,7 @@ int ecdsa_verify(char * public_key, size_t public_key_len,
     0 for failure and -1 if some other error occurred.
     */
     int iRet = EVP_VerifyFinal(verify_mdctx,sig,sig_len,veriry_pkey);
-    sgx_printf("verify result: %d\n", iRet);
+    sgx_printf("ecdsa_verify verify result: %d\n", iRet);
+    return iRet;
 }
 

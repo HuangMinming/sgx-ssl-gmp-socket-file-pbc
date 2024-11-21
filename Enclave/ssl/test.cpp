@@ -503,13 +503,6 @@ int rsa_test()
 
 
 
-void exit(int status)
-{
-	usgx_exit(status);
-	// Calling to abort function to eliminate warning: ‘noreturn’ function does return [enabled by default]
-	abort();
-}
-
 
 
 void t_list_built_in_curves()
@@ -580,15 +573,6 @@ void t_sgxssl_call_apis()
 }
 
 
-void handleErrors(char *x)
-{
-    if (DEBUG)
-    {
-        sgx_printf("%s error\n", x);
-        // ERR_print_errors_fp(stderr);
-    }
-    exit(1);
-}
 
 int gcm_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
                 unsigned char *iv, int iv_len, unsigned char *ciphertext,
