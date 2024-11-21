@@ -9,9 +9,14 @@
 
 #include "c_pre.h"
 #include "list.h"
+#include "../ssl/ssl.h"
 
 
+vk_A_t g_vk_A;
+char aad_vk_mac_text[BUFSIZ] = "vk";
 
+KeyPairHex g_keyPairHex;
+char aad_g_keyPairHex_mac_text[BUFSIZ] = "g_keyPairHex";
 
 UserRevocationList_t RL;
 char aad_UserRevocationList_mac_text[BUFSIZ] = "UserRevocationList";
@@ -2623,11 +2628,119 @@ int c_pre_main_test() {
     return 0;
 }
 
+
+sgx_status_t t_Admin_Setting(const unsigned char *vk_A, size_t vk_A_Length)
+{
+    
+    memset(g_vk_A.vk_A, 0x00, sizeof(g_vk_A.vk_A));
+
+    memcpy(g_vk_A.vk_A, vk_A, vk_A_Length);
+    g_vk_A.vk_A_Length = vk_A_Length;
+
+    return SGX_SUCCESS;
+
+}
+
+uint32_t t_get_sealed_vk_A_data_size()
+{
+    return sgx_calc_sealed_data_size((uint32_t)strlen(aad_vk_mac_text), (uint32_t)(sizeof(g_vk_A.vk_A) + 4));
+}
+
+sgx_status_t t_seal_vk_A_data(uint8_t *sealed_blob, uint32_t data_size)
+{
+    uint32_t sealed_data_size = sgx_calc_sealed_data_size((uint32_t)strlen(aad_vk_mac_text), (uint32_t)(sizeof(g_vk_A.vk_A) + 4));
+    if (sealed_data_size == UINT32_MAX)
+        return SGX_ERROR_UNEXPECTED;
+    if (sealed_data_size > data_size)
+        return SGX_ERROR_INVALID_PARAMETER;
+
+    unsigned char data_buf[sizeof(g_vk_A.vk_A) + 4];
+    char vk_A_LengthStr[5];
+    memset(data_buf, 0x00, sizeof(data_buf));
+    memset(vk_A_LengthStr, 0x00, sizeof(vk_A_LengthStr));
+    sprintf_s(vk_A_LengthStr, 5, "%04d", g_vk_A.vk_A_Length);
+
+    memcpy(data_buf, g_vk_A.vk_A, sizeof(g_vk_A.vk_A));
+    memcpy(data_buf + sizeof(g_vk_A.vk_A), vk_A_LengthStr, 4);
+    uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
+    if (temp_sealed_buf == NULL)
+        return SGX_ERROR_OUT_OF_MEMORY;
+    sgx_status_t err = sgx_seal_data((uint32_t)strlen(aad_vk_mac_text), 
+        (const uint8_t *)aad_vk_mac_text, (uint32_t)(sizeof(g_vk_A.vk_A) + 4), (uint8_t *)data_buf, 
+        sealed_data_size, (sgx_sealed_data_t *)temp_sealed_buf);
+    if (err == SGX_SUCCESS)
+    {
+        // Copy the sealed data to outside buffer
+        memcpy(sealed_blob, temp_sealed_buf, sealed_data_size);
+    }
+
+    free(temp_sealed_buf);
+    return err;
+}
+
+
+sgx_status_t t_unseal_vk_A_data(const uint8_t *sealed_blob, size_t data_size)
+{
+    uint32_t mac_text_len = sgx_get_add_mac_txt_len((const sgx_sealed_data_t *)sealed_blob);
+    uint32_t decrypt_data_len = sgx_get_encrypt_txt_len((const sgx_sealed_data_t *)sealed_blob);
+    if (mac_text_len == UINT32_MAX || decrypt_data_len == UINT32_MAX)
+        return SGX_ERROR_UNEXPECTED;
+    if (mac_text_len > data_size || decrypt_data_len > data_size)
+        return SGX_ERROR_INVALID_PARAMETER;
+
+    uint8_t *de_mac_text = (uint8_t *)malloc(mac_text_len);
+    if (de_mac_text == NULL)
+        return SGX_ERROR_OUT_OF_MEMORY;
+    uint8_t *decrypt_data = (uint8_t *)malloc(decrypt_data_len);
+    if (decrypt_data == NULL)
+    {
+        free(de_mac_text);
+        return SGX_ERROR_OUT_OF_MEMORY;
+    }
+
+    sgx_status_t ret = sgx_unseal_data((const sgx_sealed_data_t *)sealed_blob, de_mac_text, 
+        &mac_text_len, decrypt_data, &decrypt_data_len);
+    if (ret != SGX_SUCCESS)
+    {
+        free(de_mac_text);
+        free(decrypt_data);
+        return ret;
+    }
+
+    if (memcmp(de_mac_text, aad_vk_mac_text, strlen(aad_vk_mac_text)))
+    {
+        ret = SGX_ERROR_UNEXPECTED;
+    }
+
+    if(decrypt_data_len < (sizeof(g_vk_A.vk_A) + 4))
+    {
+        return SGX_ERROR_UNEXPECTED;
+    }
+
+    char vk_A_LengthStr[5];
+    memset(vk_A_LengthStr, 0x00, sizeof(vk_A_LengthStr));
+
+    memcpy(g_vk_A.vk_A, decrypt_data, sizeof(g_vk_A.vk_A));
+    memcpy(vk_A_LengthStr, decrypt_data + sizeof(g_vk_A.vk_A), 4);
+
+    g_vk_A.vk_A_Length = atoi(vk_A_LengthStr);
+
+    sgx_printf("g_vk_A is: %d\n", g_vk_A.vk_A_Length);
+    for(int i=0;i<g_vk_A.vk_A_Length;i++) {
+        sgx_printf("%c", g_vk_A.vk_A[i]);
+    }
+    sgx_printf("\n");
+
+    free(de_mac_text);
+    free(decrypt_data);
+    return ret;
+}
+
+
 /*
 generate c_pre key pair, and save pk, sk in memory
 */
-KeyPairHex g_keyPairHex;
-char aad_g_keyPairHex_mac_text[BUFSIZ] = "g_keyPairHex";
+
 sgx_status_t t_Trusted_Setup(unsigned char *pk, size_t pk_Length)
 {
     // uint8_t pk_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
@@ -3218,10 +3331,128 @@ sgx_status_t t_ReEnc(
     //𝜎U = Sign(OU ,skA)
     uint8_t *  Cert_DO = result_sf->Cert_owner_info;
     uint8_t *  Cert_DO_sign_value = result_sf->Cert_owner_info_sign_value;
+    size_t Cert_DO_len = strlen((const char *)Cert_DO);
+    size_t Cert_DO_sign_value_len = strlen((const char *)Cert_DO_sign_value);
+
+    
+    int iRet = ecdsa_verify(g_vk_A.vk_A, g_vk_A.vk_A_Length, 
+        Cert_DO, Cert_DO_len, 
+        Cert_DO_sign_value, Cert_DO_sign_value_len);
+    if(iRet != 0) {
+        sgx_printf("t_ReEnc ecdsa_verify DO error, iRet = %d\n", iRet);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+
+    iRet = ecdsa_verify(g_vk_A.vk_A, g_vk_A.vk_A_Length, 
+        Cert_user_info, Cert_user_info_len, 
+        Cert_user_info_sign_value, Cert_user_info_sign_value_len);
+    if(iRet != 0) {
+        sgx_printf("t_ReEnc ecdsa_verify DU error, iRet = %d\n", iRet);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
 
     //TEE verifies both users (DO, DU) were not revoked via checking RL
-    
+    for(int i=0;i<RL.count;i++) {
+        if( memcmp(result_sf->owner_user_id, RL.user_id[i], sizeof(result_sf->owner_user_id) - 1) ==0 ) {
+            sgx_printf("t_ReEnc owner user id is in RL, owner_user_id = %s\n", result_sf->owner_user_id);
+            return SGX_ERROR_INVALID_PARAMETER;
+        }
+        if( memcmp(result_sf->shared_with_user_id, RL.user_id[i], sizeof(result_sf->shared_with_user_id) - 1) ==0 ) {
+            sgx_printf("t_ReEnc shared with user id is in RL, shared_with_user_id = %s\n", result_sf->shared_with_user_id);
+        return SGX_ERROR_INVALID_PARAMETER;
+        }
+    }
+    /*
+    TEE recovers DEKrk from CDEK_rk, using dkTEE ,
+    denoted as DEKrk = C-PRE.Dec(dkTEE, CDEK_rk, H(IDDO|filename)),  
+    decrypts Crk to rk using AES-GCM with DEKrk, 
+    transform CDEK to TCDEK=C-PRE.reEnc(rk, CDEK), 
+    deletes record (filename, CrK, CDEK_rk, CertDO,Ogrant,𝜎grant), 
+    returns (filename, TCDEK) to WebService
+    */
+   /*
+   TEE recovers DEKrk from CDEK_rk, using dkTEE ,
+    denoted as DEKrk = C-PRE.Dec(dkTEE, CDEK_rk, H(IDDO|filename))
+   */
+    uint8_t w[256 + 20];
+    size_t owner_user_id_len = strlen(result_sf->owner_user_id);
+    size_t file_name_len = strlen(result_sf->file_name);
+    memcpy(w, result_sf->owner_user_id, owner_user_id_len);
+    memcpy(w + owner_user_id_len, result_sf->file_name, file_name_len);
+    size_t w_len = owner_user_id_len + file_name_len;
+    uint8_t DEK_rk[SHA256_DIGEST_LENGTH_32 + 1];
+    memset(DEK_rk, 0x00, sizeof(DEK_rk));
+    iRet = Dec2(g_keyPairHex.pk_Hex, sizeof(g_keyPairHex.pk_Hex),
+         g_keyPairHex.sk_Hex, sizeof(g_keyPairHex.sk_Hex),
+         w, w_len,
+         result_sf->CDEK_rk_C1, sizeof(result_sf->CDEK_rk_C1) - 1,
+         result_sf->CDEK_rk_C2, sizeof(result_sf->CDEK_rk_C2) - 1,
+         result_sf->CDEK_rk_C3, sizeof(result_sf->CDEK_rk_C3) - 1,
+         result_sf->CDEK_rk_C4, sizeof(result_sf->CDEK_rk_C4) - 1,
+         DEK_rk, sizeof(DEK_rk)
+         )
+    if(iRet != 0) {
+        sgx_printf("t_ReEnc Dec2 error, iRet = %d\n", iRet);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
 
+    sgx_printf("t_ReEnc: DEK_rk = \n");
+    for(int i=0;i<sizeof(DEK_rk);i++)
+    {
+        sgx_printf("%c", DEK_rk[i]);
+    }
+    sgx_printf("\n");
+
+    /*decrypts Crk to rk using AES-GCM with DEKrk
+    Crk = iv + tag.data + encrypted.data
+    */
+    unsigned char iv_Hex[IV_LEN * 2 + 1];
+    memset(iv_Hex, 0x00, sizeof(iv_Hex));
+    unsigned char tag_Hex[TAG_SIZE * 2 + 1];
+    memset(tag_Hex, 0x00, sizeof(tag_Hex));
+    unsigned char C_rk_Hex[512 + 1];
+    memset(C_rk_Hex, 0x00, sizeof(C_rk_Hex));
+    size_t C_rk_len = strlen(result_sf->C_rk);
+    int offset = 0;
+    memcpy(iv_Hex, (result_sf->C_rk) + offset, IV_LEN * 2);
+    offset += IV_LEN * 2;
+    memcpy(tag_Hex, (result_sf->C_rk) + offset, TAG_SIZE * 2);
+    offset += TAG_SIZE * 2;
+    memcpy(C_rk_Hex, (result_sf->C_rk) + offset, 512);
+    offset += 512;
+    sgx_printf("t_ReEnc: iv_Hex = \s\n", iv_Hex);
+    sgx_printf("t_ReEnc: tag_Hex = \s\n", tag_Hex);
+    unsigned char iv[IV_LEN + 1];
+    memset(iv, 0x00, sizeof(iv));
+    unsigned char tag[TAG_SIZE + 1];
+    memset(tag, 0x00, sizeof(tag));
+    unsigned char C_rk_Byte[256 + 1];
+    memset(C_rk_Byte, 0x00, sizeof(C_rk_Byte));
+    //uint32_t HexStrToByteStr(const uint8_t * src_buf, int src_len, uint8_t * dest_buf)
+    HexStrToByteStr(iv_Hex, IV_LEN * 2, iv);
+    HexStrToByteStr(tag_Hex, TAG_SIZE * 2, tag);
+    HexStrToByteStr(C_rk_Hex, 512, C_rk_Byte);
+    sgx_printf("t_ReEnc: iv = \s\n", iv);
+    sgx_printf("t_ReEnc: tag = \s\n", tag);
+
+    
+    unsigned char C_rk_Byte[256 + 1];
+    memset(C_rk_Byte, 0x00, sizeofo(C_rk_Byte));
+    /*
+   int aes_gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
+                unsigned char *tag, unsigned char *key, unsigned char *iv,
+                int iv_len, unsigned char *plaintext)
+   */
+    aes_gcm_decrypt(C_rk_Byte, 256, 
+        tag, DEK_rk, iv, IV_LEN, C_rk_Byte);
+    
+    unsigned char C_rk1[128 + 1];
+    memset(C_rk1, 0x00, sizeofo(C_rk1));
+
+    unsigned char C_rk2[128 + 1];
+    memset(C_rk2, 0x00, sizeofo(C_rk2));
+    memcpy(C_rk1, C_rk_Byte, 128);
+    memcpy(C_rk2, C_rk_Byte + 128, 128);
 
 
     free(result_sf);

@@ -36,6 +36,11 @@ typedef struct {
     uint8_t sk_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];   // 私钥 Zr
 } KeyPairHex;
 
+struct vk_A_t {
+        unsigned char vk_A[BUF_SIZE];
+        size_t vk_A_Length;
+};
+
 struct ShareFile_t {
     uint8_t owner_user_id[20 + 1];
     uint8_t shared_with_user_id[20 + 1];
@@ -56,7 +61,7 @@ struct ShareFile_t {
 #define UserRevocation_MAX_size 1024
 #define user_id_MAX_size 21
 struct UserRevocationList_t {
-        size_t user_count = 0;
+        size_t count = 0;
         unsigned char user_id[UserRevocation_MAX_size][user_id_MAX_size];  
 };
 

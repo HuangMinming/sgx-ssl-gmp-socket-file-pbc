@@ -2,6 +2,11 @@
 enclave {
     trusted {
         public int c_pre_main_test();
+         public sgx_status_t t_Admin_Setting([in, size=rsaPubKeyLength] const unsigned char *ptr_rsaPubKey, size_t rsaPubKeyLength);
+        public uint32_t t_get_sealed_vk_A_data_size();
+        public sgx_status_t t_seal_vk_A_data([out, size=data_size] uint8_t* sealed_blob, uint32_t data_size);
+        public sgx_status_t t_unseal_vk_A_data([in, size=data_size] const uint8_t *sealed_blob, size_t data_size);
+
         public sgx_status_t t_Trusted_Setup([out, size=pk_Length] unsigned char *pk, size_t pk_Length);
         public uint32_t t_get_sealed_keyPairHex_data_size();
         public sgx_status_t t_seal_keyPairHex_data([out, size=data_size] uint8_t* sealed_blob, uint32_t data_size);
@@ -13,6 +18,7 @@ enclave {
             [in, size=c3_Hex_len] uint8_t *c3_Hex, int c3_Hex_len,
             [in, size=c4_Hex_len] uint8_t *c4_Hex, int c4_Hex_len,
             [out, size=m_bytes_len] uint8_t *m_bytes, int m_bytes_len);
+        
         public sgx_status_t t_SaveShareFile(
             [in, size=owner_user_id_len] uint8_t *owner_user_id, int owner_user_id_len, 
             [in, size=shared_with_user_id_len] uint8_t *shared_with_user_id, int shared_with_user_id_len, 

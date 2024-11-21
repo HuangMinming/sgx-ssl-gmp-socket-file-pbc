@@ -91,11 +91,7 @@ enclave {
 		public sgx_status_t seal_data([out, size=data_size] uint8_t* sealed_blob, uint32_t data_size);
         public sgx_status_t unseal_data([in, size=data_size] const uint8_t *sealed_blob, size_t data_size);
         
-        public sgx_status_t t_Admin_Setting([in, size=rsaPubKeyLength] const unsigned char *ptr_rsaPubKey, size_t rsaPubKeyLength);
-        public uint32_t t_get_sealed_vk_A_data_size();
-        public sgx_status_t t_seal_vk_A_data([out, size=data_size] uint8_t* sealed_blob, uint32_t data_size);
-        public sgx_status_t t_unseal_vk_A_data([in, size=data_size] const uint8_t *sealed_blob, size_t data_size);
-
+       
         public sgx_status_t t_user_leave([in, size=userIdLength] const unsigned char *ptr_userId, size_t userIdLength);
         public uint32_t get_sealed_bList_U_data_size();
         public sgx_status_t seal_bList_U_data([out, size=data_size] uint8_t* sealed_blob, uint32_t data_size);

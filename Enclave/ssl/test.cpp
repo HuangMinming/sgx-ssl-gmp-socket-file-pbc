@@ -26,9 +26,7 @@
 #include <openssl/dsa.h>
 
 const int DEBUG = 0;
-const int IV_LEN = 12;
-const int TAG_SIZE = 16;
-const int KEY_SIZE = 32;
+
 
 void rsa_key_gen()
 {
