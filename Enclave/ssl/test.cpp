@@ -16,6 +16,14 @@
 
 #include <openssl/aes.h>
 
+#include <openssl/ecdsa.h>   // for ECDSA_do_sign, ECDSA_do_verify
+#include <openssl/obj_mac.h> // for NID_secp192k1
+#include <openssl/ecdh.h>
+#include <openssl/sha.h>
+#include <openssl/bio.h>
+#include <openssl/pem.h>
+#include <openssl/dsa.h>
+
 const int DEBUG = 0;
 const int IV_LEN = 12;
 const int TAG_SIZE = 16;
@@ -786,3 +794,65 @@ void t_sgxssl_test1(){
 	// BIO_dump_fp(stdout, (const char *)plaintext2, result);
 
 }
+
+
+void t_sgxssl_ecdsa_test() {
+    char *public_key = "-----BEGIN PUBLIC KEY-----\n\
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEc0oxhhjXfOFZEPR8tadGpv+lwd9Y\n\
+CJwqxd9osvTVqjOVlOK04ynnQv6Kj4YPuTWhcDzSqkkgMYA278yY88i+Lg==\n\
+-----END PUBLIC KEY-----";
+    int public_key_len = strlen(public_key);
+    printf("\npublic_key_len = %d \n", public_key_len);
+    printf("\n%s\n", public_key);
+    BIO *verify_bio = NULL;
+    verify_bio = BIO_new(BIO_s_mem());
+    BIO_puts(verify_bio, public_key);
+    EVP_PKEY * veriry_pkey;
+    if (NULL == (veriry_pkey = PEM_read_bio_PUBKEY(verify_bio, NULL, NULL, NULL) ))
+    {
+		BIO_free(verify_bio);
+        handleErrors();
+    }
+
+    EVP_MD_CTX *verify_mdctx = EVP_MD_CTX_new();
+
+	// initialize ctx
+    EVP_MD_CTX_init(verify_mdctx);
+	// verity initialize,  md must be the same as sign
+    if(!EVP_VerifyInit_ex(verify_mdctx, EVP_sha256(), NULL))
+    {  
+		handleErrors();
+		BIO_free(verify_bio);
+		EVP_MD_CTX_free(verify_mdctx);
+        return 0;  
+    }  
+	// add verify data
+    char *msg = "HELLO";
+    if(!EVP_VerifyUpdate(verify_mdctx, msg, strlen(msg)))
+    {  
+        handleErrors();
+		BIO_free(verify_bio);
+		EVP_MD_CTX_free(verify_mdctx);
+        return 0;  
+    }     
+	// verify
+    u_char *sigHex = "304402207145ddb2968068e031d9ff27e7f7579b4c0ebfbc0a4b2d6b7cd51eed63eb2d1902204c5dedbb077ef7bb6a8531162503f7eef9ed72a34b6350bc1e6f9318302007ce";
+    int sigHex_len = strlen(sigHex);
+    u_char sig[1024];
+    int sig_len = sigHex_len/2;
+    HexStrToByteStr(sigHex, sigHex_len, sig);
+    printf("sig:");
+    for(int i=0;i<sig_len;i++) {
+        printf("%c", sig[i]);
+    }
+    printf("\n");
+    printf("sig[%d] is:\n", sig_len);
+    BIO_dump_fp(stdout, (const char *)sig, sig_len);
+    /*
+    EVP_VerifyFinal() returns 1 for a correct signature, 
+    0 for failure and -1 if some other error occurred.
+    */
+    int iRet = EVP_VerifyFinal(verify_mdctx,sig,sig_len,veriry_pkey);
+    printf("verify result: %d\n", iRet);
+}
+
