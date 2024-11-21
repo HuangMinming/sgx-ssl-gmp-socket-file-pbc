@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "tSgxSSL_api.h"
+#include "ssl.h"
 
 #include <openssl/ec.h>
 #include <openssl/bn.h>
@@ -796,7 +797,7 @@ void t_sgxssl_test1(){
 }
 
 
-void t_sgxssl_ecdsa_test() {
+void t_sgxssl_ecdsa_test2() {
     char *public_key = "-----BEGIN PUBLIC KEY-----\n\
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEc0oxhhjXfOFZEPR8tadGpv+lwd9Y\n\
 CJwqxd9osvTVqjOVlOK04ynnQv6Kj4YPuTWhcDzSqkkgMYA278yY88i+Lg==\n\
@@ -856,3 +857,15 @@ CJwqxd9osvTVqjOVlOK04ynnQv6Kj4YPuTWhcDzSqkkgMYA278yY88i+Lg==\n\
     sgx_printf("verify result: %d\n", iRet);
 }
 
+void t_sgxssl_ecdsa_test() {
+    char *public_key = "-----BEGIN PUBLIC KEY-----\n\
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEc0oxhhjXfOFZEPR8tadGpv+lwd9Y\n\
+CJwqxd9osvTVqjOVlOK04ynnQv6Kj4YPuTWhcDzSqkkgMYA278yY88i+Lg==\n\
+-----END PUBLIC KEY-----";
+    int public_key_len = strlen(public_key);
+    char *msg = "HELLO";
+    u_char *sigHex = (u_char*)"304402207145ddb2968068e031d9ff27e7f7579b4c0ebfbc0a4b2d6b7cd51eed63eb2d1902204c5dedbb077ef7bb6a8531162503f7eef9ed72a34b6350bc1e6f9318302007ce";
+    int sigHex_len = strlen((const char*)sigHex);
+    int iRet = ecdsa_verify(public_key, public_key_len, msg, strlen(msg), sigHex, sigHex_len);
+    sgx_printf("verify result: %d\n", iRet);
+}
