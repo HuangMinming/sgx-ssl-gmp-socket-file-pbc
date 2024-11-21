@@ -13,6 +13,10 @@
 list_node* shareFileList = NULL;
 char aad_shareFileList_mac_text[BUFSIZ] = "shareFileList";
 
+UserRevocationList_t RL;
+char aad_UserRevocationList_mac_text[BUFSIZ] = "UserRevocationList";
+
+
 /*
 [0x23, 0x3A, 0x46, 0x4C, 0x52] ==> “233A464C52”
 const uint8_t * src_buf: input, point to the source
@@ -2800,6 +2804,8 @@ sgx_status_t t_Dec2(
 }
 
 sgx_status_t t_SaveShareFile(
+    uint8_t *owner_user_id, int owner_user_id_len, 
+    uint8_t *shared_with_user_id, int shared_with_user_id_len, 
     uint8_t *share_id, int share_id_len, 
     uint8_t *file_id, int file_id_len, 
     uint8_t *file_name, int file_name_len, 
@@ -2816,6 +2822,16 @@ sgx_status_t t_SaveShareFile(
     sgx_printf("t_SaveShareFile start\n");
         
     ShareFile_t *sf =(ShareFile_t *)malloc(sizeof(ShareFile_t)) ;
+
+    if(owner_user_id_len <=0 || owner_user_id_len > sizeof(sf->owner_user_id) - 1) {
+        sgx_printf("t_SaveShareFile owner_user_id_len error, owner_user_id_len = %d\n", owner_user_id_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+
+    if(shared_with_user_id_len <=0 || shared_with_user_id_len > sizeof(sf->shared_with_user_id) - 1) {
+        sgx_printf("t_SaveShareFile shared_with_user_id_len error, shared_with_user_id_len = %d\n", shared_with_user_id_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
 
     if(share_id_len <=0 || share_id_len > sizeof(sf->share_id) - 1) {
         sgx_printf("t_SaveShareFile share_id_len error, share_id_len = %d\n", share_id_len);
@@ -2871,6 +2887,8 @@ sgx_status_t t_SaveShareFile(
     }
     sgx_printf("\n");
     memset(sf, 0x00, sizeof(sf));
+    memcpy(sf->owner_user_id, owner_user_id, owner_user_id_len);
+    memcpy(sf->shared_with_user_id, shared_with_user_id, share_id_len);
     memcpy(sf->share_id, share_id, share_id_len);
     memcpy(sf->file_id, file_id, file_id_len);
     memcpy(sf->file_name, file_name, file_name_len);
@@ -3086,6 +3104,7 @@ sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data
 
 
 sgx_status_t t_ReEnc(
+    uint8_t *user_id, int user_id_len, 
     uint8_t *share_id, int share_id_len, 
     uint8_t *file_id, int file_id_len, 
     uint8_t *file_name, int file_name_len, 
@@ -3095,6 +3114,11 @@ sgx_status_t t_ReEnc(
     sgx_printf("t_ReEnc start\n");
         
     ShareFile_t *sf =(ShareFile_t *)malloc(sizeof(ShareFile_t)) ;
+
+    if(user_id_len <=0 || user_id_len > sizeof(sf->shared_with_user_id) - 1) {
+        sgx_printf("t_ReEnc user_id_len error, user_id_len = %d\n", user_id_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
     
     if(share_id_len <=0 || share_id_len > sizeof(sf->share_id) - 1) {
         sgx_printf("t_ReEnc share_id_len error, share_id_len = %d\n", share_id_len);
@@ -3108,14 +3132,6 @@ sgx_status_t t_ReEnc(
         sgx_printf("t_ReEnc file_name_len error, file_name_len = %d\n", file_name_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    if(Cert_user_info_len <=0 || Cert_user_info_len > sizeof(sf->Cert_user_info) - 1) {
-        sgx_printf("t_ReEnc Cert_user_info error, Cert_user_info_len = %d\n", Cert_user_info_len);
-        return SGX_ERROR_INVALID_PARAMETER;
-    }
-    if(Cert_user_info_sign_value_len <=0 || Cert_user_info_sign_value_len > sizeof(sf->Cert_user_info_sign_value) - 1) {
-        sgx_printf("t_ReEnc Cert_user_info_sign_value error, Cert_user_info_sign_value_len = %d\n", Cert_user_info_sign_value_len);
-        return SGX_ERROR_INVALID_PARAMETER;
-    }
     
     sgx_printf("share id is:");
     for(int i=0;i<share_id_len + 10;i++) {
@@ -3123,12 +3139,16 @@ sgx_status_t t_ReEnc(
     }
     sgx_printf("\n");
     memset(sf, 0x00, sizeof(sf));
+    memcpy(sf->shared_with_user_id, user_Id, user_id_len);
     memcpy(sf->share_id, share_id, share_id_len);
     memcpy(sf->file_id, file_id, file_id_len);
     memcpy(sf->file_name, file_name, file_name_len);
-    memcpy(sf->Cert_user_info, Cert_user_info, Cert_user_info_len);
-    memcpy(sf->Cert_user_info_sign_value, Cert_user_info_sign_value, Cert_user_info_sign_value_len);
 
+    
+    /*
+    TEE retrieves (filename, Crk, CDEK_rk, CertDO,Ogrant,𝜎grant) , 
+    veriry CertDU and CertDO
+    */
     //retrive sharefile info from shareFileList
     sgx_printf("t_ReEnc retrive sharefile info from shareFileList\n");
     size_t size = 0;
@@ -3153,19 +3173,19 @@ sgx_status_t t_ReEnc(
 #endif
     tmp = shareFileList;
     list_node *result_node = NULL;
-    result_node = list_find(tmp, compare_node_and_data, (void *)sf);
+    result_node = list_find(tmp, compare_ShareFile, (void *)sf);
     if(NULL == result_node) {
-        sgx_printf("failed to retrive data from shareFileList\n");
+        sgx_printf("t_SaveShareFile failed to retrive data from shareFileList\n");
         sgx_printf("maybe it has been deleted, depends on database\n");
         return SGX_SUCCESS;
     }
     shareFileList *result_sf = NULL;
     result_sf = result_node->data;
     list_remove(&shareFileList, result_node);
-    //todo
+
     sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);
     size = list_size(&shareFileList);
-    sgx_printf("t_SaveShareFile after list_insert_end, size is %d\n", size);
+    sgx_printf("t_SaveShareFile after list_remove, size is %d\n", size);
     
 #ifdef PRINT_DEBUG_INFO
     tmp = shareFileList;
@@ -3183,6 +3203,25 @@ sgx_status_t t_ReEnc(
     sgx_printf("\n");
 #endif
     
+    sgx_printf("t_SaveShareFile result_sf is %d\n");
+    sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
+                result_sf->share_id, result_sf->file_id, result_sf->file_name);
+    //veriry CertDU and CertDO
+    //todo
+    if(memcmp(result_sf->shared_with_user_id, sf->shared_with_user_id, sizeof(sf->shared_with_user_id) != 0))
+    {
+        sgx_printf("t_ReEnc user_id error, request user id is  = %s\n", sf->shared_with_user_id);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    //𝜎U = Sign(OU ,skA)
+    uint8_t *  Cert_DO = result_sf->Cert_owner_info;
+    uint8_t *  Cert_DO_sign_value = result_sf->Cert_owner_info_sign_value;
+
+    //TEE verifies both users (DO, DU) were not revoked via checking RL
+    
+
+
+
     free(result_sf);
     sgx_printf("t_SaveShareFile end\n");
     return SGX_SUCCESS;

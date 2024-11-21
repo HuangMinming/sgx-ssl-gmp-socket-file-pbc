@@ -1685,8 +1685,9 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     unsigned char *responseMsg, size_t * p_responseMsgLength) {
     
     /*
+    ownerUserIdLength(4 bytes) + ownerUserId(20 bytes) + 
+    sharedWithUserIdLength(4 bytes) + shareWithUserId(20 bytes) +
     shareIdLength(4 bytes) + shareId(50 bytes) +
-    useridLength(4 bytes) + userid(20 bytes) + 
     fileIdLength(4 bytes) + fileId(50 bytes) + 
     filenameLength(4 bytes) + filename(256 bytes) + 
     C_rk_length(4 bytes) + C_rk(568 bytes) + 
@@ -1701,12 +1702,13 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
 
     */
    
-   size_t userIdLength, shareIdLength, fileIdLength, filenameLength,C_rk_length;
+   size_t ownerUserIdLength, sharedWithUserIdLength, shareIdLength, fileIdLength, filenameLength,C_rk_length;
    size_t CDEK_rk_C1_length, CDEK_rk_C2_length, CDEK_rk_C3_length, CDEK_rk_C4_length;
    size_t Cert_owner_infoLength, Cert_owner_info_sign_valueLength;
    size_t owner_grant_infoLength, owner_grant_info_sign_valueLength;
 
-   char userIdLengthStr[5];
+   char ownerUserIdLengthStr[5];
+   char sharedWithUserIdLengthStr[5];
    char shareIdLengthStr[5];
    char fileIdLengthStr[5];
    char filenameLengthStr[5];
@@ -1720,7 +1722,8 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
    char owner_grant_infoLengthStr[5];
    char owner_grant_info_sign_valueLengthStr[5];
 
-   unsigned char userId[20];
+   unsigned char ownerUserId[20];
+   unsigned char sharedWithUserId[20];
    unsigned char shareId[50];
    unsigned char fileId[50];
    unsigned char filename[256];
@@ -1736,21 +1739,37 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
 
    int offset = 0;
    int reqestBodyOffset = 0;
-   //useridLength(4 bytes) + userid(20 bytes)
-   memset(userIdLengthStr, 0x00, sizeof(userIdLengthStr));
-   memcpy(userIdLengthStr, requestBody + reqestBodyOffset, 4);
+   //ownerUseridLength(4 bytes) + ownerUserid(20 bytes)
+   memset(ownerUseridLengthStr, 0x00, sizeof(ownerUseridLengthStr));
+   memcpy(ownerUseridLengthStr, requestBody + reqestBodyOffset, 4);
    reqestBodyOffset += 4;
-   userIdLength = atoi(userIdLengthStr);
-   if(userIdLength <= 0 || userIdLength > sizeof(userId))
+   ownerUseridLength = atoi(ownerUseridLengthStr);
+   if(ownerUseridLength <= 0 || ownerUseridLength > sizeof(ownerUserid))
     {
-        printf("error userId length, userId is %d \n", userIdLength);
+        printf("error ownerUserid length, ownerUseridLength is %d \n", ownerUseridLength);
         packResp((unsigned char *)"0101", 4, 
             (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
             responseMsg, p_responseMsgLength);
         return -1;
     }
-    memcpy(userId, requestBody + reqestBodyOffset, userIdLength);
-    reqestBodyOffset += userIdLength;
+    memcpy(ownerUserid, requestBody + reqestBodyOffset, ownerUseridLength);
+    reqestBodyOffset += ownerUseridLength;
+
+    //sharedWithUserIdLength(4 bytes) + shareWithUserId(20 bytes) 
+   memset(shareWithUserIdLengthStr, 0x00, sizeof(shareWithUserIdLengthStr));
+   memcpy(shareWithUserIdLengthStr, requestBody + reqestBodyOffset, 4);
+   reqestBodyOffset += 4;
+   shareWithUserIdLength = atoi(shareWithUserIdLengthStr);
+   if(shareWithUserIdLength <= 0 || shareWithUserIdLength > sizeof(shareWithUserId))
+    {
+        printf("error shareWithUserId length, shareWithUserIdLength is %d \n", shareWithUserIdLength);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(shareWithUserId, requestBody + reqestBodyOffset, shareWithUserIdLength);
+    reqestBodyOffset += shareWithUserIdLength;
 
     //shareIdLength(4 bytes) + shareId(50 bytes)
     memset(shareIdLengthStr, 0x00, sizeof(shareIdLengthStr));
@@ -1947,8 +1966,11 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     memcpy(owner_grant_info_sign_value, requestBody + reqestBodyOffset, owner_grant_info_sign_valueLength);
     reqestBodyOffset += owner_grant_info_sign_valueLength;
 
-    printf("userIdLength is %d, userId is :\n", userIdLength);
-    dump_hex(userId, userIdLength, 16);
+    printf("ownerUserIdLength is %d, ownerUserId is :\n", ownerUserIdLength);
+    dump_hex(ownerUserId, ownerUserIdLength, 16);
+
+    printf("shareWithUserIdLength is %d, shareWithUserId is :\n", shareWithUserIdLength);
+    dump_hex(shareWithUserId, shareWithUserIdLength, 16);
     
     printf("shareIdLength is %d, fileId is :\n", shareIdLength);
     dump_hex(shareId, shareIdLength, 16);
@@ -1988,6 +2010,8 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
 
     sgx_status_t retval;
     sgx_status_t ret = t_SaveShareFile(global_eid, &retval, 
+        ownerUserId, ownerUserIdLength,
+        shareWithUserId, shareWithUserIdLength,
         shareId, shareIdLength,
         fileId, fileIdLength,
         filename, filenameLength, 
@@ -2274,7 +2298,8 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     dump_hex(Cert_user_info_sign_value, Cert_user_info_sign_valueLength, 16);
 
     sgx_status_t retval;
-    sgx_status_t ret = t_SaveShareFile(global_eid, &retval, 
+    sgx_status_t ret = t_ReEnc(global_eid, &retval, 
+        userId, userIdLength, 
         shareId, shareIdLength,
         fileId, fileIdLength,
         filename, filenameLength, 

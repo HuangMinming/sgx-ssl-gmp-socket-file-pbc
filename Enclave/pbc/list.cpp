@@ -151,7 +151,7 @@ list_node* list_find_by_data(list_node *list, void *data)
  * Arguments: A pointer to a list, the comparison function and a pointer to the
  * data
  */
-int compare_node_and_data(list_node *list, ShareFile_t *data) 
+int compare_ShareFile(list_node *list, ShareFile_t *data) 
 {
 	ShareFile_t *sf = (ShareFile_t *)(list->data);
 	return  (strcmp(sf->share_id, data->share_id) == 0);

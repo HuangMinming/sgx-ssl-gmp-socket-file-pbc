@@ -39,6 +39,8 @@ typedef struct {
 #define bList_U_MAX_size 1024
 #define user_id_MAX_size 21
 struct ShareFile_t {
+    uint8_t owner_user_id[20 + 1];
+    uint8_t shared_with_user_id[20 + 1];
     uint8_t share_id[50 + 1];
     uint8_t file_id[50 + 1];
     uint8_t file_name[256 + 1];
@@ -51,6 +53,13 @@ struct ShareFile_t {
     uint8_t Cert_owner_info_sign_value[256 + 1];
     uint8_t owner_grant_info[2144 + 1];
     uint8_t owner_grant_info_sign_value[256 + 1];
+};
+
+#define UserRevocation_MAX_size 1024
+#define user_id_MAX_size 21
+struct UserRevocationList_t {
+        size_t user_count = 0;
+        unsigned char user_id[UserRevocation_MAX_size][user_id_MAX_size];  
 };
 
 
