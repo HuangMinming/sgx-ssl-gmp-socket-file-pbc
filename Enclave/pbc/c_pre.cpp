@@ -2,11 +2,12 @@
 #include "pbc.h"
 #include <string.h>
 #include <ctype.h>
+#include <mbusafecrt.h> //sprintf_s
 #include "sgx_tseal.h"
 #include "../Enclave.h"
 #include "../Enclave_t.h" /* print_string */
 #include "../sha256.h"
-
+#include "user_types.h" 
 #include "c_pre.h"
 #include "list.h"
 #include "../ssl/ssl.h"
@@ -3334,16 +3335,16 @@ sgx_status_t t_ReEnc(
     size_t Cert_DO_sign_value_len = strlen((const char *)Cert_DO_sign_value);
 
     
-    int iRet = ecdsa_verify(g_vk_A.vk_A, g_vk_A.vk_A_Length, 
-        Cert_DO, Cert_DO_len, 
+    int iRet = ecdsa_verify((char *)(g_vk_A.vk_A), g_vk_A.vk_A_Length, 
+        (char *)Cert_DO, Cert_DO_len, 
         Cert_DO_sign_value, Cert_DO_sign_value_len);
     if(iRet != 0) {
         sgx_printf("t_ReEnc ecdsa_verify DO error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
 
-    iRet = ecdsa_verify(g_vk_A.vk_A, g_vk_A.vk_A_Length, 
-        Cert_user_info, Cert_user_info_len, 
+    iRet = ecdsa_verify((char *)(g_vk_A.vk_A), g_vk_A.vk_A_Length, 
+        (char *)Cert_user_info, Cert_user_info_len, 
         Cert_user_info_sign_value, Cert_user_info_sign_value_len);
     if(iRet != 0) {
         sgx_printf("t_ReEnc ecdsa_verify DU error, iRet = %d\n", iRet);
@@ -3374,8 +3375,8 @@ sgx_status_t t_ReEnc(
     denoted as DEKrk = C-PRE.Dec(dkTEE, CDEK_rk, H(IDDO|filename))
    */
     uint8_t w[256 + 20];
-    size_t owner_user_id_len = strlen(result_sf->owner_user_id);
-    size_t file_name_len = strlen(result_sf->file_name);
+    size_t owner_user_id_len = strlen((const char*)(result_sf->owner_user_id));
+    // size_t file_name_len = strlen((const char*)(result_sf->file_name));
     memcpy(w, result_sf->owner_user_id, owner_user_id_len);
     memcpy(w + owner_user_id_len, result_sf->file_name, file_name_len);
     size_t w_len = owner_user_id_len + file_name_len;
@@ -3389,7 +3390,7 @@ sgx_status_t t_ReEnc(
          result_sf->CDEK_rk_C3, sizeof(result_sf->CDEK_rk_C3) - 1,
          result_sf->CDEK_rk_C4, sizeof(result_sf->CDEK_rk_C4) - 1,
          DEK_rk, sizeof(DEK_rk)
-         )
+         );
     if(iRet != 0) {
         sgx_printf("t_ReEnc Dec2 error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
@@ -3411,7 +3412,7 @@ sgx_status_t t_ReEnc(
     memset(tag_Hex, 0x00, sizeof(tag_Hex));
     uint8_t C_rk_Hex[512 + 1];
     memset(C_rk_Hex, 0x00, sizeof(C_rk_Hex));
-    size_t C_rk_len = strlen(result_sf->C_rk);
+    size_t C_rk_len = strlen((const char*)(result_sf->C_rk));
     int offset = 0;
     memcpy(iv_Hex, (result_sf->C_rk) + offset, IV_LEN * 2);
     offset += IV_LEN * 2;
@@ -3434,27 +3435,23 @@ sgx_status_t t_ReEnc(
     sgx_printf("t_ReEnc: iv = \s\n", iv);
     sgx_printf("t_ReEnc: tag = \s\n", tag);
 
-    
-    uint8_t C_rk_Byte[256 + 1];
-    memset(C_rk_Byte, 0x00, sizeofo(C_rk_Byte));
-
-    iREt = aes_gcm_decrypt(C_rk_Byte, 256, 
+    iRet = aes_gcm_decrypt(C_rk_Byte, 256, 
         tag, TAG_SIZE, DEK_rk, iv, IV_LEN, C_rk_Byte);
     if(iRet != 0) {
         sgx_printf("t_ReEnc aes_gcm_decrypt error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
     uint8_t C_rk1[128 + 1];
-    memset(C_rk1, 0x00, sizeofo(C_rk1));
+    memset(C_rk1, 0x00, sizeof(C_rk1));
     uint8_t C_rk2[128 + 1];
-    memset(C_rk2, 0x00, sizeofo(C_rk2));
+    memset(C_rk2, 0x00, sizeof(C_rk2));
     memcpy(C_rk1, C_rk_Byte, 128);
     memcpy(C_rk2, C_rk_Byte + 128, 128);
 
     uint8_t C_rk1_Hex[256 + 1];
-    memset(C_rk1_Hex, 0x00, sizeofo(C_rk1_Hex));
+    memset(C_rk1_Hex, 0x00, sizeof(C_rk1_Hex));
     uint8_t C_rk2_Hex[256 + 1];
-    memset(C_rk2_Hex, 0x00, sizeofo(C_rk2_Hex));
+    memset(C_rk2_Hex, 0x00, sizeof(C_rk2_Hex));
 
     
     ByteStrToHexStr(C_rk1, 128, C_rk1_Hex, 256); 

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pbc.h>
+#include "user_types.h" 
 
 #define PRINT_DEBUG_INFO
 

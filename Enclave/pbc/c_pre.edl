@@ -47,8 +47,8 @@ enclave {
             [out, size=TC_DEK_c1_Hex_len] uint8_t *TC_DEK_c1_Hex, int TC_DEK_c1_Hex_len, 
             [out, size=TC_DEK_c2_Hex_len] uint8_t *TC_DEK_c2_Hex, int TC_DEK_c2_Hex_len, 
             [out, size=TC_DEK_c3_Hex_len] uint8_t *TC_DEK_c3_Hex, int TC_DEK_c3_Hex_len, 
-            [out, size=TC_DEK_c4_Hex_len] uint8_t *TC_DEK_c4_Hex, int TC_DEK_c4_Hex_len)
-            };
+            [out, size=TC_DEK_c4_Hex_len] uint8_t *TC_DEK_c4_Hex, int TC_DEK_c4_Hex_len);
+    };
 
     untrusted {
     
