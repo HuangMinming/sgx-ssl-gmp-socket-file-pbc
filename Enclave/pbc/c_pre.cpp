@@ -3224,7 +3224,11 @@ sgx_status_t t_ReEnc(
     uint8_t *file_id, int file_id_len, 
     uint8_t *file_name, int file_name_len, 
     uint8_t *Cert_user_info, int Cert_user_info_len, 
-    uint8_t *Cert_user_info_sign_value, int Cert_user_info_sign_value_len)
+    uint8_t *Cert_user_info_sign_value, int Cert_user_info_sign_value_len,
+    uint8_t *TC_DEK_c1_Hex, int TC_DEK_c1_Hex_len, 
+    uint8_t *TC_DEK_c2_Hex, int TC_DEK_c2_Hex_len, 
+    uint8_t *TC_DEK_c3_Hex, int TC_DEK_c3_Hex_len, 
+    uint8_t *TC_DEK_c4_Hex, int TC_DEK_c4_Hex_len)
 {
     sgx_printf("t_ReEnc start\n");
         
@@ -3259,6 +3263,22 @@ sgx_status_t t_ReEnc(
     memcpy(sf->file_id, file_id, file_id_len);
     memcpy(sf->file_name, file_name, file_name_len);
 
+    if(TC_DEK_c1_Hex_len < 256) {
+        sgx_printf("t_ReEnc TC_DEK_c1_Hex_len error, TC_DEK_c1_Hex_len = %d\n", TC_DEK_c1_Hex_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(TC_DEK_c2_Hex_len < 256) {
+        sgx_printf("t_ReEnc TC_DEK_c2_Hex_len error, TC_DEK_c2_Hex_len = %d\n", TC_DEK_c2_Hex_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(TC_DEK_c3_Hex_len < 512) {
+        sgx_printf("t_ReEnc TC_DEK_c3_Hex_len error, TC_DEK_c3_Hex_len = %d\n", TC_DEK_c3_Hex_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(TC_DEK_c4_Hex_len < 256) {
+        sgx_printf("t_ReEnc TC_DEK_c4_Hex_len error, TC_DEK_c4_Hex_len = %d\n", TC_DEK_c4_Hex_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
     
     /*
     TEE retrieves (filename, Crk, CDEK_rk, CertDO,Ogrant,𝜎grant) , 
@@ -3292,31 +3312,10 @@ sgx_status_t t_ReEnc(
     if(NULL == result_node) {
         sgx_printf("t_SaveShareFile failed to retrive data from shareFileList\n");
         sgx_printf("maybe it has been deleted, depends on database\n");
-        return SGX_SUCCESS;
+        return SGX_SUCCESS; //todo, maybe should return another value 
     }
     ShareFile_t *result_sf = NULL;
     result_sf = (ShareFile_t *)result_node->data;
-    list_remove(&shareFileList, result_node);
-
-    sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);
-    size = list_size(&shareFileList);
-    sgx_printf("t_SaveShareFile after list_remove, size is %d\n", size);
-    
-#ifdef PRINT_DEBUG_INFO
-    tmp = shareFileList;
-    index = 0;
-    if(size > 0) {
-        while (tmp != NULL) {
-            ShareFile_t *sf = (ShareFile_t *)(tmp->data);
-            sgx_printf("element %d:\n", index);
-            sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
-                sf->share_id, sf->file_id, sf->file_name);
-            tmp = tmp->next;
-            index ++;
-        }
-    }
-    sgx_printf("\n");
-#endif
     
     sgx_printf("t_SaveShareFile result_sf is %d\n");
     sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
@@ -3367,7 +3366,7 @@ sgx_status_t t_ReEnc(
     denoted as DEKrk = C-PRE.Dec(dkTEE, CDEK_rk, H(IDDO|filename)),  
     decrypts Crk to rk using AES-GCM with DEKrk, 
     transform CDEK to TCDEK=C-PRE.reEnc(rk, CDEK), 
-    deletes record (filename, CrK, CDEK_rk, CertDO,Ogrant,𝜎grant), 
+    deletes record (filename, CrK, CDEK_rk, CertDO,Ogrant,𝜎grant)
     returns (filename, TCDEK) to WebService
     */
    /*
@@ -3406,11 +3405,11 @@ sgx_status_t t_ReEnc(
     /*decrypts Crk to rk using AES-GCM with DEKrk
     Crk = iv + tag.data + encrypted.data
     */
-    unsigned char iv_Hex[IV_LEN * 2 + 1];
+    uint8_t iv_Hex[IV_LEN * 2 + 1];
     memset(iv_Hex, 0x00, sizeof(iv_Hex));
-    unsigned char tag_Hex[TAG_SIZE * 2 + 1];
+    uint8_t tag_Hex[TAG_SIZE * 2 + 1];
     memset(tag_Hex, 0x00, sizeof(tag_Hex));
-    unsigned char C_rk_Hex[512 + 1];
+    uint8_t C_rk_Hex[512 + 1];
     memset(C_rk_Hex, 0x00, sizeof(C_rk_Hex));
     size_t C_rk_len = strlen(result_sf->C_rk);
     int offset = 0;
@@ -3422,11 +3421,11 @@ sgx_status_t t_ReEnc(
     offset += 512;
     sgx_printf("t_ReEnc: iv_Hex = \s\n", iv_Hex);
     sgx_printf("t_ReEnc: tag_Hex = \s\n", tag_Hex);
-    unsigned char iv[IV_LEN + 1];
+    uint8_t iv[IV_LEN + 1];
     memset(iv, 0x00, sizeof(iv));
-    unsigned char tag[TAG_SIZE + 1];
+    uint8_t tag[TAG_SIZE + 1];
     memset(tag, 0x00, sizeof(tag));
-    unsigned char C_rk_Byte[256 + 1];
+    uint8_t C_rk_Byte[256 + 1];
     memset(C_rk_Byte, 0x00, sizeof(C_rk_Byte));
     //uint32_t HexStrToByteStr(const uint8_t * src_buf, int src_len, uint8_t * dest_buf)
     HexStrToByteStr(iv_Hex, IV_LEN * 2, iv);
@@ -3436,25 +3435,75 @@ sgx_status_t t_ReEnc(
     sgx_printf("t_ReEnc: tag = \s\n", tag);
 
     
-    unsigned char C_rk_Byte[256 + 1];
+    uint8_t C_rk_Byte[256 + 1];
     memset(C_rk_Byte, 0x00, sizeofo(C_rk_Byte));
-    /*
-   int aes_gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
-                unsigned char *tag, unsigned char *key, unsigned char *iv,
-                int iv_len, unsigned char *plaintext)
-   */
-    aes_gcm_decrypt(C_rk_Byte, 256, 
-        tag, DEK_rk, iv, IV_LEN, C_rk_Byte);
-    
-    unsigned char C_rk1[128 + 1];
-    memset(C_rk1, 0x00, sizeofo(C_rk1));
 
-    unsigned char C_rk2[128 + 1];
+    iREt = aes_gcm_decrypt(C_rk_Byte, 256, 
+        tag, TAG_SIZE, DEK_rk, iv, IV_LEN, C_rk_Byte);
+    if(iRet != 0) {
+        sgx_printf("t_ReEnc aes_gcm_decrypt error, iRet = %d\n", iRet);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    uint8_t C_rk1[128 + 1];
+    memset(C_rk1, 0x00, sizeofo(C_rk1));
+    uint8_t C_rk2[128 + 1];
     memset(C_rk2, 0x00, sizeofo(C_rk2));
     memcpy(C_rk1, C_rk_Byte, 128);
     memcpy(C_rk2, C_rk_Byte + 128, 128);
 
+    uint8_t C_rk1_Hex[256 + 1];
+    memset(C_rk1_Hex, 0x00, sizeofo(C_rk1_Hex));
+    uint8_t C_rk2_Hex[256 + 1];
+    memset(C_rk2_Hex, 0x00, sizeofo(C_rk2_Hex));
 
+    
+    ByteStrToHexStr(C_rk1, 128, C_rk1_Hex, 256); 
+    ByteStrToHexStr(C_rk2, 128, C_rk2_Hex, 256); 
+    
+    sgx_printf("t_ReEnc: C_rk1_Hex = \s\n", C_rk1_Hex);
+    sgx_printf("t_ReEnc: C_rk2_Hex = \s\n", C_rk2_Hex);
+
+    /*
+    transform CDEK to TCDEK=C-PRE.reEnc(rk, CDEK), 
+    */
+    iRet = ReEnc(result_sf->CDEK_rk_C1, 256, 
+        result_sf->CDEK_rk_C2, 256, 
+        result_sf->CDEK_rk_C3, 256, 
+        result_sf->CDEK_rk_C4, 512, 
+        C_rk1_Hex, 256, 
+        C_rk2_Hex, 256,
+        TC_DEK_c1_Hex, 256,
+        TC_DEK_c2_Hex, 256,
+        TC_DEK_c3_Hex, 512,
+        TC_DEK_c4_Hex, 256);
+    if(iRet != 0) {
+        sgx_printf("t_ReEnc ReEnc error, iRet = %d\n", iRet);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+
+    //deletes record (filename, CrK, CDEK_rk, CertDO,Ogrant,𝜎grant), 
+    list_remove(&shareFileList, result_node);
+
+    sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);
+    size = list_size(&shareFileList);
+    sgx_printf("t_SaveShareFile after list_remove, size is %d\n", size);
+    
+#ifdef PRINT_DEBUG_INFO
+    tmp = shareFileList;
+    index = 0;
+    if(size > 0) {
+        while (tmp != NULL) {
+            ShareFile_t *sf = (ShareFile_t *)(tmp->data);
+            sgx_printf("element %d:\n", index);
+            sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
+                sf->share_id, sf->file_id, sf->file_name);
+            tmp = tmp->next;
+            index ++;
+        }
+    }
+    sgx_printf("\n");
+#endif
+    
     free(result_sf);
     sgx_printf("t_SaveShareFile end\n");
     return SGX_SUCCESS;
