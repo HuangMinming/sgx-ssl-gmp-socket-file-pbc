@@ -2364,20 +2364,45 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     }
     printf("Call write_buf_to_file success.\n");
 
+    printf("Sealing data succeeded.\n");
+
     free(temp_sealed_buf);
     // set successful respond
     // add return msg
+    size_t responseBodyLen = 4 + 50 + 4 + 256 + 4 + 256 + 4 + 512 + 4 + 256;
+    uint8_t responseBody[responseBodyLen];
+    memset(responseBody, 0x00, sizeof(responseBody));
     offset = 0;
-    memcpy(responseMsg + offset, "0000", 4);
+    sprintf((char *)(responseBody + offset), "%04d", shareIdLength);
     offset += 4;
-    sprintf((char *)(responseMsg + offset), "%04d", (sizeof(ek_TEE) + 4));
+    memcpy(responseBody + offset, shareId, shareIdLength);
+    offset += shareIdLength;
+
+    sprintf((char *)(responseBody + offset), "%04d", 256);
     offset += 4;
-    sprintf((char *)(responseMsg + offset), "%04d", sizeof(ek_TEE));
+    memcpy(responseBody + offset, TC_DEK_c1_Hex, 256);
+    offset += 256;
+
+    sprintf((char *)(responseBody + offset), "%04d", 256);
     offset += 4;
-    memcpy(responseMsg + offset, ek_TEE, sizeof(ek_TEE));
-    offset += sizeof(ek_TEE);
-    (*p_responseMsgLength) = offset;
-    printf("Sealing data succeeded.\n");
+    memcpy(responseBody + offset, TC_DEK_c2_Hex, 256);
+    offset += 256;
+
+    sprintf((char *)(responseBody + offset), "%04d", 512);
+    offset += 4;
+    memcpy(responseBody + offset, TC_DEK_c3_Hex, 512);
+    offset += 512;
+
+    sprintf((char *)(responseBody + offset), "%04d", 256);
+    offset += 4;
+    memcpy(responseBody + offset, TC_DEK_c3_Hex, 256);
+    offset += 256;
+
+    packResp((unsigned char *)"0000", 4, 
+            (unsigned char *)responseBody, offset,
+            responseMsg, p_responseMsgLength);
+
+    printf("handleRequest0004 succeeded.\n");
     return 0;
 }
 
