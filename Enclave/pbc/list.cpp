@@ -157,6 +157,8 @@ list_node* list_find_by_data(list_node *list, void *data)
 int compare_ShareFile(list_node *list, void *data) 
 {
 	ShareFile_t *sf = (ShareFile_t *)(list->data);
+	sgx_printf("compare_ShareFile sf->share_id = %s, data)->share_id=%s end\n",
+		(const char*)(sf->share_id), ((ShareFile_t *)data)->share_id);
 	return  (strcmp((const char*)(sf->share_id), (const char*)((ShareFile_t *)data)->share_id) == 0);
 }
 list_node* list_find(list_node *list, int(*func)(list_node*,void*), void *data)

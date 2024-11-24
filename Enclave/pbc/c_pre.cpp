@@ -3305,10 +3305,10 @@ sgx_status_t t_ReEnc(
     index = 0;
     if(size > 0) {
         while (tmp != NULL) {
-            ShareFile_t *sf = (ShareFile_t *)(tmp->data);
+            ShareFile_t *node_data = (ShareFile_t *)(tmp->data);
             sgx_printf("element %d:\n", index);
             sgx_printf("\tfild_id = %s\n\tfile_name = %s\n", 
-                sf->file_id, sf->file_name);
+                node_data->file_id, node_data->file_name);
             tmp = tmp->next;
             index ++;
         }
