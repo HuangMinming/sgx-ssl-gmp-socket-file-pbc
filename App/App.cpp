@@ -395,7 +395,7 @@ static bool write_buf_to_file(const char *filename, const uint8_t *buf, size_t b
 
 static bool remove_file(const char *filename)
 {
-    if (filename == NULL || buf == NULL || bsize == 0)
+    if (filename == NULL)
         return false;
     if (std::remove(filename) != 0) {
         std::cout << "Failed to remove the file \"" << filename << "\"" << std::endl;
