@@ -3428,8 +3428,8 @@ sgx_status_t t_ReEnc(
     offset += TAG_SIZE * 2;
     memcpy(C_rk_Hex, (result_sf->C_rk) + offset, 512);
     offset += 512;
-    sgx_printf("t_ReEnc: iv_Hex = \s\n", iv_Hex);
-    sgx_printf("t_ReEnc: tag_Hex = \s\n", tag_Hex);
+    sgx_printf("t_ReEnc: iv_Hex = %s\n", iv_Hex);
+    sgx_printf("t_ReEnc: tag_Hex = %s\n", tag_Hex);
     uint8_t iv[IV_LEN + 1];
     memset(iv, 0x00, sizeof(iv));
     uint8_t tag[TAG_SIZE + 1];
@@ -3440,8 +3440,8 @@ sgx_status_t t_ReEnc(
     HexStrToByteStr(iv_Hex, IV_LEN * 2, iv);
     HexStrToByteStr(tag_Hex, TAG_SIZE * 2, tag);
     HexStrToByteStr(C_rk_Hex, 512, C_rk_Byte);
-    sgx_printf("t_ReEnc: iv = \s\n", iv);
-    sgx_printf("t_ReEnc: tag = \s\n", tag);
+    sgx_printf("t_ReEnc: iv = %s\n", iv);
+    sgx_printf("t_ReEnc: tag = %s\n", tag);
 
     iRet = aes_gcm_decrypt(C_rk_Byte, 256, 
         tag, TAG_SIZE, DEK_rk, iv, IV_LEN, C_rk_Byte);
