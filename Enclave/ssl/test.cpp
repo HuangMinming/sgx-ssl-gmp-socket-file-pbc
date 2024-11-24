@@ -625,7 +625,7 @@ int gcm_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
 }
 
 int gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
-                unsigned char *tag, unsigned char *key, unsigned char *iv,
+                unsigned char *tag, int tag_len, unsigned char *key, unsigned char *iv,
                 int iv_len, unsigned char *plaintext)
 {
     EVP_CIPHER_CTX *ctx;
@@ -658,7 +658,7 @@ int gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
     plaintext_len = len;
 
     /* Set expected tag value. Works in OpenSSL 1.0.1d and later */
-    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, TAG_SIZE, tag))
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, tag_len, tag))
         handleErrors("EVP_CTRL_GCM_SET_TAG");
 
     /*
@@ -714,7 +714,7 @@ void t_sgxssl_test3()
 	// BIO_dump_fp(stdout, (const char *)tag, TAG_SIZE *2);
 
     int result =
-      gcm_decrypt(ciphertext, ciphertext_len, tag, key, iv, IV_LEN, plaintext2);
+      gcm_decrypt(ciphertext, ciphertext_len, tag, TAG_SIZE, key, iv, IV_LEN, plaintext2);
 
     sgx_printf("plaintext2 (len:%d) is:\n", result);
     sgx_printf("%s:\n", plaintext2);
@@ -803,7 +803,7 @@ void t_sgxssl_test(){
     // sgx_printf("\n");
 
     int result =
-      gcm_decrypt(ciphertext, sizeof(ciphertext), tag, key, iv, IV_LEN, plaintext2);
+      gcm_decrypt(ciphertext, sizeof(ciphertext), tag, TAG_SIZE, key, iv, IV_LEN, plaintext2);
 
     sgx_printf("plaintext2 (len:%d) is:\n", result);
     for(int i=0;i<result;i++) {
