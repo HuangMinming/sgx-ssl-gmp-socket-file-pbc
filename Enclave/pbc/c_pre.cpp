@@ -3430,6 +3430,7 @@ sgx_status_t t_ReEnc(
     offset += 512;
     sgx_printf("t_ReEnc: iv_Hex = %s\n", iv_Hex);
     sgx_printf("t_ReEnc: tag_Hex = %s\n", tag_Hex);
+    sgx_printf("t_ReEnc: C_rk_Hex = %s\n", C_rk_Hex);
     uint8_t iv[IV_LEN + 1];
     memset(iv, 0x00, sizeof(iv));
     uint8_t tag[TAG_SIZE + 1];
@@ -3442,31 +3443,34 @@ sgx_status_t t_ReEnc(
     HexStrToByteStr(C_rk_Hex, 512, C_rk_Byte);
     sgx_printf("t_ReEnc: iv = %s\n", iv);
     sgx_printf("t_ReEnc: tag = %s\n", tag);
+    sgx_printf("t_ReEnc: C_rk_Byte = %s\n", C_rk_Byte);
 
+    uint8_t rk_Byte[256 + 1];
+    memset(rk_Byte, 0x00, sizeof(rk_Byte));
     iRet = aes_gcm_decrypt(C_rk_Byte, 256, 
-        tag, TAG_SIZE, DEK_rk, iv, IV_LEN, C_rk_Byte);
+        tag, TAG_SIZE, DEK_rk, iv, IV_LEN, rk_Byte);
     if(iRet != 0) {
         sgx_printf("t_ReEnc aes_gcm_decrypt error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    uint8_t C_rk1[128 + 1];
-    memset(C_rk1, 0x00, sizeof(C_rk1));
-    uint8_t C_rk2[128 + 1];
-    memset(C_rk2, 0x00, sizeof(C_rk2));
-    memcpy(C_rk1, C_rk_Byte, 128);
-    memcpy(C_rk2, C_rk_Byte + 128, 128);
+    uint8_t rk1[128 + 1];
+    memset(rk1, 0x00, sizeof(rk1));
+    uint8_t rk2[128 + 1];
+    memset(rk2, 0x00, sizeof(rk2));
+    memcpy(rk1, rk_Byte, 128);
+    memcpy(rk2, rk_Byte + 128, 128);
 
-    uint8_t C_rk1_Hex[256 + 1];
-    memset(C_rk1_Hex, 0x00, sizeof(C_rk1_Hex));
-    uint8_t C_rk2_Hex[256 + 1];
-    memset(C_rk2_Hex, 0x00, sizeof(C_rk2_Hex));
+    uint8_t rk1_Hex[256 + 1];
+    memset(rk1_Hex, 0x00, sizeof(rk1_Hex));
+    uint8_t rk2_Hex[256 + 1];
+    memset(rk2_Hex, 0x00, sizeof(rk2_Hex));
 
     
-    ByteStrToHexStr(C_rk1, 128, C_rk1_Hex, 256); 
-    ByteStrToHexStr(C_rk2, 128, C_rk2_Hex, 256); 
+    ByteStrToHexStr(rk1, 128, rk1_Hex, 256); 
+    ByteStrToHexStr(rk2, 128, rk2_Hex, 256); 
     
-    sgx_printf("t_ReEnc: C_rk1_Hex = \s\n", C_rk1_Hex);
-    sgx_printf("t_ReEnc: C_rk2_Hex = \s\n", C_rk2_Hex);
+    sgx_printf("t_ReEnc: rk1_Hex = %s\n", rk1_Hex);
+    sgx_printf("t_ReEnc: rk2_Hex = %s\n", rk2_Hex);
 
     /*
     transform CDEK to TCDEK=C-PRE.reEnc(rk, CDEK), 
@@ -3475,8 +3479,8 @@ sgx_status_t t_ReEnc(
         result_sf->CDEK_rk_C2, 256, 
         result_sf->CDEK_rk_C3, 256, 
         result_sf->CDEK_rk_C4, 512, 
-        C_rk1_Hex, 256, 
-        C_rk2_Hex, 256,
+        rk1_Hex, 256, 
+        rk2_Hex, 256,
         TC_DEK_c1_Hex, 256,
         TC_DEK_c2_Hex, 256,
         TC_DEK_c3_Hex, 512,
