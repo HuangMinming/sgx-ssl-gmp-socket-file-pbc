@@ -3002,7 +3002,7 @@ sgx_status_t t_SaveShareFile(
         sgx_printf("%c", file_name[i]);
     }
     sgx_printf("\n");
-    memset(sf, 0x00, sizeof(sf));
+    memset(sf, 0x00, sizeof(ShareFile_t));
     memcpy(sf->owner_user_id, owner_user_id, owner_user_id_len);
     memcpy(sf->shared_with_user_id, shared_with_user_id, share_id_len);
     memcpy(sf->share_id, share_id, share_id_len);
@@ -3036,8 +3036,8 @@ sgx_status_t t_SaveShareFile(
         while (tmp != NULL) {
             ShareFile_t *sf = (ShareFile_t *)(tmp->data);
             sgx_printf("element %d:\n", index);
-            sgx_printf("\tfild_id = %s\n\tfile_name = %s\n", 
-                sf->file_id, sf->file_name);
+            sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
+                sf->share_id, sf->file_id, sf->file_name);
             tmp = tmp->next;
             index ++;
         }
@@ -3266,7 +3266,7 @@ sgx_status_t t_ReEnc(
         sgx_printf("%c", share_id[i]);
     }
     sgx_printf("\n");
-    memset(sf, 0x00, sizeof(sf));
+    memset(sf, 0x00, sizeof(ShareFile_t));
     memcpy(sf->shared_with_user_id, user_id, user_id_len);
     memcpy(sf->share_id, share_id, share_id_len);
     memcpy(sf->file_id, file_id, file_id_len);
