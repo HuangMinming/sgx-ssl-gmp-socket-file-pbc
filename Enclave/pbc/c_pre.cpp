@@ -3444,6 +3444,7 @@ sgx_status_t t_ReEnc(
     sgx_printf("t_ReEnc: iv = %s\n", iv);
     sgx_printf("t_ReEnc: tag = %s\n", tag);
     sgx_printf("t_ReEnc: C_rk_Byte = %s\n", C_rk_Byte);
+    sgx_printf("t_ReEnc: DEK_rk = %s\n", DEK_rk);
 
     uint8_t rk_Byte[256 + 1];
     memset(rk_Byte, 0x00, sizeof(rk_Byte));
