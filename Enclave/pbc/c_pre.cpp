@@ -3103,8 +3103,8 @@ sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
         while (tmp != NULL) {
             ShareFile_t *sf = (ShareFile_t *)(tmp->data);
             sgx_printf("element %d:\n", index);
-            sgx_printf("\tfild_id = %s\n\tfile_name = %s\n", 
-                sf->file_id, sf->file_name);
+            sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
+                sf->share_id, sf->file_id, sf->file_name);
             tmp = tmp->next;
             index ++;
         }
@@ -3212,8 +3212,8 @@ sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data
         while (tmp != NULL) {
             ShareFile_t *sf = (ShareFile_t *)(tmp->data);
             sgx_printf("element %d:\n", index);
-            sgx_printf("\tfild_id = %s, \n\tfile_name = %s\n", 
-                sf->file_id, sf->file_name);
+            sgx_printf("\tshare_id = %s, \n\tfild_id = %s, \n\tfile_name = %s\n", 
+                sf->share_id, sf->file_id, sf->file_name);
             tmp = tmp->next;
             index ++;
         }
@@ -3307,8 +3307,8 @@ sgx_status_t t_ReEnc(
         while (tmp != NULL) {
             ShareFile_t *node_data = (ShareFile_t *)(tmp->data);
             sgx_printf("element %d:\n", index);
-            sgx_printf("\tfild_id = %s\n\tfile_name = %s\n", 
-                node_data->file_id, node_data->file_name);
+            sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
+                node_data->share_id, node_data->file_id, node_data->file_name);
             tmp = tmp->next;
             index ++;
         }
