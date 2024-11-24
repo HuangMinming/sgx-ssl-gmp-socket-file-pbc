@@ -3454,7 +3454,7 @@ sgx_status_t t_ReEnc(
     memset(rk_Byte, 0x00, sizeof(rk_Byte));
     iRet = aes_gcm_decrypt(C_rk_Byte, 256, 
         tag, TAG_SIZE, DEK_rk, iv, IV_LEN, rk_Byte);
-    if(iRet != 0) {
+    if(iRet < 0) {
         sgx_printf("t_ReEnc aes_gcm_decrypt error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
