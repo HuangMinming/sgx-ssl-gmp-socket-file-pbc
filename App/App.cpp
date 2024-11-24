@@ -2433,7 +2433,7 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
 
     sprintf((char *)(responseBody + offset), "%04d", 256);
     offset += 4;
-    memcpy(responseBody + offset, TC_DEK_c3_Hex, 256);
+    memcpy(responseBody + offset, TC_DEK_c4_Hex, 256);
     offset += 256;
 
     packResp((unsigned char *)"0000", 4, 
