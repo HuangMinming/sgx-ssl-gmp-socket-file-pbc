@@ -3444,7 +3444,7 @@ sgx_status_t t_ReEnc(
     HexStrToByteStr(iv_Hex, IV_LEN * 2, iv);
     HexStrToByteStr(tag_Hex, TAG_SIZE * 2, tag);
     HexStrToByteStr(C_rk_Hex, 512, C_rk_Byte);
-    HexStrToByteStr(DEK_rk_Hex, 21, DEK_rk);
+    HexStrToByteStr(DEK_rk_Hex, 32, DEK_rk);
     sgx_printf("t_ReEnc: iv = %s\n", iv);
     sgx_printf("t_ReEnc: tag = %s\n", tag);
     sgx_printf("t_ReEnc: C_rk_Byte = %s\n", C_rk_Byte);
