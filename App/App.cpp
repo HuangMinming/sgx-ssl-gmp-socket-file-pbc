@@ -35,6 +35,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <cstdio>
 
 #include <unistd.h>
 #include <pwd.h>
@@ -389,6 +390,17 @@ static bool write_buf_to_file(const char *filename, const uint8_t *buf, size_t b
         return false;
     }
 
+    return true;
+}
+
+static bool remove_file(const char *filename)
+{
+    if (filename == NULL || buf == NULL || bsize == 0)
+        return false;
+    if (std::remove(filename) != 0) {
+        std::cout << "Failed to remove the file \"" << filename << "\"" << std::endl;
+        return false;
+    }
     return true;
 }
 
@@ -2075,51 +2087,56 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
         return -3;
     }
     printf("Call t_get_sealed_shareFileList_data_size success.\n");
+    if(sealed_data_size == 0) {
+        printf("no share file need to seal, delete %s\n", SEALED_shareFileList_DATA_FILE);
+        remove_file(SEALED_shareFileList_DATA_FILE);
+    } 
+    else {
+        uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
+        if (temp_sealed_buf == NULL)
+        {
+            printf("Out of memory\n");
+            packResp((unsigned char *)"0103", 4, 
+                (unsigned char *)ERRORMSG_MEMORY_ERROR, strlen(ERRORMSG_MEMORY_ERROR),
+                responseMsg, p_responseMsgLength);
+            return -2;
+        }
+        ret = t_seal_shareFileList_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+        if (ret != SGX_SUCCESS)
+        {
+            printf("call t_seal_shareFileList_data failed\n");
+            print_error_message(ret);
+            free(temp_sealed_buf);
+            packResp((unsigned char *)"0103", 4, 
+                (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
+                responseMsg, p_responseMsgLength);
+            return -3;
+        }
+        else if (retval != SGX_SUCCESS)
+        {
+            printf("call t_seal_shareFileList_data failed, retval=%d\n", retval);
+            print_error_message(retval);
+            free(temp_sealed_buf);
+            packResp((unsigned char *)"0103", 4, 
+                (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
+                responseMsg, p_responseMsgLength);
+            return -3;
+        }
+        printf("Call t_seal_shareFileList_data success.\n");
 
-    uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
-    if (temp_sealed_buf == NULL)
-    {
-        printf("Out of memory\n");
-        packResp((unsigned char *)"0103", 4, 
-            (unsigned char *)ERRORMSG_MEMORY_ERROR, strlen(ERRORMSG_MEMORY_ERROR),
-            responseMsg, p_responseMsgLength);
-        return -2;
-    }
-    ret = t_seal_shareFileList_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
-    if (ret != SGX_SUCCESS)
-    {
-        printf("call t_seal_shareFileList_data failed\n");
-        print_error_message(ret);
-        free(temp_sealed_buf);
-        packResp((unsigned char *)"0103", 4, 
-            (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
-            responseMsg, p_responseMsgLength);
-        return -3;
-    }
-    else if (retval != SGX_SUCCESS)
-    {
-        printf("call t_seal_shareFileList_data failed, retval=%d\n", retval);
-        print_error_message(retval);
-        free(temp_sealed_buf);
-        packResp((unsigned char *)"0103", 4, 
-            (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
-            responseMsg, p_responseMsgLength);
-        return -3;
-    }
-    printf("Call t_seal_shareFileList_data success.\n");
+        if (write_buf_to_file(SEALED_shareFileList_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
+        {
+            printf("Failed to save the sealed data blob to \" %s \" \n", SEALED_shareFileList_DATA_FILE);
+            free(temp_sealed_buf);
+            packResp((unsigned char *)"0104", 4, 
+                (unsigned char *)ERRORMSG_FILE_IO_ERROR, strlen(ERRORMSG_FILE_IO_ERROR),
+                responseMsg, p_responseMsgLength);
+            return -2;
+        }
+        printf("Call write_buf_to_file success.\n");
 
-    if (write_buf_to_file(SEALED_shareFileList_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
-    {
-        printf("Failed to save the sealed data blob to \" %s \" \n", SEALED_shareFileList_DATA_FILE);
         free(temp_sealed_buf);
-        packResp((unsigned char *)"0104", 4, 
-            (unsigned char *)ERRORMSG_FILE_IO_ERROR, strlen(ERRORMSG_FILE_IO_ERROR),
-            responseMsg, p_responseMsgLength);
-        return -2;
     }
-    printf("Call write_buf_to_file success.\n");
-
-    free(temp_sealed_buf);
     // set successful respond
     memcpy(responseMsg, "00000000", 8);
     (*p_responseMsgLength) = 8;
@@ -2336,53 +2353,58 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
         return -3;
     }
     printf("Call t_get_sealed_shareFileList_data_size success.\n");
+    if(sealed_data_size == 0) {
+        printf("no share file need to seal, delete %s\n", SEALED_shareFileList_DATA_FILE);
+        remove_file(SEALED_shareFileList_DATA_FILE);
+    } 
+    else {
+        uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
+        if (temp_sealed_buf == NULL)
+        {
+            printf("Out of memory\n");
+            packResp((unsigned char *)"0103", 4, 
+                (unsigned char *)ERRORMSG_MEMORY_ERROR, strlen(ERRORMSG_MEMORY_ERROR),
+                responseMsg, p_responseMsgLength);
+            return -2;
+        }
+        ret = t_seal_shareFileList_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+        if (ret != SGX_SUCCESS)
+        {
+            printf("call t_seal_shareFileList_data failed\n");
+            print_error_message(ret);
+            free(temp_sealed_buf);
+            packResp((unsigned char *)"0103", 4, 
+                (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
+                responseMsg, p_responseMsgLength);
+            return -3;
+        }
+        else if (retval != SGX_SUCCESS)
+        {
+            printf("call t_seal_shareFileList_data failed, retval=%d\n", retval);
+            print_error_message(retval);
+            free(temp_sealed_buf);
+            packResp((unsigned char *)"0103", 4, 
+                (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
+                responseMsg, p_responseMsgLength);
+            return -3;
+        }
+        printf("Call t_seal_shareFileList_data success.\n");
 
-    uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
-    if (temp_sealed_buf == NULL)
-    {
-        printf("Out of memory\n");
-        packResp((unsigned char *)"0103", 4, 
-            (unsigned char *)ERRORMSG_MEMORY_ERROR, strlen(ERRORMSG_MEMORY_ERROR),
-            responseMsg, p_responseMsgLength);
-        return -2;
-    }
-    ret = t_seal_shareFileList_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
-    if (ret != SGX_SUCCESS)
-    {
-        printf("call t_seal_shareFileList_data failed\n");
-        print_error_message(ret);
+        if (write_buf_to_file(SEALED_shareFileList_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
+        {
+            printf("Failed to save the sealed data blob to \" %s \" \n", SEALED_shareFileList_DATA_FILE);
+            free(temp_sealed_buf);
+            packResp((unsigned char *)"0104", 4, 
+                (unsigned char *)ERRORMSG_FILE_IO_ERROR, strlen(ERRORMSG_FILE_IO_ERROR),
+                responseMsg, p_responseMsgLength);
+            return -2;
+        }
+        printf("Call write_buf_to_file success.\n");
+
+        printf("Sealing data succeeded.\n");
+
         free(temp_sealed_buf);
-        packResp((unsigned char *)"0103", 4, 
-            (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
-            responseMsg, p_responseMsgLength);
-        return -3;
     }
-    else if (retval != SGX_SUCCESS)
-    {
-        printf("call t_seal_shareFileList_data failed, retval=%d\n", retval);
-        print_error_message(retval);
-        free(temp_sealed_buf);
-        packResp((unsigned char *)"0103", 4, 
-            (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
-            responseMsg, p_responseMsgLength);
-        return -3;
-    }
-    printf("Call t_seal_shareFileList_data success.\n");
-
-    if (write_buf_to_file(SEALED_shareFileList_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
-    {
-        printf("Failed to save the sealed data blob to \" %s \" \n", SEALED_shareFileList_DATA_FILE);
-        free(temp_sealed_buf);
-        packResp((unsigned char *)"0104", 4, 
-            (unsigned char *)ERRORMSG_FILE_IO_ERROR, strlen(ERRORMSG_FILE_IO_ERROR),
-            responseMsg, p_responseMsgLength);
-        return -2;
-    }
-    printf("Call write_buf_to_file success.\n");
-
-    printf("Sealing data succeeded.\n");
-
-    free(temp_sealed_buf);
     // set successful respond
     // add return msg
     size_t responseBodyLen = 4 + 50 + 4 + 256 + 4 + 256 + 4 + 512 + 4 + 256;

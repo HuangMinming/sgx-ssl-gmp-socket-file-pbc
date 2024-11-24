@@ -3085,6 +3085,10 @@ seal and unseal shareFileList
 uint32_t t_get_sealed_shareFileList_data_size()
 {
     size_t size = list_size(&shareFileList);
+    if( size <= 0) {
+        sgx_printf("no share file need to seal.\n");
+        return 0;
+    }
     return sgx_calc_sealed_data_size((uint32_t)strlen(aad_shareFileList_mac_text), 
         (uint32_t)(size * sizeof(ShareFile_t)));
 }
@@ -3095,6 +3099,10 @@ sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
     sgx_printf("t_seal_shareFileList_data address of shareFileList = %p\n", &shareFileList);
     size_t size = list_size(&shareFileList);
     sgx_printf("t_seal_shareFileList_data list_size is %d\n", size);
+    if( size <= 0) {
+        sgx_printf("no share file need to seal.\n");
+        return SGX_SUCCESS;
+    }
     list_node *tmp = NULL;
 #ifdef PRINT_DEBUG_INFO
     tmp = shareFileList;
