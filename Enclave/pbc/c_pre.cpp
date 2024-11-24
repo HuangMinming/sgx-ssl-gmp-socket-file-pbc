@@ -3045,7 +3045,11 @@ sgx_status_t t_SaveShareFile(
     sgx_printf("\n");
 #endif
 
-    list_insert_end(shareFileList, (void *)sf);
+    list_node* newNode = list_insert_end(shareFileList, (void *)sf);
+    if(newNode == NULL) {
+        sgx_printf("t_SaveShareFile newNode is null\n");
+        return SGX_ERROR_OUT_OF_MEMORY;
+    }
     sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);
     size = list_size(&shareFileList);
     sgx_printf("t_SaveShareFile after list_insert_end, size is %d\n", size);
