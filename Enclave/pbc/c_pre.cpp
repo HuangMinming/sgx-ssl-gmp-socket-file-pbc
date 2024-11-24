@@ -3346,7 +3346,7 @@ sgx_status_t t_ReEnc(
     int iRet = ecdsa_verify((char *)(g_vk_A.vk_A), g_vk_A.vk_A_Length, 
         (char *)Cert_DO, Cert_DO_len, 
         Cert_DO_sign_value, Cert_DO_sign_value_len);
-    if(iRet != 0) {
+    if(iRet != 1) {
         sgx_printf("t_ReEnc ecdsa_verify DO error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
@@ -3354,7 +3354,7 @@ sgx_status_t t_ReEnc(
     iRet = ecdsa_verify((char *)(g_vk_A.vk_A), g_vk_A.vk_A_Length, 
         (char *)Cert_user_info, Cert_user_info_len, 
         Cert_user_info_sign_value, Cert_user_info_sign_value_len);
-    if(iRet != 0) {
+    if(iRet != 1) {
         sgx_printf("t_ReEnc ecdsa_verify DU error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
