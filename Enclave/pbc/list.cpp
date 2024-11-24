@@ -16,7 +16,7 @@ list_node* list_create(void *data)
 		l->next = NULL;
 		l->data = data;
 	}
-
+	sgx_printf("list_create l =%p\n", l);
 	return l;
 }
 
@@ -62,6 +62,7 @@ list_node* list_insert_beginning(list_node *list, void *data)
 list_node* list_insert_end(list_node *list, void *data)
 {
 	list_node *new_node = list_create(data);
+	sgx_printf("list_insert_end new_node =%p\n", new_node);
 	if (new_node != NULL) {
 		for(list_node *it = list; it != NULL; it = it->next) {
 			if (it->next == NULL) {
