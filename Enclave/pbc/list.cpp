@@ -2,6 +2,8 @@
 #include <string.h>
 #include "list.h"
 #include "c_pre.h"
+#include "../Enclave.h"
+#include "../Enclave_t.h" /* print_string */
 
 /* Creates a list (node) and returns it
  * Arguments: The data the list will contain or NULL to create an empty
@@ -179,4 +181,25 @@ int list_size(list_node **list)
 		size ++;
 	}
 	return size;
+}
+
+/* print the list
+ * Arguments: A pointer to a pointer to a list
+ */
+void list_print(list_node **list)
+{
+	sgx_printf("list_print start, list = %p\n", list);
+	if (list == NULL) return;
+	list_node *tmp = *list;
+	int index = 0;
+	sgx_printf("list_print, tmp = %p\n", tmp);
+	while (tmp != NULL) {
+		ShareFile_t *sf = (ShareFile_t *)(tmp->data);
+		sgx_printf("element %d:\n", index);
+		sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
+            sf->share_id, sf->file_id, sf->file_name);
+		tmp = tmp->next;
+		index ++;
+	}
+	sgx_printf("list_print end\n");
 }
