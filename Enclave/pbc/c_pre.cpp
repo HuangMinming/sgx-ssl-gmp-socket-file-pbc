@@ -3050,6 +3050,9 @@ sgx_status_t t_SaveShareFile(
         sgx_printf("t_SaveShareFile newNode is null\n");
         return SGX_ERROR_OUT_OF_MEMORY;
     }
+    if(shareFileList == NULL) {
+        shareFileList = newNode;
+    }
     list_print(&shareFileList);
     sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);
     size = list_size(&shareFileList);
