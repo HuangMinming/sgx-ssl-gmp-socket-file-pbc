@@ -2180,7 +2180,7 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     memcpy(shareIdLengthStr, requestBody + reqestBodyOffset, 4);
     reqestBodyOffset += 4;
     shareIdLength = atoi(shareIdLengthStr);
-    if(shareIdLength <= 0 || shareIdLength > sizeof(filename))
+    if(shareIdLength <= 0 || shareIdLength > sizeof(shareId))
     {
         printf("error shareId length, shareIdLength is %d \n", shareIdLength);
         packResp((unsigned char *)"0101", 4, 
@@ -2196,7 +2196,7 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     memcpy(fileIdLengthStr, requestBody + reqestBodyOffset, 4);
     reqestBodyOffset += 4;
     fileIdLength = atoi(fileIdLengthStr);
-    if(fileIdLength <= 0 || fileIdLength > sizeof(filename))
+    if(fileIdLength <= 0 || fileIdLength > sizeof(fileId))
     {
         printf("error fileId length, fileIdLength is %d \n", fileIdLength);
         packResp((unsigned char *)"0101", 4, 
@@ -2206,6 +2206,22 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     }
     memcpy(fileId, requestBody + reqestBodyOffset, fileIdLength);
     reqestBodyOffset += fileIdLength;
+
+    //filenameLength(4 bytes) + filename(256 bytes)
+    memset(filenameLengthStr, 0x00, sizeof(filenameLengthStr));
+    memcpy(filenameLengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    filenameLength = atoi(filenameLengthStr);
+    if(filenameLength <= 0 || filenameLength > sizeof(filename))
+    {
+        printf("error filename length, filenameLength is %d \n", filenameLength);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(filename, requestBody + reqestBodyOffset, filenameLength);
+    reqestBodyOffset += filenameLength;
 
     //Cert_user_infoLength(4 bytes) + Cert_user_info(600 bytes) 
     memset(Cert_user_infoLengthStr, 0x00, sizeof(Cert_user_infoLengthStr));
@@ -2230,7 +2246,7 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     Cert_user_info_sign_valueLength = atoi(Cert_user_info_sign_valueLengthStr);
     if(Cert_user_info_sign_valueLength <= 0 || Cert_user_info_sign_valueLength > sizeof(Cert_user_info_sign_value))
     {
-        printf("error C_rk length, Cert_user_info_sign_valueLength is %d \n", Cert_user_info_sign_valueLength);
+        printf("error Cert_user_info_sign_value length, Cert_user_info_sign_valueLength is %d \n", Cert_user_info_sign_valueLength);
         packResp((unsigned char *)"0101", 4, 
             (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
             responseMsg, p_responseMsgLength);
