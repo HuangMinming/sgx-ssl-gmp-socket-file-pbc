@@ -3388,8 +3388,8 @@ sgx_status_t t_ReEnc(
     memcpy(w, result_sf->owner_user_id, owner_user_id_len);
     memcpy(w + owner_user_id_len, result_sf->file_name, file_name_len);
     size_t w_len = owner_user_id_len + file_name_len;
-    uint8_t DEK_rk[SHA256_DIGEST_LENGTH_32 + 1];
-    memset(DEK_rk, 0x00, sizeof(DEK_rk));
+    uint8_t DEK_rk_Hex[SHA256_DIGEST_LENGTH_32 + 1];
+    memset(DEK_rk_Hex, 0x00, sizeof(DEK_rk_Hex));
     iRet = Dec2(g_keyPairHex.pk_Hex, sizeof(g_keyPairHex.pk_Hex),
          g_keyPairHex.sk_Hex, sizeof(g_keyPairHex.sk_Hex),
          w, w_len,
@@ -3397,17 +3397,17 @@ sgx_status_t t_ReEnc(
          result_sf->CDEK_rk_C2, sizeof(result_sf->CDEK_rk_C2) - 1,
          result_sf->CDEK_rk_C3, sizeof(result_sf->CDEK_rk_C3) - 1,
          result_sf->CDEK_rk_C4, sizeof(result_sf->CDEK_rk_C4) - 1,
-         DEK_rk, sizeof(DEK_rk)
+         DEK_rk_Hex, sizeof(DEK_rk_Hex)
          );
     if(iRet != 0) {
         sgx_printf("t_ReEnc Dec2 error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
 
-    sgx_printf("t_ReEnc: DEK_rk = \n");
-    for(int i=0;i<sizeof(DEK_rk);i++)
+    sgx_printf("t_ReEnc: DEK_rk_Hex = \n");
+    for(int i=0;i<sizeof(DEK_rk_Hex);i++)
     {
-        sgx_printf("%c", DEK_rk[i]);
+        sgx_printf("%c", DEK_rk_Hex[i]);
     }
     sgx_printf("\n");
 
@@ -3431,16 +3431,20 @@ sgx_status_t t_ReEnc(
     sgx_printf("t_ReEnc: iv_Hex = %s\n", iv_Hex);
     sgx_printf("t_ReEnc: tag_Hex = %s\n", tag_Hex);
     sgx_printf("t_ReEnc: C_rk_Hex = %s\n", C_rk_Hex);
+    sgx_printf("t_ReEnc: DEK_rk_Hex = %s\n", DEK_rk_Hex);
     uint8_t iv[IV_LEN + 1];
     memset(iv, 0x00, sizeof(iv));
     uint8_t tag[TAG_SIZE + 1];
     memset(tag, 0x00, sizeof(tag));
     uint8_t C_rk_Byte[256 + 1];
     memset(C_rk_Byte, 0x00, sizeof(C_rk_Byte));
+    uint8_t DEK_rk[16 + 1];
+    memset(DEK_rk, 0x00, sizeof(DEK_rk));
     //uint32_t HexStrToByteStr(const uint8_t * src_buf, int src_len, uint8_t * dest_buf)
     HexStrToByteStr(iv_Hex, IV_LEN * 2, iv);
     HexStrToByteStr(tag_Hex, TAG_SIZE * 2, tag);
     HexStrToByteStr(C_rk_Hex, 512, C_rk_Byte);
+    HexStrToByteStr(DEK_rk_Hex, 21, DEK_rk);
     sgx_printf("t_ReEnc: iv = %s\n", iv);
     sgx_printf("t_ReEnc: tag = %s\n", tag);
     sgx_printf("t_ReEnc: C_rk_Byte = %s\n", C_rk_Byte);
