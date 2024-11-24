@@ -3531,8 +3531,8 @@ sgx_status_t t_ReEnc(
     /*
     debug
     */
-   uint8_t pk_Hex[] = "476cd255cb2e411d30dea136ab07db3cb68e76cdebdef0d2f22f9f79ffea7d608d12ef8ca461425c830a40dd2e23547cb8c68ab64c910324cf8f78a4403292383d8df912b9b5bfa18ff23ec237d2af6e9d46e4e716e38a4a539424bd50ed590179293099fbd3fa552072af4ea8e19709cdf262c33343e93db1d83235a6f8239f";
-   uint8_t *sk_Hex = "065d104abf18db74fad92b9ff0fe7785ee114e2f";
+   uint8_t *pk_Hex = (uint8_t *)"476cd255cb2e411d30dea136ab07db3cb68e76cdebdef0d2f22f9f79ffea7d608d12ef8ca461425c830a40dd2e23547cb8c68ab64c910324cf8f78a4403292383d8df912b9b5bfa18ff23ec237d2af6e9d46e4e716e38a4a539424bd50ed590179293099fbd3fa552072af4ea8e19709cdf262c33343e93db1d83235a6f8239f";
+   uint8_t *sk_Hex = (uint8_t *)"065d104abf18db74fad92b9ff0fe7785ee114e2f";
     uint8_t m_bytes[32 + 1];
     memset(m_bytes, 0x00, sizeof(m_bytes));
     int idebug = Dec1(pk_Hex, strlen((const char *)pk_Hex), 
