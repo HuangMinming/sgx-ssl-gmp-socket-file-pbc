@@ -1752,16 +1752,16 @@ int ReEnc(uint8_t *c1_i_Hex, int c1_i_Hex_len,
         NULL == c3_j_Hex || c3_j_Hex_len < SHA256_DIGEST_LENGTH_32 * 8 * 2 ||
         NULL == c4_j_Hex || c4_j_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2)
     {
-        sgx_printf("ReKeyGen input error \n");
+        sgx_printf("ReEnc input error \n");
         sgx_printf("NULL == c1_i_Hex = %d\n", NULL == c1_i_Hex);
         sgx_printf("c1_i_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c1_i_Hex_len = %d\n", 
             c1_i_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2, c1_i_Hex_len);
         sgx_printf("NULL == c2_i_Hex = %d\n", NULL == c2_i_Hex);
-        sgx_printf("c2_i_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c2_i_Hex_len = %d\n", 
-            c2_i_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2, c2_i_Hex_len);
+        sgx_printf("c2_i_Hex_len != GT_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c2_i_Hex_len = %d\n", 
+            c2_i_Hex_len != GT_ELEMENT_LENGTH_IN_BYTES * 2, c2_i_Hex_len);
         sgx_printf("NULL == c3_i_Hex = %d\n", NULL == c3_i_Hex);
-        sgx_printf("c3_i_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c3_i_Hex_len = %d\n", 
-            c3_i_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2, c3_i_Hex_len);
+        sgx_printf("c3_i_Hex_len != SHA256_DIGEST_LENGTH_32 * 8 * 2 = %d, c3_i_Hex_len = %d\n", 
+            c3_i_Hex_len != SHA256_DIGEST_LENGTH_32 * 8 * 2, c3_i_Hex_len);
         sgx_printf("NULL == c4_i_Hex = %d\n", NULL == c4_i_Hex);
         sgx_printf("c4_i_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c4_i_Hex_len = %d\n", 
             c4_i_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2, c4_i_Hex_len);
@@ -1775,11 +1775,11 @@ int ReEnc(uint8_t *c1_i_Hex, int c1_i_Hex_len,
         sgx_printf("c1_j_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c1_j_Hex_len = %d\n", 
             c1_j_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2, c1_j_Hex_len);
         sgx_printf("NULL == c2_j_Hex = %d\n", NULL == c2_j_Hex);
-        sgx_printf("c2_j_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c2_j_Hex_len = %d\n", 
-            c2_j_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2, c2_j_Hex_len);
+        sgx_printf("c2_j_Hex_len < GT_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c2_j_Hex_len = %d\n", 
+            c2_j_Hex_len < GT_ELEMENT_LENGTH_IN_BYTES * 2, c2_j_Hex_len);
         sgx_printf("NULL == c3_j_Hex = %d\n", NULL == c3_j_Hex);
-        sgx_printf("c3_j_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c3_j_Hex_len = %d\n", 
-            c3_j_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2, c3_j_Hex_len);
+        sgx_printf("c3_j_Hex_len < SHA256_DIGEST_LENGTH_32 * 8 * 2 = %d, c3_j_Hex_len = %d\n", 
+            c3_j_Hex_len < SHA256_DIGEST_LENGTH_32 * 8 * 2, c3_j_Hex_len);
         sgx_printf("NULL == c4_j_Hex = %d\n", NULL == c4_j_Hex);
         sgx_printf("c4_j_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c4_j_Hex_len = %d\n", 
             c4_j_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2, c4_j_Hex_len);
@@ -3482,8 +3482,8 @@ sgx_status_t t_ReEnc(
     */
     iRet = ReEnc(result_sf->CDEK_rk_C1, 256, 
         result_sf->CDEK_rk_C2, 256, 
-        result_sf->CDEK_rk_C3, 256, 
-        result_sf->CDEK_rk_C4, 512, 
+        result_sf->CDEK_rk_C3, 512, 
+        result_sf->CDEK_rk_C4, 256, 
         rk1_Hex, 256, 
         rk2_Hex, 256,
         TC_DEK_c1_Hex, 256,
