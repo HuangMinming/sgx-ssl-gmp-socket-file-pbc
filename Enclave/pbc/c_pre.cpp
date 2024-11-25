@@ -3379,7 +3379,7 @@ sgx_status_t t_ReEnc(
     ShareFile_t *result_sf = NULL;
     result_sf = (ShareFile_t *)result_node->data;
     
-    sgx_printf("t_ReEnc result_sf is %d\n");
+    sgx_printf("t_ReEnc result_sf is\n");
     sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
                 result_sf->share_id, result_sf->file_id, result_sf->file_name);
     //veriry CertDU and CertDO
@@ -3403,6 +3403,7 @@ sgx_status_t t_ReEnc(
         sgx_printf("t_ReEnc ecdsa_verify DO error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
+    sgx_printf("t_ReEnc ecdsa_verify DO ok\n");
 
     iRet = ecdsa_verify((char *)(g_vk_A.vk_A), g_vk_A.vk_A_Length, 
         (char *)Cert_user_info, Cert_user_info_len, 
@@ -3411,6 +3412,8 @@ sgx_status_t t_ReEnc(
         sgx_printf("t_ReEnc ecdsa_verify DU error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
+
+    sgx_printf("t_ReEnc ecdsa_verify DU ok\n");
 
     //TEE verifies both users (DO, DU) were not revoked via checking RL
     for(int i=0;i<RL.count;i++) {
@@ -3423,6 +3426,8 @@ sgx_status_t t_ReEnc(
         return SGX_ERROR_INVALID_PARAMETER;
         }
     }
+
+    sgx_printf("t_ReEnc RL check ok\n");
     /*
     TEE recovers DEKrk from CDEK_rk, using dkTEE ,
     denoted as DEKrk = C-PRE.Dec(dkTEE, CDEK_rk, H(IDDO|filename)),  
