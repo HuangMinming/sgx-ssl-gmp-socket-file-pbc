@@ -2685,7 +2685,6 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
 
     sgx_status_t retval;
     sgx_status_t ret = t_Revocate(global_eid, &retval, 
-        userId, userIdLength, 
         revocateUserId, revocateUserIdLength, 
         revocate_sign_value, revocate_sign_valueLength);
     if (ret != SGX_SUCCESS)
