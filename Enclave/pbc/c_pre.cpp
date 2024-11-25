@@ -3246,10 +3246,10 @@ sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data
     // {
     //     return SGX_ERROR_UNEXPECTED;
     // } 
-    for(int i=0;i<100;i++) {
-        sgx_printf("%02c ", decrypt_data[i]);
-    }
-    sgx_printf("\n");
+    // for(int i=0;i<100;i++) {
+    //     sgx_printf("%02c ", decrypt_data[i]);
+    // }
+    // sgx_printf("\n");
     list_destroy(&shareFileList);
     int offset = 0;
     size_t size = decrypt_data_len / sizeof(ShareFile_t);
@@ -3388,7 +3388,6 @@ sgx_status_t t_ReEnc(
     sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
                 result_sf->share_id, result_sf->file_id, result_sf->file_name);
     //veriry CertDU and CertDO
-    //todo
     if(memcmp(result_sf->shared_with_user_id, sf->shared_with_user_id, sizeof(sf->shared_with_user_id) != 0))
     {
         sgx_printf("t_ReEnc user_id error, request user id is  = %s\n", sf->shared_with_user_id);

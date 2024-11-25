@@ -1062,12 +1062,28 @@ bool loadSealed_UserRevocationList_Data() {
 }
 
 bool loadSealedData() {
-
-    loadSealed_Vk_Data();
+    bool b = false;
+    b = loadSealed_Vk_Data();
+    if(!b) {
+        printf("loadSealed_Vk_Data error\n");
+        return false;
+    }
     // loadSealed_bList_U_Data();
-    loadSealed_keyPairHex_Data();
-    loadSealed_shareFileList_Data();
-    loadSealed_UserRevocationList_Data();
+    b = loadSealed_keyPairHex_Data();
+    if(!b) {
+        printf("loadSealed_Vk_Data error\n");
+        return false;
+    }
+    b = loadSealed_shareFileList_Data();
+    if(!b) {
+        printf("loadSealed_Vk_Data error\n");
+        return false;
+    }
+    b = loadSealed_UserRevocationList_Data();
+    if(!b) {
+        printf("loadSealed_Vk_Data error\n");
+        return false;
+    }
 
     return true;
 }
@@ -1123,7 +1139,12 @@ int SGX_CDECL main(int argc, char *argv[])
         return -2;
     }
 
-    loadSealedData();
+    bool b = loadSealedData();
+    if(!b) {
+        printf("loadSealedData error\n");
+        sgx_destroy_enclave(global_eid);
+        return -1;
+    }
 
     // Initialize listener
     int i, j, n, nready;
