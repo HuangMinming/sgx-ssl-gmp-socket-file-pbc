@@ -2955,10 +2955,10 @@ sgx_status_t t_SaveShareFile(
     uint8_t *Cert_owner_info_sign_value, int Cert_owner_info_sign_value_len,
     uint8_t *owner_grant_info, int owner_grant_info_len,
     uint8_t *owner_grant_info_sign_value, int owner_grant_info_sign_value_len,
-    uint8_t *C_DEK_C1, C_DEK_C1_len, 
-    uint8_t *C_DEK_C2, C_DEK_C2_len, 
-    uint8_t *C_DEK_C3, C_DEK_C3_len, 
-    uint8_t *C_DEK_C4, C_DEK_C4_len)
+    uint8_t *C_DEK_C1, int C_DEK_C1_len, 
+    uint8_t *C_DEK_C2, int C_DEK_C2_len, 
+    uint8_t *C_DEK_C3, int C_DEK_C3_len, 
+    uint8_t *C_DEK_C4, int C_DEK_C4_len)
 {
     sgx_printf("t_SaveShareFile start\n");
         
