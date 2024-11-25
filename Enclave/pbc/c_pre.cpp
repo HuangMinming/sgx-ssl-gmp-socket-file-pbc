@@ -3645,28 +3645,28 @@ uint32_t t_get_sealed_UserRevocationList_data_size()
 
 sgx_status_t t_seal_UserRevocationList_data(uint8_t *sealed_blob, uint32_t data_size)
 {
-    uint32_t data_size = user_id_MAX_size * RL.count;
+    uint32_t RL_data_size = user_id_MAX_size * RL.count;
     uint32_t sealed_data_size = sgx_calc_sealed_data_size((uint32_t)strlen(aad_UserRevocationList_mac_text), 
-        (uint32_t)(data_size + 4));
+        (uint32_t)(RL_data_size + 4));
     if (sealed_data_size == UINT32_MAX)
         return SGX_ERROR_UNEXPECTED;
     if (sealed_data_size > data_size)
         return SGX_ERROR_INVALID_PARAMETER;
 
-    unsigned char *data_buf = (unsigned char *)malloc(data_size + 4);
+    unsigned char *data_buf = (unsigned char *)malloc(RL_data_size + 4);
     char RL_count_Str[5];
-    memset(data_buf, 0x00, data_size + 4);
+    memset(data_buf, 0x00, RL_data_size + 4);
     memset(RL_count_Str, 0x00, sizeof(RL_count_Str));
     sprintf_s(RL_count_Str, 5, "%04d", RL.count);
 
     memcpy(data_buf, RL_count_Str, 4);
-    memcpy(data_buf + 4, RL.user_id, data_size);
+    memcpy(data_buf + 4, RL.user_id, RL_data_size);
     uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
     if (temp_sealed_buf == NULL)
         return SGX_ERROR_OUT_OF_MEMORY;
     sgx_status_t err = sgx_seal_data((uint32_t)strlen(aad_UserRevocationList_mac_text), 
         (const uint8_t *)aad_UserRevocationList_mac_text, 
-        (uint32_t)(data_size + 4), (uint8_t *)data_buf, 
+        (uint32_t)(RL_data_size + 4), (uint8_t *)data_buf, 
         sealed_data_size, (sgx_sealed_data_t *)temp_sealed_buf);
     if (err == SGX_SUCCESS)
     {
