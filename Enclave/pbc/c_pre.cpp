@@ -2174,6 +2174,15 @@ int Dec1(uint8_t *pk_Hex, int pk_Hex_len,
     if (iRet != 0)
     {
         sgx_printf("Dec1 verify g^H1(m, R) == c1 fail\n");
+        bits_to_bytes(m, m_len, m_bytes, m_bytes_len);
+#ifdef PRINT_DEBUG_INFO
+        sgx_printf("Dec1 m_bytes =\n");
+        for(int i=0;i<m_bytes_len;i++)
+        {
+            sgx_printf("%c", m_bytes[i]);
+        }
+        sgx_printf("\n");
+#endif
     }
     else 
     {
