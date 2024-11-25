@@ -2174,15 +2174,6 @@ int Dec1(uint8_t *pk_Hex, int pk_Hex_len,
     if (iRet != 0)
     {
         sgx_printf("Dec1 verify g^H1(m, R) == c1 fail\n");
-        bits_to_bytes(m, m_len, m_bytes, m_bytes_len);
-#ifdef PRINT_DEBUG_INFO
-        sgx_printf("Dec1 m_bytes =\n");
-        for(int i=0;i<m_bytes_len;i++)
-        {
-            sgx_printf("%c", m_bytes[i]);
-        }
-        sgx_printf("\n");
-#endif
     }
     else 
     {
@@ -2963,7 +2954,11 @@ sgx_status_t t_SaveShareFile(
     uint8_t *Cert_owner_info, int Cert_owner_info_len, 
     uint8_t *Cert_owner_info_sign_value, int Cert_owner_info_sign_value_len,
     uint8_t *owner_grant_info, int owner_grant_info_len,
-    uint8_t *owner_grant_info_sign_value, int owner_grant_info_sign_value_len)
+    uint8_t *owner_grant_info_sign_value, int owner_grant_info_sign_value_len,
+    uint8_t *C_DEK_C1, C_DEK_C1_len, 
+    uint8_t *C_DEK_C2, C_DEK_C2_len, 
+    uint8_t *C_DEK_C3, C_DEK_C3_len, 
+    uint8_t *C_DEK_C4, C_DEK_C4_len)
 {
     sgx_printf("t_SaveShareFile start\n");
         
@@ -3027,6 +3022,22 @@ sgx_status_t t_SaveShareFile(
         sgx_printf("t_SaveShareFile owner_grant_info_sign_value_len error, owner_grant_info_sign_value_len = %d\n", owner_grant_info_sign_value_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
+    if(C_DEK_C1_len <=0 || C_DEK_C1_len > sizeof(sf->C_DEK_C1) - 1) {
+        sgx_printf("t_SaveShareFile C_DEK_C1_len error, C_DEK_C1_len = %d\n", C_DEK_C1_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(C_DEK_C2_len <=0 || C_DEK_C2_len > sizeof(sf->C_DEK_C2) - 1) {
+        sgx_printf("t_SaveShareFile C_DEK_C2_len error, C_DEK_C2_len = %d\n", C_DEK_C2_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(C_DEK_C3_len <=0 || C_DEK_C3_len > sizeof(sf->C_DEK_C3) - 1) {
+        sgx_printf("t_SaveShareFile C_DEK_C3_len error, C_DEK_C3_len = %d\n", C_DEK_C3_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    if(C_DEK_C4_len <=0 || C_DEK_C4_len > sizeof(sf->C_DEK_C4) - 1) {
+        sgx_printf("t_SaveShareFile C_DEK_C4_len error, C_DEK_C4_len = %d\n", C_DEK_C4_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
     sgx_printf("filename is:");
     for(int i=0;i<file_name_len + 10;i++) {
         sgx_printf("%c", file_name[i]);
@@ -3047,6 +3058,10 @@ sgx_status_t t_SaveShareFile(
     memcpy(sf->Cert_owner_info_sign_value, Cert_owner_info_sign_value, Cert_owner_info_sign_value_len);
     memcpy(sf->owner_grant_info, owner_grant_info, CDEK_rk_C3_len);
     memcpy(sf->owner_grant_info_sign_value, owner_grant_info_sign_value, owner_grant_info_sign_value_len);
+    memcpy(sf->C_DEK_C1, C_DEK_C1, C_DEK_C1_len);
+    memcpy(sf->C_DEK_C2, C_DEK_C2, C_DEK_C2_len);
+    memcpy(sf->C_DEK_C3, C_DEK_C3, C_DEK_C3_len);
+    memcpy(sf->C_DEK_C4, C_DEK_C4, C_DEK_C4_len);
 
     // if(shareFileList == NULL) {
     //     shareFileList = list_create(sf);
@@ -3299,7 +3314,7 @@ sgx_status_t t_ReEnc(
         return SGX_ERROR_INVALID_PARAMETER;
     }
     
-    sgx_printf("share id is:");
+    sgx_printf("t_ReEnc share id is:");
     for(int i=0;i<share_id_len + 10;i++) {
         sgx_printf("%c", share_id[i]);
     }
@@ -3338,13 +3353,13 @@ sgx_status_t t_ReEnc(
     int index = 0;
 #ifdef PRINT_DEBUG_INFO
     size = list_size(&shareFileList);
-    sgx_printf("t_SaveShareFile before list_find, size is %d\n", size);
+    sgx_printf("t_ReEnc before list_find, size is %d\n", size);
     tmp = shareFileList;
     index = 0;
     if(size > 0) {
         while (tmp != NULL) {
             ShareFile_t *node_data = (ShareFile_t *)(tmp->data);
-            sgx_printf("element %d:\n", index);
+            sgx_printf("t_ReEnc element %d:\n", index);
             sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
                 node_data->share_id, node_data->file_id, node_data->file_name);
             tmp = tmp->next;
@@ -3357,14 +3372,14 @@ sgx_status_t t_ReEnc(
     list_node *result_node = NULL;
     result_node = list_find(tmp, compare_ShareFile, (void *)sf);
     if(NULL == result_node) {
-        sgx_printf("t_SaveShareFile failed to retrive data from shareFileList\n");
+        sgx_printf("t_ReEnc failed to retrive data from shareFileList\n");
         sgx_printf("maybe it has been deleted, depends on database\n");
         return SGX_SUCCESS; //todo, maybe should return another value 
     }
     ShareFile_t *result_sf = NULL;
     result_sf = (ShareFile_t *)result_node->data;
     
-    sgx_printf("t_SaveShareFile result_sf is %d\n");
+    sgx_printf("t_ReEnc result_sf is %d\n");
     sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
                 result_sf->share_id, result_sf->file_id, result_sf->file_name);
     //veriry CertDU and CertDO
@@ -3518,10 +3533,10 @@ sgx_status_t t_ReEnc(
     /*
     transform CDEK to TCDEK=C-PRE.reEnc(rk, CDEK), 
     */
-    iRet = ReEnc(result_sf->CDEK_rk_C1, 256, 
-        result_sf->CDEK_rk_C2, 256, 
-        result_sf->CDEK_rk_C3, 512, 
-        result_sf->CDEK_rk_C4, 256, 
+    iRet = ReEnc(result_sf->C_DEK_C1, 256, 
+        result_sf->C_DEK_C2, 256, 
+        result_sf->C_DEK_C3, 512, 
+        result_sf->C_DEK_C4, 256, 
         rk1_Hex, 256, 
         rk2_Hex, 256,
         TC_DEK_c1_Hex, 256,
@@ -3536,9 +3551,9 @@ sgx_status_t t_ReEnc(
     //deletes record (filename, CrK, CDEK_rk, CertDO,Ogrant,𝜎grant), 
     list_remove(&shareFileList, result_node);
 
-    sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);
+    sgx_printf("t_ReEnc address of shareFileList = %p\n", &shareFileList);
     size = list_size(&shareFileList);
-    sgx_printf("t_SaveShareFile after list_remove, size is %d\n", size);
+    sgx_printf("t_ReEnc after list_remove, size is %d\n", size);
     
 #ifdef PRINT_DEBUG_INFO
     tmp = shareFileList;
@@ -3546,7 +3561,7 @@ sgx_status_t t_ReEnc(
     if(size > 0) {
         while (tmp != NULL) {
             ShareFile_t *sf = (ShareFile_t *)(tmp->data);
-            sgx_printf("element %d:\n", index);
+            sgx_printf("t_ReEnc element %d:\n", index);
             sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
                 sf->share_id, sf->file_id, sf->file_name);
             tmp = tmp->next;
@@ -3557,26 +3572,26 @@ sgx_status_t t_ReEnc(
 #endif
     
     free(result_sf);
-    sgx_printf("t_SaveShareFile end\n");
+    sgx_printf("t_ReEnc end\n");
     /*
     debug
     */
-   uint8_t *pk_Hex = (uint8_t *)"476cd255cb2e411d30dea136ab07db3cb68e76cdebdef0d2f22f9f79ffea7d608d12ef8ca461425c830a40dd2e23547cb8c68ab64c910324cf8f78a4403292383d8df912b9b5bfa18ff23ec237d2af6e9d46e4e716e38a4a539424bd50ed590179293099fbd3fa552072af4ea8e19709cdf262c33343e93db1d83235a6f8239f";
-   uint8_t *sk_Hex = (uint8_t *)"065d104abf18db74fad92b9ff0fe7785ee114e2f";
-   uint8_t *c1_Hex = (uint8_t *)"50be1bdd837b8df275280119cfe40e668ec9181876b10c88196b1738939b26dba53c7da8216fc4f9cf32a70aa05e6fb4f682a3933f502172581d6e1e5042287e61322cd842d1620c0367ea8e5fe28e06cae097e6d8bcc833167793a16854e7d812112a2e69586fc04521e093df4e1554de5a8aa2c5524da5fe7c2bd4e85f4fd3";
-   uint8_t *c2_Hex = (uint8_t *)"81fa741bc8f6c07705ef049b4e7c1f8c11c8e08c5b725debd226da1e20916640cc5b1cfec86fa0b5a4f5dd39f213a705633f763f9134867e2a1402907d97047a43f0b1e53533f8fcb209d4dccc42c123c38fa7273bceec1ba386bb98958c734fa68058af8f4ecf355aa4a23e053e61689831d639a6c1bc11bf078b9b1c78469d";
-   uint8_t *c3_Hex = (uint8_t *)"30303030303030303030313130303130313130303030303131313130303131303031313131313131313030313131313030313031303130303130303130313030303030303130313031313030313030303030313031313030303031313030313131303031313130313131313031303130303131313130303030313031303130303130313131303031313131313031303130303131313031303030303130303031313031303031313130303031303131303030303031303130313131313031303131313130303030313130303131303131313130303131303031313030313131303030313130313031313130313031303031303030303030303130303131313130";
-   uint8_t *c4_Hex = (uint8_t *)"a44d8c20a2e99be3a5f8d48372facad21696341c53586da5ac4483a7e9dab4539dff7ede8376b0aa1ba72ba92e5080cffcdcce478c9efeb4f106ee0d0dc1366f4592b0f084aace1fc4db60e1e06579db2327871e2c15151800df5be208c0d36847a5437113b506dbd7c042a32a9daeaa159585144b6a0b9d395b25af369c4f24";
-    uint8_t m_bytes[32 + 1];
-    memset(m_bytes, 0x00, sizeof(m_bytes));
-    int idebug = Dec1(pk_Hex, strlen((const char *)pk_Hex), 
-        sk_Hex, strlen((const char *)sk_Hex), 
-        c1_Hex, strlen((const char *)c1_Hex),
-        c2_Hex, strlen((const char *)c2_Hex),
-        c3_Hex, strlen((const char *)c3_Hex),
-        c4_Hex, strlen((const char *)c4_Hex),
-        m_bytes, 32
-    );
-    sgx_printf("t_SaveShareFile idebug is %d, m_bytes is %s\n", idebug, m_bytes);
+//    uint8_t *pk_Hex = (uint8_t *)"476cd255cb2e411d30dea136ab07db3cb68e76cdebdef0d2f22f9f79ffea7d608d12ef8ca461425c830a40dd2e23547cb8c68ab64c910324cf8f78a4403292383d8df912b9b5bfa18ff23ec237d2af6e9d46e4e716e38a4a539424bd50ed590179293099fbd3fa552072af4ea8e19709cdf262c33343e93db1d83235a6f8239f";
+//    uint8_t *sk_Hex = (uint8_t *)"065d104abf18db74fad92b9ff0fe7785ee114e2f";
+//    uint8_t *c1_Hex = (uint8_t *)"50be1bdd837b8df275280119cfe40e668ec9181876b10c88196b1738939b26dba53c7da8216fc4f9cf32a70aa05e6fb4f682a3933f502172581d6e1e5042287e61322cd842d1620c0367ea8e5fe28e06cae097e6d8bcc833167793a16854e7d812112a2e69586fc04521e093df4e1554de5a8aa2c5524da5fe7c2bd4e85f4fd3";
+//    uint8_t *c2_Hex = (uint8_t *)"81fa741bc8f6c07705ef049b4e7c1f8c11c8e08c5b725debd226da1e20916640cc5b1cfec86fa0b5a4f5dd39f213a705633f763f9134867e2a1402907d97047a43f0b1e53533f8fcb209d4dccc42c123c38fa7273bceec1ba386bb98958c734fa68058af8f4ecf355aa4a23e053e61689831d639a6c1bc11bf078b9b1c78469d";
+//    uint8_t *c3_Hex = (uint8_t *)"30303030303030303030313130303130313130303030303131313130303131303031313131313131313030313131313030313031303130303130303130313030303030303130313031313030313030303030313031313030303031313030313131303031313130313131313031303130303131313130303030313031303130303130313131303031313131313031303130303131313031303030303130303031313031303031313130303031303131303030303031303130313131313031303131313130303030313130303131303131313130303131303031313030313131303030313130313031313130313031303031303030303030303130303131313130";
+//    uint8_t *c4_Hex = (uint8_t *)"a44d8c20a2e99be3a5f8d48372facad21696341c53586da5ac4483a7e9dab4539dff7ede8376b0aa1ba72ba92e5080cffcdcce478c9efeb4f106ee0d0dc1366f4592b0f084aace1fc4db60e1e06579db2327871e2c15151800df5be208c0d36847a5437113b506dbd7c042a32a9daeaa159585144b6a0b9d395b25af369c4f24";
+//     uint8_t m_bytes[32 + 1];
+//     memset(m_bytes, 0x00, sizeof(m_bytes));
+//     int idebug = Dec1(pk_Hex, strlen((const char *)pk_Hex), 
+//         sk_Hex, strlen((const char *)sk_Hex), 
+//         c1_Hex, strlen((const char *)c1_Hex),
+//         c2_Hex, strlen((const char *)c2_Hex),
+//         c3_Hex, strlen((const char *)c3_Hex),
+//         c4_Hex, strlen((const char *)c4_Hex),
+//         m_bytes, 32
+//     );
+//     sgx_printf("t_SaveShareFile idebug is %d, m_bytes is %s\n", idebug, m_bytes);
     return SGX_SUCCESS;
 }

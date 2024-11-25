@@ -57,6 +57,10 @@ struct ShareFile_t {
     uint8_t Cert_owner_info_sign_value[256 + 1];
     uint8_t owner_grant_info[2144 + 1];
     uint8_t owner_grant_info_sign_value[256 + 1];
+    uint8_t C_DEK_C1[256 + 1];
+    uint8_t C_DEK_C2[512 + 1];
+    uint8_t C_DEK_C3[256 + 1];
+    uint8_t C_DEK_C4[256 + 1];
 };
 
 #define UserRevocation_MAX_size 1024

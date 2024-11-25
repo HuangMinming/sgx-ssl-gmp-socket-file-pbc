@@ -1058,7 +1058,7 @@ int SGX_CDECL main(int argc, char *argv[])
     // pairing_test();
     // seal_test();
     // unseal_test();
-    c_pre_test();
+    // c_pre_test();
     // ssl_test();
 
     /* Initialize the enclave , set global_eid*/
@@ -1718,7 +1718,11 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     Cert_owner_infoLength(4 bytes) + Cert_owner_info(600 bytes) +  
     Cert_owner_info_sign_valueLength(4 bytes) + Cert_owner_info_sign_value(256 bytes) + 
     owner_grant_infoLength(4 bytes) + owner_grant_info(2144 bytes) + 
-    owner_grant_info_sign_valueLength(4 bytes) + owner_grant_info_sign_value(256 bytes)
+    owner_grant_info_sign_valueLength(4 bytes) + owner_grant_info_sign_value(256 bytes) +
+    C_DEK_C1_length(4 bytes) +  C_DEK_C1(256 bytes) +
+    C_DEK_C2_length(4 bytes) +  C_DEK_C2(256 bytes) +
+    C_DEK_C3_length(4 bytes) +  C_DEK_C3(512 bytes) +
+    C_DEK_C4_length(4 bytes) +  C_DEK_C4(256 bytes)
 
     */
    
@@ -1726,6 +1730,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
    size_t CDEK_rk_C1_length, CDEK_rk_C2_length, CDEK_rk_C3_length, CDEK_rk_C4_length;
    size_t Cert_owner_infoLength, Cert_owner_info_sign_valueLength;
    size_t owner_grant_infoLength, owner_grant_info_sign_valueLength;
+   size_t C_DEK_C1_length, C_DEK_C2_length, C_DEK_C3_length, C_DEK_C4_length;
 
    char ownerUserIdLengthStr[5];
    char sharedWithUserIdLengthStr[5];
@@ -1741,6 +1746,10 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
    char Cert_owner_info_sign_valueLengthStr[5];
    char owner_grant_infoLengthStr[5];
    char owner_grant_info_sign_valueLengthStr[5];
+   char C_DEK_C1_lengthStr[5];
+   char C_DEK_C2_lengthStr[5];
+   char C_DEK_C3_lengthStr[5];
+   char C_DEK_C4_lengthStr[5];
 
    unsigned char ownerUserId[20];
    unsigned char sharedWithUserId[20];
@@ -1756,6 +1765,10 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
    unsigned char Cert_owner_info_sign_value[256];
    unsigned char owner_grant_info[2144];
    unsigned char owner_grant_info_sign_value[256];
+   unsigned char C_DEK_C1[256];
+   unsigned char C_DEK_C2[256];
+   unsigned char C_DEK_C3[512];
+   unsigned char C_DEK_C4[256];
 
    int offset = 0;
    int reqestBodyOffset = 0;
@@ -1986,6 +1999,74 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     memcpy(owner_grant_info_sign_value, requestBody + reqestBodyOffset, owner_grant_info_sign_valueLength);
     reqestBodyOffset += owner_grant_info_sign_valueLength;
 
+    //C_DEK_C1_length(4 bytes) +  C_DEK_C1(256 bytes)
+    memset(C_DEK_C1_lengthStr, 0x00, sizeof(C_DEK_C1_lengthStr));
+    memcpy(C_DEK_C1_lengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    C_DEK_C1_length = atoi(C_DEK_C1_lengthStr);
+    if(C_DEK_C1_length <= 0 || 
+        C_DEK_C1_length > sizeof(C_DEK_C1))
+    {
+        printf("error C_DEK_C1 length, C_DEK_C1_length is %d \n", C_DEK_C1_length);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(C_DEK_C1, requestBody + reqestBodyOffset, C_DEK_C1_length);
+    reqestBodyOffset += C_DEK_C1_length;
+
+    //C_DEK_C2_length(4 bytes) +  C_DEK_C2(256 bytes)
+    memset(C_DEK_C2_lengthStr, 0x00, sizeof(C_DEK_C2_lengthStr));
+    memcpy(C_DEK_C2_lengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    C_DEK_C2_length = atoi(C_DEK_C2_lengthStr);
+    if(C_DEK_C2_length <= 0 || 
+        C_DEK_C2_length > sizeof(C_DEK_C2))
+    {
+        printf("error C_DEK_C2 length, C_DEK_C2_length is %d \n", C_DEK_C2_length);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(C_DEK_C2, requestBody + reqestBodyOffset, C_DEK_C2_length);
+    reqestBodyOffset += C_DEK_C2_length;
+
+    //C_DEK_C3_length(4 bytes) +  C_DEK_C3(512 bytes)
+    memset(C_DEK_C3_lengthStr, 0x00, sizeof(C_DEK_C3_lengthStr));
+    memcpy(C_DEK_C3_lengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    C_DEK_C3_length = atoi(C_DEK_C3_lengthStr);
+    if(C_DEK_C3_length <= 0 || 
+        C_DEK_C3_length > sizeof(C_DEK_C3))
+    {
+        printf("error C_DEK_C3 length, C_DEK_C3_length is %d \n", C_DEK_C3_length);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(C_DEK_C3, requestBody + reqestBodyOffset, C_DEK_C3_length);
+    reqestBodyOffset += C_DEK_C3_length;
+
+    //C_DEK_C4_length(4 bytes) +  C_DEK_C4(256 bytes)
+    memset(C_DEK_C4_lengthStr, 0x00, sizeof(C_DEK_C4_lengthStr));
+    memcpy(C_DEK_C4_lengthStr, requestBody + reqestBodyOffset, 4);
+    reqestBodyOffset += 4;
+    C_DEK_C4_length = atoi(C_DEK_C4_lengthStr);
+    if(C_DEK_C4_length <= 0 || 
+        C_DEK_C4_length > sizeof(C_DEK_C4))
+    {
+        printf("error C_DEK_C4 length, C_DEK_C4_length is %d \n", C_DEK_C4_length);
+        packResp((unsigned char *)"0101", 4, 
+            (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
+            responseMsg, p_responseMsgLength);
+        return -1;
+    }
+    memcpy(C_DEK_C4, requestBody + reqestBodyOffset, C_DEK_C4_length);
+    reqestBodyOffset += C_DEK_C4_length;
+
     printf("ownerUserIdLength is %d, ownerUserId is :\n", ownerUserIdLength);
     dump_hex(ownerUserId, ownerUserIdLength, 16);
 
@@ -2028,6 +2109,18 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     printf("owner_grant_info_sign_valueLength is %d, owner_grant_info_sign_value is :\n", owner_grant_info_sign_valueLength);
     dump_hex(owner_grant_info_sign_value, owner_grant_info_sign_valueLength, 16);
 
+    printf("C_DEK_C1_length is %d, C_DEK_C1 is :\n", C_DEK_C1_length);
+    dump_hex(C_DEK_C1, C_DEK_C1_length, 16);
+
+    printf("C_DEK_C2_length is %d, C_DEK_C2 is :\n", C_DEK_C2_length);
+    dump_hex(C_DEK_C2, C_DEK_C2_length, 16);
+
+    printf("C_DEK_C3_length is %d, C_DEK_C3 is :\n", C_DEK_C3_length);
+    dump_hex(C_DEK_C3, C_DEK_C3_length, 16);
+
+    printf("C_DEK_C4_length is %d, C_DEK_C4 is :\n", C_DEK_C4_length);
+    dump_hex(C_DEK_C4, C_DEK_C4_length, 16);
+
     sgx_status_t retval;
     sgx_status_t ret = t_SaveShareFile(global_eid, &retval, 
         ownerUserId, ownerUserIdLength,
@@ -2043,7 +2136,11 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
         Cert_owner_info, Cert_owner_infoLength, 
         Cert_owner_info_sign_value, Cert_owner_info_sign_valueLength,
         owner_grant_info, owner_grant_infoLength,
-        owner_grant_info_sign_value, owner_grant_info_sign_valueLength);
+        owner_grant_info_sign_value, owner_grant_info_sign_valueLength,
+        C_DEK_C1, C_DEK_C1_length,
+        C_DEK_C2, C_DEK_C2_length,
+        C_DEK_C3, C_DEK_C3_length,
+        C_DEK_C4, C_DEK_C4_length);
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_SaveShareFile failed.\n");

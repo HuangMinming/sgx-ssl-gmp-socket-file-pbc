@@ -33,7 +33,11 @@ enclave {
             [in, size=Cert_owner_info_len] uint8_t *Cert_owner_info, int Cert_owner_info_len, 
             [in, size=Cert_owner_info_sign_value_len] uint8_t *Cert_owner_info_sign_value, int Cert_owner_info_sign_value_len,
             [in, size=owner_grant_info_len] uint8_t *owner_grant_info, int owner_grant_info_len,
-            [in, size=owner_grant_info_sign_value_len] uint8_t *owner_grant_info_sign_value, int owner_grant_info_sign_value_len);
+            [in, size=owner_grant_info_sign_value_len] uint8_t *owner_grant_info_sign_value, int owner_grant_info_sign_value_len, 
+            [in, size=C_DEK_C1_len] uint8_t *C_DEK_C1, int C_DEK_C1_len, 
+            [in, size=C_DEK_C2_len] uint8_t *C_DEK_C2, int C_DEK_C2_len, 
+            [in, size=C_DEK_C3_len] uint8_t *C_DEK_C3, int C_DEK_C3_len, 
+            [in, size=C_DEK_C4_len] uint8_t *C_DEK_C4, int C_DEK_C4_len);
         public uint32_t t_get_sealed_shareFileList_data_size();
         public sgx_status_t t_seal_shareFileList_data([out, size=data_size] uint8_t* sealed_blob, uint32_t data_size);
         public sgx_status_t t_unseal_shareFileList_data([in, size=data_size] const uint8_t *sealed_blob, size_t data_size);
