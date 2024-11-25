@@ -3254,7 +3254,9 @@ sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data
     int offset = 0;
     size_t size = decrypt_data_len / sizeof(ShareFile_t);
     for(int i=0;i<size;i++) {
-        list_node* newNode = list_insert_end(shareFileList, decrypt_data + offset);
+        ShareFile_t *new_sf = (ShareFile_t *)malloc(sizeof(ShareFile_t));
+        memcpy(new_sf, decrypt_data + offset, sizeof(ShareFile_t));
+        list_node* newNode = list_insert_end(shareFileList, (void *)new_sf);
         if(shareFileList == NULL) {
             shareFileList = newNode;
         }
@@ -3578,7 +3580,7 @@ sgx_status_t t_ReEnc(
     }
     sgx_printf("\n");
 #endif
-    
+    sgx_printf("t_ReEnc before free(result_sf)\n");
     free(result_sf);
     sgx_printf("t_ReEnc end\n");
     /*
