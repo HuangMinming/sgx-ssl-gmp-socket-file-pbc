@@ -3605,3 +3605,142 @@ sgx_status_t t_ReEnc(
 //     sgx_printf("t_SaveShareFile idebug is %d, m_bytes is %s\n", idebug, m_bytes);
     return SGX_SUCCESS;
 }
+
+
+sgx_status_t t_Revocate(
+    uint8_t *revocateUserId, int revocateUserId_len, 
+    uint8_t *revocate_sign_value, int revocate_sign_value_len)
+{
+    sgx_printf("t_Revocate start\n");
+
+    if(revocateUserId_len <=0 || revocateUserId_len > user_id_MAX_size - 1) {
+        sgx_printf("t_Revocate revocateUserId_len error, revocateUserId_len = %d\n", revocateUserId_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+
+    // TODO: check sign value
+
+    sgx_printf("revocateUserId is:");
+    for(int i=0;i<revocateUserId_len;i++) {
+        sgx_printf("%c", revocateUserId[i]);
+    }
+    sgx_printf("\n");
+
+    size_t index = RL.count;
+    memcpy(&(RL.user_id[index][0]), revocateUserId, revocateUserId_len);
+    RL.count ++;
+    sgx_printf("RL.count is %d\n", RL.count);
+    sgx_printf("t_Revocate end\n");
+    return SGX_SUCCESS;
+}
+
+uint32_t t_get_sealed_UserRevocationList_data_size()
+{
+    if(RL.count == 0) {
+        return 0;
+    }
+    return sgx_calc_sealed_data_size((uint32_t)strlen(aad_UserRevocationList_mac_text), 
+        (uint32_t)(user_id_MAX_size * RL.count + 4));
+}
+
+sgx_status_t t_seal_UserRevocationList_data(uint8_t *sealed_blob, uint32_t data_size)
+{
+    uint32_t data_size = user_id_MAX_size * RL.count;
+    uint32_t sealed_data_size = sgx_calc_sealed_data_size((uint32_t)strlen(aad_UserRevocationList_mac_text), 
+        (uint32_t)(data_size + 4));
+    if (sealed_data_size == UINT32_MAX)
+        return SGX_ERROR_UNEXPECTED;
+    if (sealed_data_size > data_size)
+        return SGX_ERROR_INVALID_PARAMETER;
+
+    unsigned char *data_buf = (unsigned char *)malloc(data_size + 4);
+    char RL_count_Str[5];
+    memset(data_buf, 0x00, data_size + 4);
+    memset(RL_count_Str, 0x00, sizeof(RL_count_Str));
+    sprintf_s(RL_count_Str, 5, "%04d", RL.count);
+
+    memcpy(data_buf, RL_count_Str, 4);
+    memcpy(data_buf + 4, RL.user_id, data_size);
+    uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
+    if (temp_sealed_buf == NULL)
+        return SGX_ERROR_OUT_OF_MEMORY;
+    sgx_status_t err = sgx_seal_data((uint32_t)strlen(aad_UserRevocationList_mac_text), 
+        (const uint8_t *)aad_UserRevocationList_mac_text, 
+        (uint32_t)(data_size + 4), (uint8_t *)data_buf, 
+        sealed_data_size, (sgx_sealed_data_t *)temp_sealed_buf);
+    if (err == SGX_SUCCESS)
+    {
+        // Copy the sealed data to outside buffer
+        memcpy(sealed_blob, temp_sealed_buf, sealed_data_size);
+    }
+
+    free(temp_sealed_buf);
+    free(data_buf);
+    return err;
+}
+
+sgx_status_t t_unseal_UserRevocationList_data(const uint8_t *sealed_blob, size_t data_size)
+{
+    uint32_t mac_text_len = sgx_get_add_mac_txt_len((const sgx_sealed_data_t *)sealed_blob);
+    uint32_t decrypt_data_len = sgx_get_encrypt_txt_len((const sgx_sealed_data_t *)sealed_blob);
+    if (mac_text_len == UINT32_MAX || decrypt_data_len == UINT32_MAX)
+        return SGX_ERROR_UNEXPECTED;
+    if (mac_text_len > data_size || decrypt_data_len > data_size)
+        return SGX_ERROR_INVALID_PARAMETER;
+
+    uint8_t *de_mac_text = (uint8_t *)malloc(mac_text_len);
+    if (de_mac_text == NULL)
+        return SGX_ERROR_OUT_OF_MEMORY;
+    uint8_t *decrypt_data = (uint8_t *)malloc(decrypt_data_len);
+    if (decrypt_data == NULL)
+    {
+        free(de_mac_text);
+        return SGX_ERROR_OUT_OF_MEMORY;
+    }
+
+    sgx_status_t ret = sgx_unseal_data((const sgx_sealed_data_t *)sealed_blob, de_mac_text, 
+        &mac_text_len, decrypt_data, &decrypt_data_len);
+    if (ret != SGX_SUCCESS)
+    {
+        free(de_mac_text);
+        free(decrypt_data);
+        return ret;
+    }
+
+    if (memcmp(de_mac_text, aad_UserRevocationList_mac_text, strlen(aad_UserRevocationList_mac_text)))
+    {
+        ret = SGX_ERROR_UNEXPECTED;
+    }
+
+    if(decrypt_data_len <  4)
+    {
+        sgx_printf("decrypt_data_len less than 4, = %d\n", decrypt_data_len);
+        return SGX_ERROR_UNEXPECTED;
+    }
+
+    char RL_count_Str[5];
+    memset(RL_count_Str, 0x00, sizeof(RL_count_Str));
+
+    size_t count = atoi(RL_count_Str);
+    if(count <= 0) {
+        sgx_printf("RL_count_Str less than 0, = %s\n", RL_count_Str);
+        return SGX_ERROR_UNEXPECTED;
+    }
+    if(decrypt_data_len < (count * user_id_MAX_size + 4)) {
+        sgx_printf("decrypt_data_len less than %d, decrypt_data_len = %d\n", 
+            count * user_id_MAX_size + 4, decrypt_data_len);
+        return SGX_ERROR_UNEXPECTED;
+    }
+    RL.count = count;
+    memcpy(RL.user_id, decrypt_data + 4, count * user_id_MAX_size);
+
+    sgx_printf("revocate user count is %d, list is\n", RL.count);
+    for(int i=0;i<RL.count;i++) {
+        sgx_printf("\telement %d: %s\n", i, RL.user_id[i]);
+    }
+    sgx_printf("\n");
+
+    free(de_mac_text);
+    free(decrypt_data);
+    return ret;
+}

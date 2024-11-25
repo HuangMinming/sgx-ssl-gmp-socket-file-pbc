@@ -76,6 +76,8 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     unsigned char *responseBody, size_t * responseBodyLength);
 int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     unsigned char *responseBody, size_t * responseBodyLength);
+int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
+    unsigned char *responseBody, size_t * responseBodyLength);
 int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
     unsigned char *responseBody, size_t * responseBodyLength);
 // the same as pre.h c_pre.h
