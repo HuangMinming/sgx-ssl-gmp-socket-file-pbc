@@ -3254,7 +3254,10 @@ sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data
     int offset = 0;
     size_t size = decrypt_data_len / sizeof(ShareFile_t);
     for(int i=0;i<size;i++) {
-        shareFileList = list_insert_end(shareFileList, decrypt_data + offset);
+        list_node* newNode = list_insert_end(shareFileList, decrypt_data + offset);
+        if(shareFileList == NULL) {
+            shareFileList = newNode;
+        }
         offset += sizeof(ShareFile_t);
     }
 #ifdef PRINT_DEBUG_INFO
