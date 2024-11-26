@@ -3737,6 +3737,7 @@ sgx_status_t t_unseal_UserRevocationList_data(const uint8_t *sealed_blob, size_t
 
     char RL_count_Str[5];
     memset(RL_count_Str, 0x00, sizeof(RL_count_Str));
+    memcpy(RL_count_Str, decrypt_data, 4);
 
     size_t count = atoi(RL_count_Str);
     if(count <= 0) {
