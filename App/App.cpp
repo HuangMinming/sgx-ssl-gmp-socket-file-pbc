@@ -1471,6 +1471,7 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_Admin_Setting failed.\n");
+        print_error_message(ret);
         int len = strlen(ERRORMSG_SGX_ERROR);
         offset = 0;
         memcpy(responseMsg + offset, "0102", 4);
@@ -1644,6 +1645,7 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_Trusted_Setup failed.\n");
+        print_error_message(ret);
         int len = strlen(ERRORMSG_SGX_ERROR);
         offset = 0;
         memcpy(responseMsg + offset, "0103", 4);
@@ -2229,6 +2231,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_SaveShareFile failed.\n");
+        print_error_message(ret);
         packResp((unsigned char *)"0102", 4, 
             (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
             responseMsg, p_responseMsgLength);
@@ -2495,6 +2498,7 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_ReEnc failed.\n");
+        print_error_message(ret);
         packResp((unsigned char *)"0102", 4, 
             (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
             responseMsg, p_responseMsgLength);
@@ -2942,6 +2946,7 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_Dec2 failed.\n");
+        print_error_message(ret);
         packResp((unsigned char *)"0102", 4, 
             (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
             responseMsg, p_responseMsgLength);
