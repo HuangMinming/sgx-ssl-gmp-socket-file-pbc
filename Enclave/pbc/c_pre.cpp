@@ -3629,7 +3629,7 @@ sgx_status_t t_revoke(
     revoke_info_len += revokeUserId_len;
     // TODO: check sign value
     int iRet = ecdsa_verify((char *)(g_vk_A.vk_A), g_vk_A.vk_A_Length, 
-        (char *)strlen, revoke_info_len, 
+        (char *)revoke_info, revoke_info_len, 
         revoke_sign_value, revoke_sign_value_len);
     if(iRet != 1) {
         sgx_printf("t_ReEnc ecdsa_verify revoke error, iRet = %d\n", iRet);
