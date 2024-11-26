@@ -2711,6 +2711,7 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_revoke failed.\n");
+        print_error_message(ret);
         packResp((unsigned char *)"0102", 4, 
             (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
             responseMsg, p_responseMsgLength);
