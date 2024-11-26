@@ -3616,8 +3616,26 @@ sgx_status_t t_revoke(
         sgx_printf("t_revoke revokeUserId_len error, revokeUserId_len = %d\n", revokeUserId_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-
+    if(revoke_sign_value_len <=0 || revoke_sign_value_len > 256) {
+        sgx_printf("t_revoke revoke_sign_value_len error, revoke_sign_value_len = %d\n", revoke_sign_value_len);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    uint8_t revoke_info[6 + 20 + 1];
+    int revoke_info_len = 0;
+    memset(revoke_info, 0x00, sizeof(revoke_info));
+    memcpy(revoke_info, "revoke", strlen("revoke"));
+    revoke_info_len += strlen("revoke");
+    memcpy(revoke_info + offset, revokeUserId, revokeUserId_len);
+    revoke_info_len += revokeUserId_len;
     // TODO: check sign value
+    int iRet = ecdsa_verify((char *)(g_vk_A.vk_A), g_vk_A.vk_A_Length, 
+        (char *)strlen, revoke_info_len, 
+        revoke_sign_value, revoke_sign_value_len);
+    if(iRet != 1) {
+        sgx_printf("t_ReEnc ecdsa_verify revoke error, iRet = %d\n", iRet);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    sgx_printf("t_ReEnc ecdsa_verify revoke ok\n");
 
     sgx_printf("revokeUserId is:");
     for(int i=0;i<revokeUserId_len;i++) {
