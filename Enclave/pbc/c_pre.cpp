@@ -3625,7 +3625,7 @@ sgx_status_t t_revoke(
     memset(revoke_info, 0x00, sizeof(revoke_info));
     memcpy(revoke_info, "revoke", strlen("revoke"));
     revoke_info_len += strlen("revoke");
-    memcpy(revoke_info + offset, revokeUserId, revokeUserId_len);
+    memcpy(revoke_info + revoke_info_len, revokeUserId, revokeUserId_len);
     revoke_info_len += revokeUserId_len;
     // TODO: check sign value
     int iRet = ecdsa_verify((char *)(g_vk_A.vk_A), g_vk_A.vk_A_Length, 
