@@ -2811,7 +2811,6 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
     // set successful respond
     memcpy(responseMsg, "00000000", 8);
     (*p_responseMsgLength) = 8;
-    printf("Sealing data succeeded.\n");
 
     printf("handleRequest0005 succeeded.\n");
     return 0;
