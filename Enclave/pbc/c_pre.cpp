@@ -3606,30 +3606,30 @@ sgx_status_t t_ReEnc(
 }
 
 
-sgx_status_t t_Revocate(
-    uint8_t *revocateUserId, int revocateUserId_len, 
-    uint8_t *revocate_sign_value, int revocate_sign_value_len)
+sgx_status_t t_revoke(
+    uint8_t *revokeUserId, int revokeUserId_len, 
+    uint8_t *revoke_sign_value, int revoke_sign_value_len)
 {
-    sgx_printf("t_Revocate start\n");
+    sgx_printf("t_revoke start\n");
 
-    if(revocateUserId_len <=0 || revocateUserId_len > user_id_MAX_size - 1) {
-        sgx_printf("t_Revocate revocateUserId_len error, revocateUserId_len = %d\n", revocateUserId_len);
+    if(revokeUserId_len <=0 || revokeUserId_len > user_id_MAX_size - 1) {
+        sgx_printf("t_revoke revokeUserId_len error, revokeUserId_len = %d\n", revokeUserId_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
 
     // TODO: check sign value
 
-    sgx_printf("revocateUserId is:");
-    for(int i=0;i<revocateUserId_len;i++) {
-        sgx_printf("%c", revocateUserId[i]);
+    sgx_printf("revokeUserId is:");
+    for(int i=0;i<revokeUserId_len;i++) {
+        sgx_printf("%c", revokeUserId[i]);
     }
     sgx_printf("\n");
 
     size_t index = RL.count;
-    memcpy(&(RL.user_id[index][0]), revocateUserId, revocateUserId_len);
+    memcpy(&(RL.user_id[index][0]), revokeUserId, revokeUserId_len);
     RL.count ++;
     sgx_printf("RL.count is %d\n", RL.count);
-    sgx_printf("t_Revocate end\n");
+    sgx_printf("t_revoke end\n");
     return SGX_SUCCESS;
 }
 
@@ -3733,7 +3733,7 @@ sgx_status_t t_unseal_UserRevocationList_data(const uint8_t *sealed_blob, size_t
     RL.count = count;
     memcpy(RL.user_id, decrypt_data + 4, count * user_id_MAX_size);
 
-    sgx_printf("revocate user count is %d, list is\n", RL.count);
+    sgx_printf("revoke user count is %d, list is\n", RL.count);
     for(int i=0;i<RL.count;i++) {
         sgx_printf("\telement %d: %s\n", i, RL.user_id[i]);
     }

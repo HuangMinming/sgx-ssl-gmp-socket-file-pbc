@@ -2631,19 +2631,19 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
     
     /*
     userIdLength(4 bytes) + userId(20 bytes) + 
-    revocateUserIdLength(4 bytes) + revocateUserId(20 bytes) + 
-    revocate_sign_valueLength(4 bytes) + revocate_sign_value(256 bytes)
+    revokeUserIdLength(4 bytes) + revokeUserId(20 bytes) + 
+    revoke_sign_valueLength(4 bytes) + revoke_sign_value(256 bytes)
     */
    
-   size_t userIdLength, revocateUserIdLength, revocate_sign_valueLength;
+   size_t userIdLength, revokeUserIdLength, revoke_sign_valueLength;
 
    char userIdLengthStr[5];
-   char revocateUserIdLengthStr[5];
-   char revocate_sign_valueLengthStr[5];
+   char revokeUserIdLengthStr[5];
+   char revoke_sign_valueLengthStr[5];
 
    unsigned char userId[20];
-   unsigned char revocateUserId[20];
-   unsigned char revocate_sign_value[256];
+   unsigned char revokeUserId[20];
+   unsigned char revoke_sign_value[256];
 
    int offset = 0;
    int reqestBodyOffset = 0;
@@ -2663,54 +2663,54 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
     memcpy(userId, requestBody + reqestBodyOffset, userIdLength);
     reqestBodyOffset += userIdLength;
 
-    //revocateUserIdLength(4 bytes) + revocateUserId(20 bytes)
-    memset(revocateUserIdLengthStr, 0x00, sizeof(revocateUserIdLengthStr));
-    memcpy(revocateUserIdLengthStr, requestBody + reqestBodyOffset, 4);
+    //revokeUserIdLength(4 bytes) + revokeUserId(20 bytes)
+    memset(revokeUserIdLengthStr, 0x00, sizeof(revokeUserIdLengthStr));
+    memcpy(revokeUserIdLengthStr, requestBody + reqestBodyOffset, 4);
     reqestBodyOffset += 4;
-    revocateUserIdLength = atoi(revocateUserIdLengthStr);
-    if(revocateUserIdLength <= 0 || revocateUserIdLength > sizeof(revocateUserId))
+    revokeUserIdLength = atoi(revokeUserIdLengthStr);
+    if(revokeUserIdLength <= 0 || revokeUserIdLength > sizeof(revokeUserId))
     {
-        printf("error revocateUserId length, revocateUserIdLength is %d \n", revocateUserIdLength);
+        printf("error revokeUserId length, revokeUserIdLength is %d \n", revokeUserIdLength);
         packResp((unsigned char *)"0101", 4, 
             (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
             responseMsg, p_responseMsgLength);
         return -1;
     }
-    memcpy(revocateUserId, requestBody + reqestBodyOffset, revocateUserIdLength);
-    reqestBodyOffset += revocateUserIdLength;
+    memcpy(revokeUserId, requestBody + reqestBodyOffset, revokeUserIdLength);
+    reqestBodyOffset += revokeUserIdLength;
     
-    //revocate_sign_valueLength(4 bytes) + revocate_sign_value(256 bytes)
-    memset(revocate_sign_valueLengthStr, 0x00, sizeof(revocate_sign_valueLengthStr));
-    memcpy(revocate_sign_valueLengthStr, requestBody + reqestBodyOffset, 4);
+    //revoke_sign_valueLength(4 bytes) + revoke_sign_value(256 bytes)
+    memset(revoke_sign_valueLengthStr, 0x00, sizeof(revoke_sign_valueLengthStr));
+    memcpy(revoke_sign_valueLengthStr, requestBody + reqestBodyOffset, 4);
     reqestBodyOffset += 4;
-    revocate_sign_valueLength = atoi(revocate_sign_valueLengthStr);
-    if(revocate_sign_valueLength <= 0 || revocate_sign_valueLength > sizeof(revocate_sign_value))
+    revoke_sign_valueLength = atoi(revoke_sign_valueLengthStr);
+    if(revoke_sign_valueLength <= 0 || revoke_sign_valueLength > sizeof(revoke_sign_value))
     {
-        printf("error revocate_sign_value length, revocate_sign_valueLength is %d \n", revocate_sign_valueLength);
+        printf("error revoke_sign_value length, revoke_sign_valueLength is %d \n", revoke_sign_valueLength);
         packResp((unsigned char *)"0101", 4, 
             (unsigned char *)ERRORMSG_REQUEST_ERROR, strlen(ERRORMSG_REQUEST_ERROR),
             responseMsg, p_responseMsgLength);
         return -1;
     }
-    memcpy(revocate_sign_value, requestBody + reqestBodyOffset, revocate_sign_valueLength);
-    reqestBodyOffset += revocate_sign_valueLength;
+    memcpy(revoke_sign_value, requestBody + reqestBodyOffset, revoke_sign_valueLength);
+    reqestBodyOffset += revoke_sign_valueLength;
 
     printf("userIdLength is %d, userId is :\n", userIdLength);
     dump_hex(userId, userIdLength, 16);
     
-    printf("revocateUserIdLength is %d, revocateUserId is :\n", revocateUserIdLength);
-    dump_hex(revocateUserId, revocateUserIdLength, 16);
+    printf("revokeUserIdLength is %d, revokeUserId is :\n", revokeUserIdLength);
+    dump_hex(revokeUserId, revokeUserIdLength, 16);
 
-    printf("revocate_sign_valueLength is %d, revocate_sign_value is :\n", revocate_sign_valueLength);
-    dump_hex(revocate_sign_value, revocate_sign_valueLength, 16);
+    printf("revoke_sign_valueLength is %d, revoke_sign_value is :\n", revoke_sign_valueLength);
+    dump_hex(revoke_sign_value, revoke_sign_valueLength, 16);
 
     sgx_status_t retval;
-    sgx_status_t ret = t_Revocate(global_eid, &retval, 
-        revocateUserId, revocateUserIdLength, 
-        revocate_sign_value, revocate_sign_valueLength);
+    sgx_status_t ret = t_revoke(global_eid, &retval, 
+        revokeUserId, revokeUserIdLength, 
+        revoke_sign_value, revoke_sign_valueLength);
     if (ret != SGX_SUCCESS)
     {
-        printf("Call t_Revocate failed.\n");
+        printf("Call t_revoke failed.\n");
         packResp((unsigned char *)"0102", 4, 
             (unsigned char *)ERRORMSG_SGX_ERROR, strlen(ERRORMSG_SGX_ERROR),
             responseMsg, p_responseMsgLength);
@@ -2724,7 +2724,7 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
             responseMsg, p_responseMsgLength);
         return -2;
     }
-    printf("Call t_Revocate success.\n");
+    printf("Call t_revoke success.\n");
 
     /*
     seal UserRevocationList data

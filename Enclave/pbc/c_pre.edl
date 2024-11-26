@@ -53,9 +53,9 @@ enclave {
             [out, size=TC_DEK_c3_Hex_len] uint8_t *TC_DEK_c3_Hex, int TC_DEK_c3_Hex_len, 
             [out, size=TC_DEK_c4_Hex_len] uint8_t *TC_DEK_c4_Hex, int TC_DEK_c4_Hex_len);
         
-        sgx_status_t t_Revocate(
-            [in, size=revocateUserId_len] uint8_t *revocateUserId, int revocateUserId_len, 
-            [in, size=revocate_sign_value_len] uint8_t *revocate_sign_value, int revocate_sign_value_len);
+        sgx_status_t t_revoke(
+            [in, size=revokeUserId_len] uint8_t *revokeUserId, int revokeUserId_len, 
+            [in, size=revoke_sign_value_len] uint8_t *revoke_sign_value, int revoke_sign_value_len);
         public uint32_t t_get_sealed_UserRevocationList_data_size();
         public sgx_status_t t_seal_UserRevocationList_data([out, size=data_size] uint8_t* sealed_blob, uint32_t data_size);
         public sgx_status_t t_unseal_UserRevocationList_data([in, size=data_size] const uint8_t *sealed_blob, size_t data_size);
