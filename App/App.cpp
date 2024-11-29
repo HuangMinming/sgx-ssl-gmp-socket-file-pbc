@@ -1221,17 +1221,21 @@ int SGX_CDECL main(int argc, char *argv[])
                 }
                 else if (n > 0)
                 {
+#ifdef PRINT_DEBUG_INFO
                     printf("recvMsg is :\n");
                     dump_hex(msg, n, 16);
+#endif
                     unsigned char responseMsg[BUFSIZ];
                     size_t responseMsgLen;
 
                     handleRequest(msg, n, i, responseMsg, &responseMsgLen);
 
-                    printf("responseMsg is :\n");
                     if(responseMsgLen > 0) 
                     {
+#ifdef PRINT_DEBUG_INFO
+                        printf("responseMsg is :\n");
                         dump_hex(responseMsg, responseMsgLen, 16);
+#endif
                         Write(i, responseMsg, responseMsgLen);
                     }
                     // memset(user_id, 0x00, sizeof(user_id));
@@ -1460,12 +1464,12 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         return -1;
     }
     memcpy(vk_A, requestBody + 4 + userIdLength + 4, vk_A_Length);
-
+#ifdef PRINT_DEBUG_INFO
     printf("userIdLength is %d, userId is :\n", userIdLength);
     dump_hex(userId, userIdLength, 16);
     printf("vk_A_Length is %d, vk_A is :\n", vk_A_Length);
     dump_hex(vk_A, vk_A_Length, 16);
-
+#endif
     sgx_status_t retval;
     sgx_status_t ret = t_Admin_Setting(global_eid, &retval, vk_A, vk_A_Length);
     if (ret != SGX_SUCCESS)
@@ -1598,10 +1602,11 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
     }
 
     free(temp_sealed_buf);
+    printf("Sealing data succeeded.\n");
     // set successful respond
     memcpy(responseMsg, "00000000", 8);
     (*p_responseMsgLength) = 8;
-    printf("Sealing data succeeded.\n");
+    printf("handleRequest0001 succeeded.\n");
     return 0;
 }
 
@@ -1636,9 +1641,10 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
         return -1;
     }
     memcpy(userId, requestBody + 4, userIdLength);
-
+#ifdef PRINT_DEBUG_INFO
+    printf("userIdLength is %d, userId is :\n", userIdLength);
     dump_hex(userId, userIdLength, 16);
-
+#endif
     sgx_status_t retval;
     unsigned char ek_TEE[G1_ELEMENT_LENGTH_IN_BYTES * 2];
     sgx_status_t ret = t_Trusted_Setup(global_eid, &retval, ek_TEE, sizeof(ek_TEE));
@@ -1770,6 +1776,8 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     }
 
     free(temp_sealed_buf);
+    printf("Sealing data succeeded.\n");
+
     // sgx_destroy_enclave(global_eid);
     // add return msg
     offset = 0;
@@ -1783,7 +1791,7 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     offset += sizeof(ek_TEE);
     (*p_responseMsgLength) = offset;
 
-    printf("Sealing data succeeded.\n");
+    printf("handleRequest0002 succeeded.\n");
     return 0;
 }
 
@@ -2153,7 +2161,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     }
     memcpy(C_DEK_C4, requestBody + reqestBodyOffset, C_DEK_C4_length);
     reqestBodyOffset += C_DEK_C4_length;
-
+#ifdef PRINT_DEBUG_INFO
     printf("ownerUserIdLength is %d, ownerUserId is :\n", ownerUserIdLength);
     dump_hex(ownerUserId, ownerUserIdLength, 16);
 
@@ -2207,7 +2215,7 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
 
     printf("C_DEK_C4_length is %d, C_DEK_C4 is :\n", C_DEK_C4_length);
     dump_hex(C_DEK_C4, C_DEK_C4_length, 16);
-
+#endif
     sgx_status_t retval;
     sgx_status_t ret = t_SaveShareFile(global_eid, &retval, 
         ownerUserId, ownerUserIdLength,
@@ -2321,11 +2329,12 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
         printf("Call write_buf_to_file success.\n");
 
         free(temp_sealed_buf);
+        printf("seal data success.\n");
     }
     // set successful respond
     memcpy(responseMsg, "00000000", 8);
     (*p_responseMsgLength) = 8;
-    printf("Sealing data succeeded.\n");
+    printf("handleRequest0003 succeeded.\n");
     return 0;
 }
 
@@ -2456,7 +2465,7 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     }
     memcpy(Cert_user_info_sign_value, requestBody + reqestBodyOffset, Cert_user_info_sign_valueLength);
     reqestBodyOffset += Cert_user_info_sign_valueLength;
-
+#ifdef PRINT_DEBUG_INFO
     printf("userIdLength is %d, userId is :\n", userIdLength);
     dump_hex(userId, userIdLength, 16);
     
@@ -2474,7 +2483,7 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
 
     printf("Cert_user_info_sign_valueLength is %d, Cert_user_info_sign_value is :\n", Cert_user_info_sign_valueLength);
     dump_hex(Cert_user_info_sign_value, Cert_user_info_sign_valueLength, 16);
-
+#endif
     uint8_t TC_DEK_c1_Hex[256 + 1];
     uint8_t TC_DEK_c2_Hex[256 + 1];
     uint8_t TC_DEK_c3_Hex[512 + 1];
@@ -2698,7 +2707,7 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
     }
     memcpy(revoke_sign_value, requestBody + reqestBodyOffset, revoke_sign_valueLength);
     reqestBodyOffset += revoke_sign_valueLength;
-
+#ifdef PRINT_DEBUG_INFO
     printf("userIdLength is %d, userId is :\n", userIdLength);
     dump_hex(userId, userIdLength, 16);
     
@@ -2707,7 +2716,7 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
 
     printf("revoke_sign_valueLength is %d, revoke_sign_value is :\n", revoke_sign_valueLength);
     dump_hex(revoke_sign_value, revoke_sign_valueLength, 16);
-
+#endif
     sgx_status_t retval;
     sgx_status_t ret = t_revoke(global_eid, &retval, 
         revokeUserId, revokeUserIdLength, 
@@ -2922,7 +2931,7 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
     memcpy(c4, requestBody + reqestBodyOffset, c4Len);
     reqestBodyOffset += c4Len;
 
-
+#ifdef PRINT_DEBUG_INFO
     printf("wLen is %d, w is :\n", wLen);
     dump_hex(w, wLen, 16);
     printf("c1Len is %d, c1 is :\n", c1Len);
@@ -2933,9 +2942,8 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
     dump_hex(c3, c3Len, 16);
     printf("c4Len is %d, c4 is :\n", c4Len);
     dump_hex(c4, c4Len, 16);
-
+#endif
     unsigned char m_bytes[SHA256_DIGEST_LENGTH_32];
-    
 
     sgx_status_t retval;
     sgx_status_t ret = t_Dec2(global_eid, &retval, w, wLen, 
@@ -2967,10 +2975,9 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
     packResp((unsigned char *)"0000", 4, 
             respBody, sizeof(respBody),
             responseMsg, p_responseMsgLength);
-    printf("Sealing data succeeded.\n");
+    printf("handleRequest1001 succeeded.\n");
     return 0;
 }
-
 
 int access_control(char *user_id, char *file_id)
 {

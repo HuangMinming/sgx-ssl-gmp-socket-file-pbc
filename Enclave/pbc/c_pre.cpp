@@ -2746,13 +2746,13 @@ sgx_status_t t_unseal_vk_A_data(const uint8_t *sealed_blob, size_t data_size)
     memcpy(vk_A_LengthStr, decrypt_data + sizeof(g_vk_A.vk_A), 4);
 
     g_vk_A.vk_A_Length = atoi(vk_A_LengthStr);
-
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("g_vk_A is: %d\n", g_vk_A.vk_A_Length);
     for(int i=0;i<g_vk_A.vk_A_Length;i++) {
         sgx_printf("%c", g_vk_A.vk_A[i]);
     }
     sgx_printf("\n");
-
+#endif
     free(de_mac_text);
     free(decrypt_data);
     return ret;
@@ -3098,12 +3098,11 @@ sgx_status_t t_SaveShareFile(
     if(shareFileList == NULL) {
         shareFileList = newNode;
     }
+#ifdef PRINT_DEBUG_INFO
     list_print(&shareFileList);
     sgx_printf("t_SaveShareFile address of shareFileList = %p\n", &shareFileList);
     size = list_size(&shareFileList);
     sgx_printf("t_SaveShareFile after list_insert_end, size is %d\n", size);
-    
-#ifdef PRINT_DEBUG_INFO
     tmp = shareFileList;
     index = 0;
     if(size > 0) {
@@ -3140,10 +3139,12 @@ uint32_t t_get_sealed_shareFileList_data_size()
 
 sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
 {
+    size_t size = list_size(&shareFileList);
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_seal_shareFileList_data start\n");
     sgx_printf("t_seal_shareFileList_data address of shareFileList = %p\n", &shareFileList);
-    size_t size = list_size(&shareFileList);
     sgx_printf("t_seal_shareFileList_data list_size is %d\n", size);
+#endif
     if( size <= 0) {
         sgx_printf("no share file need to seal.\n");
         return SGX_SUCCESS;
@@ -3210,7 +3211,9 @@ sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
 
 sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data_size)
 {
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_unseal_shareFileList_data start\n");
+#endif
     uint32_t mac_text_len = sgx_get_add_mac_txt_len((const sgx_sealed_data_t *)sealed_blob);
     uint32_t decrypt_data_len = sgx_get_encrypt_txt_len((const sgx_sealed_data_t *)sealed_blob);
     if (mac_text_len == UINT32_MAX || decrypt_data_len == UINT32_MAX)
@@ -3297,8 +3300,9 @@ sgx_status_t t_ReEnc(
     uint8_t *TC_DEK_c3_Hex, int TC_DEK_c3_Hex_len, 
     uint8_t *TC_DEK_c4_Hex, int TC_DEK_c4_Hex_len)
 {
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc start\n");
-        
+#endif
     ShareFile_t *sf =(ShareFile_t *)malloc(sizeof(ShareFile_t)) ;
 
     if(user_id_len <=0 || user_id_len > sizeof(sf->shared_with_user_id) - 1) {
@@ -3318,12 +3322,13 @@ sgx_status_t t_ReEnc(
         sgx_printf("t_ReEnc file_name_len error, file_name_len = %d\n", file_name_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-    
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc share id is:");
-    for(int i=0;i<share_id_len + 10;i++) {
+    for(int i=0;i<share_id_len;i++) {
         sgx_printf("%c", share_id[i]);
     }
     sgx_printf("\n");
+#endif
     memset(sf, 0x00, sizeof(ShareFile_t));
     memcpy(sf->shared_with_user_id, user_id, user_id_len);
     memcpy(sf->share_id, share_id, share_id_len);
@@ -3352,7 +3357,9 @@ sgx_status_t t_ReEnc(
     veriry CertDU and CertDO
     */
     //retrive sharefile info from shareFileList
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc retrive sharefile info from shareFileList\n");
+#endif
     size_t size = 0;
     list_node *tmp = NULL;
     int index = 0;
@@ -3377,16 +3384,19 @@ sgx_status_t t_ReEnc(
     list_node *result_node = NULL;
     result_node = list_find(tmp, compare_ShareFile, (void *)sf);
     if(NULL == result_node) {
+#ifdef PRINT_DEBUG_INFO
         sgx_printf("t_ReEnc failed to retrive data from shareFileList\n");
         sgx_printf("maybe it has been deleted, depends on database\n");
+#endif
         return SGX_SUCCESS; //todo, maybe should return another value 
     }
     ShareFile_t *result_sf = NULL;
     result_sf = (ShareFile_t *)result_node->data;
-    
+#ifdef PRINT_DEBUG_INFO   
     sgx_printf("t_ReEnc result_sf is\n");
     sgx_printf("\tshare_id = %s\n\tfild_id = %s\n\tfile_name = %s\n", 
                 result_sf->share_id, result_sf->file_id, result_sf->file_name);
+#endif
     //veriry CertDU and CertDO
     if(memcmp(result_sf->shared_with_user_id, sf->shared_with_user_id, sizeof(sf->shared_with_user_id) != 0))
     {
@@ -3465,14 +3475,14 @@ sgx_status_t t_ReEnc(
         sgx_printf("t_ReEnc Dec2 error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc: DEK_rk_Hex = \n");
     for(int i=0;i<sizeof(DEK_rk_Hex);i++)
     {
         sgx_printf("%c", DEK_rk_Hex[i]);
     }
     sgx_printf("\n");
-
+#endif
     /*decrypts Crk to rk using AES-GCM with DEKrk
     Crk = iv + tag.data + encrypted.data
     */
@@ -3490,10 +3500,12 @@ sgx_status_t t_ReEnc(
     offset += TAG_SIZE * 2;
     memcpy(C_rk_Hex, (result_sf->C_rk) + offset, 512);
     offset += 512;
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc: iv_Hex = %s\n", iv_Hex);
     sgx_printf("t_ReEnc: tag_Hex = %s\n", tag_Hex);
     sgx_printf("t_ReEnc: C_rk_Hex = %s\n", C_rk_Hex);
     sgx_printf("t_ReEnc: DEK_rk_Hex = %s\n", DEK_rk_Hex);
+#endif
     uint8_t iv[IV_LEN + 1];
     memset(iv, 0x00, sizeof(iv));
     uint8_t tag[TAG_SIZE + 1];
@@ -3507,11 +3519,12 @@ sgx_status_t t_ReEnc(
     HexStrToByteStr(tag_Hex, TAG_SIZE * 2, tag);
     HexStrToByteStr(C_rk_Hex, 512, C_rk_Byte);
     HexStrToByteStr(DEK_rk_Hex, 32, DEK_rk);
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc: iv = %s\n", iv);
     sgx_printf("t_ReEnc: tag = %s\n", tag);
     sgx_printf("t_ReEnc: C_rk_Byte = %s\n", C_rk_Byte);
     sgx_printf("t_ReEnc: DEK_rk = %s\n", DEK_rk);
-
+#endif
     uint8_t rk_Byte[256 + 1];
     memset(rk_Byte, 0x00, sizeof(rk_Byte));
     iRet = aes_gcm_decrypt(C_rk_Byte, 256, 
@@ -3535,10 +3548,10 @@ sgx_status_t t_ReEnc(
     
     ByteStrToHexStr(rk1, 128, rk1_Hex, 256); 
     ByteStrToHexStr(rk2, 128, rk2_Hex, 256); 
-    
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc: rk1_Hex = %s\n", rk1_Hex);
     sgx_printf("t_ReEnc: rk2_Hex = %s\n", rk2_Hex);
-
+#endif
     /*
     transform CDEK to TCDEK=C-PRE.reEnc(rk, CDEK), 
     */
@@ -3559,11 +3572,13 @@ sgx_status_t t_ReEnc(
 
     //deletes record (filename, CrK, CDEK_rk, CertDO,Ogrant,𝜎grant), 
     list_remove(&shareFileList, result_node);
-
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc address of shareFileList = %p\n", &shareFileList);
+#endif
     size = list_size(&shareFileList);
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc after list_remove, size is %d\n", size);
-    
+#endif
 #ifdef PRINT_DEBUG_INFO
     tmp = shareFileList;
     index = 0;
@@ -3579,7 +3594,6 @@ sgx_status_t t_ReEnc(
     }
     sgx_printf("\n");
 #endif
-    sgx_printf("t_ReEnc before free(result_sf)\n");
     free(result_sf);
     sgx_printf("t_ReEnc end\n");
     /*
@@ -3635,6 +3649,7 @@ sgx_status_t t_revoke(
         sgx_printf("t_ReEnc ecdsa_verify revoke error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc ecdsa_verify revoke ok\n");
 
     sgx_printf("revokeUserId is:");
@@ -3642,7 +3657,7 @@ sgx_status_t t_revoke(
         sgx_printf("%c", revokeUserId[i]);
     }
     sgx_printf("\n");
-
+#endif
     size_t index = RL.count;
     memcpy(&(RL.user_id[index][0]), revokeUserId, revokeUserId_len);
     RL.count ++;
@@ -3751,13 +3766,13 @@ sgx_status_t t_unseal_UserRevocationList_data(const uint8_t *sealed_blob, size_t
     }
     RL.count = count;
     memcpy(RL.user_id, decrypt_data + 4, count * user_id_MAX_size);
-
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("revoke user count is %d, list is\n", RL.count);
     for(int i=0;i<RL.count;i++) {
         sgx_printf("\telement %d: %s\n", i, RL.user_id[i]);
     }
     sgx_printf("\n");
-
+#endif
     free(de_mac_text);
     free(decrypt_data);
     return ret;

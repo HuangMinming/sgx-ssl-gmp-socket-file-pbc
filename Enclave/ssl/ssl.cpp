@@ -59,8 +59,10 @@ int ecdsa_verify(char * public_key, size_t public_key_len,
         sgx_printf("input error, public_key must be NUL-terminated string\n");
         return -1;
     }
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("\npublic_key_len = %d \n", public_key_len);
     sgx_printf("\n%s\n", public_key);
+#endif
     BIO *verify_bio = NULL;
     verify_bio = BIO_new(BIO_s_mem());
     BIO_puts(verify_bio, public_key);
@@ -97,12 +99,14 @@ int ecdsa_verify(char * public_key, size_t public_key_len,
     u_char sig[1024];
     int sig_len = sigHex_len/2;
     HexStrToByteStr(sigHex, sigHex_len, sig);
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("sig:");
     for(int i=0;i<sig_len;i++) {
         sgx_printf("%c", sig[i]);
     }
     sgx_printf("\n");
     sgx_printf("sig[%d] is:\n", sig_len);
+#endif
     // BIO_dump_fp(stdout, (const char *)sig, sig_len);
     /*
     EVP_VerifyFinal() returns 1 for a correct signature, 

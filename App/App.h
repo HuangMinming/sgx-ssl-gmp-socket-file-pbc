@@ -50,6 +50,8 @@
 # define FALSE 0
 #endif
 
+#define PRINT_DEBUG_INFO
+
 # define TOKEN_FILENAME   "enclave.token"
 # define ENCLAVE_FILENAME "enclave.signed.so"
 
