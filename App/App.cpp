@@ -1471,7 +1471,18 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
     dump_hex(vk_A, vk_A_Length, 16);
 #endif
     sgx_status_t retval;
+
+#define TIME_COST
+    struct timespec start, end;
+    long long elapsedTime;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+#endif
     sgx_status_t ret = t_Admin_Setting(global_eid, &retval, vk_A, vk_A_Length);
+#define TIME_COST
+    clock_gettime(CLOCK_REALTIME, &end);
+    elapsedTime = (end.tv_sec - start.tv_sec) * 1000000000l + (end.tv_nsec - start.tv_nsec);
+    printf("t_Admin_Setting Elapsed time: %ld nanoseconds\n", elapsedTime);
+#endif
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_Admin_Setting failed.\n");

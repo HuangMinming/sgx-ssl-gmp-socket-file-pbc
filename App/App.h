@@ -51,6 +51,7 @@
 #endif
 
 #define PRINT_DEBUG_INFO
+#define TIME_COST
 
 # define TOKEN_FILENAME   "enclave.token"
 # define ENCLAVE_FILENAME "enclave.signed.so"

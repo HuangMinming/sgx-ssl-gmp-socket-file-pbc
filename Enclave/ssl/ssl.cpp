@@ -113,7 +113,9 @@ int ecdsa_verify(char * public_key, size_t public_key_len,
     0 for failure and -1 if some other error occurred.
     */
     int iRet = EVP_VerifyFinal(verify_mdctx,sig,sig_len,veriry_pkey);
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("ecdsa_verify verify result: %d\n", iRet);
+#endif
     BIO_free(verify_bio);
     EVP_PKEY_free(veriry_pkey);
     EVP_MD_CTX_free(verify_mdctx);

@@ -2211,7 +2211,6 @@ int Dec1(uint8_t *pk_Hex, int pk_Hex_len,
     return iRet;
 }
 
-
 void Enc2Test()
 {
     uint8_t pk_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
@@ -2443,8 +2442,6 @@ void Enc1Test()
     sgx_printf("\n");
 }
 
-
-
 void ReEncTest() 
 {
     //start to test ReKeyGen
@@ -2593,10 +2590,6 @@ void ReEncTest_2()
 
 }
 
-
-
-
-
 int c_pre_main_test() {
 
     sgx_printf("==========================\n");
@@ -2653,14 +2646,10 @@ int c_pre_main_test() {
 
 sgx_status_t t_Admin_Setting(const unsigned char *vk_A, size_t vk_A_Length)
 {
-    
     memset(g_vk_A.vk_A, 0x00, sizeof(g_vk_A.vk_A));
-
     memcpy(g_vk_A.vk_A, vk_A, vk_A_Length);
     g_vk_A.vk_A_Length = vk_A_Length;
-
     return SGX_SUCCESS;
-
 }
 
 uint32_t t_get_sealed_vk_A_data_size()
@@ -2746,13 +2735,13 @@ sgx_status_t t_unseal_vk_A_data(const uint8_t *sealed_blob, size_t data_size)
     memcpy(vk_A_LengthStr, decrypt_data + sizeof(g_vk_A.vk_A), 4);
 
     g_vk_A.vk_A_Length = atoi(vk_A_LengthStr);
-#ifdef PRINT_DEBUG_INFO
+// #ifdef PRINT_DEBUG_INFO
     sgx_printf("g_vk_A is: %d\n", g_vk_A.vk_A_Length);
     for(int i=0;i<g_vk_A.vk_A_Length;i++) {
         sgx_printf("%c", g_vk_A.vk_A[i]);
     }
     sgx_printf("\n");
-#endif
+// #endif
     free(de_mac_text);
     free(decrypt_data);
     return ret;
@@ -2885,7 +2874,7 @@ sgx_status_t t_unseal_keyPairHex_data(const uint8_t *sealed_blob, size_t data_si
     offset += sizeof(g_keyPairHex.pk_Hex);
     memcpy(g_keyPairHex.sk_Hex, decrypt_data +offset, sizeof(g_keyPairHex.sk_Hex));
     offset += sizeof(g_keyPairHex.sk_Hex);
-#ifdef PRINT_DEBUG_INFO
+// #ifdef PRINT_DEBUG_INFO
     sgx_printf("t_unseal_keyPairHex_data pk_Hex_len = %d, pk_Hex=\n", sizeof(g_keyPairHex.pk_Hex));
     for(int i=0;i<sizeof(g_keyPairHex.pk_Hex);) {
         sgx_printf("%c%c ", g_keyPairHex.pk_Hex[i], g_keyPairHex.pk_Hex[i+1]);
@@ -2898,7 +2887,7 @@ sgx_status_t t_unseal_keyPairHex_data(const uint8_t *sealed_blob, size_t data_si
         i += 2;
     }
     sgx_printf("\n");
-#endif
+// #endif
     free(de_mac_text);
     free(decrypt_data);
     return ret;
@@ -2960,8 +2949,9 @@ sgx_status_t t_SaveShareFile(
     uint8_t *C_DEK_C3, int C_DEK_C3_len, 
     uint8_t *C_DEK_C4, int C_DEK_C4_len)
 {
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_SaveShareFile start\n");
-        
+#endif
     ShareFile_t *sf =(ShareFile_t *)malloc(sizeof(ShareFile_t)) ;
 
     if(owner_user_id_len <=0 || owner_user_id_len > sizeof(sf->owner_user_id) - 1) {
@@ -3038,11 +3028,13 @@ sgx_status_t t_SaveShareFile(
         sgx_printf("t_SaveShareFile C_DEK_C4_len error, C_DEK_C4_len = %d\n", C_DEK_C4_len);
         return SGX_ERROR_INVALID_PARAMETER;
     }
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("filename is:");
     for(int i=0;i<file_name_len + 10;i++) {
         sgx_printf("%c", file_name[i]);
     }
     sgx_printf("\n");
+#endif
     memset(sf, 0x00, sizeof(ShareFile_t));
     memcpy(sf->owner_user_id, owner_user_id, owner_user_id_len);
     memcpy(sf->shared_with_user_id, shared_with_user_id, share_id_len);
@@ -3116,8 +3108,8 @@ sgx_status_t t_SaveShareFile(
         }
     }
     sgx_printf("\n");
-#endif
     sgx_printf("t_SaveShareFile end\n");
+#endif
     return SGX_SUCCESS;
 }
 
@@ -3172,8 +3164,9 @@ sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
         return SGX_ERROR_UNEXPECTED;
     if (sealed_data_size > data_size)
         return SGX_ERROR_INVALID_PARAMETER;
-
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_seal_shareFileList_data sealed_data_size is %d\n", sealed_data_size);
+#endif
     unsigned char data_buf[size * sizeof(ShareFile_t)];
 
     int offset = 0;
@@ -3204,16 +3197,18 @@ sgx_status_t t_seal_shareFileList_data(uint8_t *sealed_blob, uint32_t data_size)
     }
 
     free(temp_sealed_buf);
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_seal_shareFileList_data end, err = %d\n", err);
+#endif
     return err;
 }
 
 
 sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data_size)
 {
-#ifdef PRINT_DEBUG_INFO
+// #ifdef PRINT_DEBUG_INFO
     sgx_printf("t_unseal_shareFileList_data start\n");
-#endif
+// #endif
     uint32_t mac_text_len = sgx_get_add_mac_txt_len((const sgx_sealed_data_t *)sealed_blob);
     uint32_t decrypt_data_len = sgx_get_encrypt_txt_len((const sgx_sealed_data_t *)sealed_blob);
     if (mac_text_len == UINT32_MAX || decrypt_data_len == UINT32_MAX)
@@ -3265,7 +3260,7 @@ sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data
         }
         offset += sizeof(ShareFile_t);
     }
-#ifdef PRINT_DEBUG_INFO
+// #ifdef PRINT_DEBUG_INFO
     sgx_printf("t_unseal_shareFileList_data shareFileList size is  = %d, shareFileList is:\n", size);
     list_node *tmp = shareFileList;
     int index = 0;
@@ -3280,10 +3275,12 @@ sgx_status_t t_unseal_shareFileList_data(const uint8_t *sealed_blob, size_t data
         }
     }
     sgx_printf("\n");
-#endif
+// #endif
     free(de_mac_text);
     // free(decrypt_data);
+// #ifdef PRINT_DEBUG_INFO
     sgx_printf("t_unseal_shareFileList_data end\n");
+// #endif
     return ret;
 }
 
@@ -3417,8 +3414,9 @@ sgx_status_t t_ReEnc(
         sgx_printf("t_ReEnc ecdsa_verify DO error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc ecdsa_verify DO ok\n");
-
+#endif
     iRet = ecdsa_verify((char *)(g_vk_A.vk_A), g_vk_A.vk_A_Length, 
         (char *)Cert_user_info, Cert_user_info_len, 
         Cert_user_info_sign_value, Cert_user_info_sign_value_len);
@@ -3426,9 +3424,9 @@ sgx_status_t t_ReEnc(
         sgx_printf("t_ReEnc ecdsa_verify DU error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
     }
-
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc ecdsa_verify DU ok\n");
-
+#endif
     //TEE verifies both users (DO, DU) were not revoked via checking RL
     for(int i=0;i<RL.count;i++) {
         if( memcmp(result_sf->owner_user_id, RL.user_id[i], sizeof(result_sf->owner_user_id) - 1) ==0 ) {
@@ -3437,11 +3435,12 @@ sgx_status_t t_ReEnc(
         }
         if( memcmp(result_sf->shared_with_user_id, RL.user_id[i], sizeof(result_sf->shared_with_user_id) - 1) ==0 ) {
             sgx_printf("t_ReEnc shared with user id is in RL, shared_with_user_id = %s\n", result_sf->shared_with_user_id);
-        return SGX_ERROR_INVALID_PARAMETER;
+            return SGX_ERROR_INVALID_PARAMETER;
         }
     }
-
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc RL check ok\n");
+#endif
     /*
     TEE recovers DEKrk from CDEK_rk, using dkTEE ,
     denoted as DEKrk = C-PRE.Dec(dkTEE, CDEK_rk, H(IDDO|filename)),  
@@ -3574,12 +3573,8 @@ sgx_status_t t_ReEnc(
     list_remove(&shareFileList, result_node);
 #ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc address of shareFileList = %p\n", &shareFileList);
-#endif
     size = list_size(&shareFileList);
-#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc after list_remove, size is %d\n", size);
-#endif
-#ifdef PRINT_DEBUG_INFO
     tmp = shareFileList;
     index = 0;
     if(size > 0) {
@@ -3595,7 +3590,9 @@ sgx_status_t t_ReEnc(
     sgx_printf("\n");
 #endif
     free(result_sf);
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc end\n");
+#endif
     /*
     debug
     */
@@ -3624,8 +3621,9 @@ sgx_status_t t_revoke(
     uint8_t *revokeUserId, int revokeUserId_len, 
     uint8_t *revoke_sign_value, int revoke_sign_value_len)
 {
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("t_revoke start\n");
-
+#endif
     if(revokeUserId_len <=0 || revokeUserId_len > user_id_MAX_size - 1) {
         sgx_printf("t_revoke revokeUserId_len error, revokeUserId_len = %d\n", revokeUserId_len);
         return SGX_ERROR_INVALID_PARAMETER;
@@ -3651,7 +3649,6 @@ sgx_status_t t_revoke(
     }
 #ifdef PRINT_DEBUG_INFO
     sgx_printf("t_ReEnc ecdsa_verify revoke ok\n");
-
     sgx_printf("revokeUserId is:");
     for(int i=0;i<revokeUserId_len;i++) {
         sgx_printf("%c", revokeUserId[i]);
@@ -3661,8 +3658,10 @@ sgx_status_t t_revoke(
     size_t index = RL.count;
     memcpy(&(RL.user_id[index][0]), revokeUserId, revokeUserId_len);
     RL.count ++;
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("RL.count is %d\n", RL.count);
     sgx_printf("t_revoke end\n");
+#endif
     return SGX_SUCCESS;
 }
 
@@ -3766,13 +3765,13 @@ sgx_status_t t_unseal_UserRevocationList_data(const uint8_t *sealed_blob, size_t
     }
     RL.count = count;
     memcpy(RL.user_id, decrypt_data + 4, count * user_id_MAX_size);
-#ifdef PRINT_DEBUG_INFO
+// #ifdef PRINT_DEBUG_INFO
     sgx_printf("revoke user count is %d, list is\n", RL.count);
     for(int i=0;i<RL.count;i++) {
         sgx_printf("\telement %d: %s\n", i, RL.user_id[i]);
     }
     sgx_printf("\n");
-#endif
+// #endif
     free(de_mac_text);
     free(decrypt_data);
     return ret;

@@ -16,7 +16,9 @@ list_node* list_create(void *data)
 		l->next = NULL;
 		l->data = data;
 	}
+#ifdef PRINT_DEBUG_INFO
 	sgx_printf("list_create l =%p\n", l);
+#endif
 	return l;
 }
 
@@ -62,7 +64,9 @@ list_node* list_insert_beginning(list_node *list, void *data)
 list_node* list_insert_end(list_node *list, void *data)
 {
 	list_node *new_node = list_create(data);
+#ifdef PRINT_DEBUG_INFO
 	sgx_printf("list_insert_end new_node =%p\n", new_node);
+#endif
 	if (new_node != NULL) {
 		for(list_node *it = list; it != NULL; it = it->next) {
 			if (it->next == NULL) {
@@ -157,8 +161,10 @@ list_node* list_find_by_data(list_node *list, void *data)
 int compare_ShareFile(list_node *list, void *data) 
 {
 	ShareFile_t *sf = (ShareFile_t *)(list->data);
+#ifdef PRINT_DEBUG_INFO
 	sgx_printf("compare_ShareFile sf->share_id = %s, data)->share_id=%s end\n",
 		(const char*)(sf->share_id), ((ShareFile_t *)data)->share_id);
+#endif
 	return  (strcmp((const char*)(sf->share_id), (const char*)((ShareFile_t *)data)->share_id) == 0);
 }
 list_node* list_find(list_node *list, int(*func)(list_node*,void*), void *data)
