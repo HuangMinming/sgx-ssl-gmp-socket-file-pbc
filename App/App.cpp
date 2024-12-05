@@ -1680,7 +1680,17 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
 #endif
     sgx_status_t retval;
     unsigned char ek_TEE[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+#ifdef TIME_COST
+    struct timespec start, end;
+    long long elapsedTime;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+#endif
     sgx_status_t ret = t_Trusted_Setup(global_eid, &retval, ek_TEE, sizeof(ek_TEE));
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsedTime = (end.tv_sec - start.tv_sec) * 1000000000l + (end.tv_nsec - start.tv_nsec);
+    printf("t_Trusted_Setup Elapsed time: %ld nanoseconds\n", elapsedTime);
+#endif
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_Trusted_Setup failed.\n");
@@ -1716,7 +1726,18 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
     */
    // Get the sealed data size
     uint32_t sealed_data_size = 0;
+#ifdef TIME_COST
+    struct timespec start_getSealSize, end_getSealSize;
+    long long elapsedTime_getSealSize;
+    clock_gettime(CLOCK_MONOTONIC, &start_getSealSize);
+#endif
     ret = t_get_sealed_keyPairHex_data_size(global_eid, &sealed_data_size);
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end_getSealSize);
+    elapsedTime_getSealSize = (end_getSealSize.tv_sec - start_getSealSize.tv_sec) * 1000000000l + 
+        (end_getSealSize.tv_nsec - start_getSealSize.tv_nsec);
+    printf("t_get_sealed_keyPairHex_data_size Elapsed time: %ld nanoseconds\n", elapsedTime_getSealSize);
+#endif
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
@@ -1760,7 +1781,18 @@ int handleRequest0002(unsigned char *requestBody, size_t requestBodyLength,
         (*p_responseMsgLength) = offset;
         return -2;
     }
+#ifdef TIME_COST
+    struct timespec start_Seal, end_Seal;
+    long long elapsedTime_Seal;
+    clock_gettime(CLOCK_MONOTONIC, &start_Seal);
+#endif
     ret = t_seal_keyPairHex_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end_Seal);
+    elapsedTime_Seal = (end_Seal.tv_sec - start_Seal.tv_sec) * 1000000000l + 
+        (end_Seal.tv_nsec - start_Seal.tv_nsec);
+    printf("t_seal_keyPairHex_data Elapsed time: %ld nanoseconds\n", elapsedTime_Seal);
+#endif
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
@@ -2250,6 +2282,11 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     dump_hex(C_DEK_C4, C_DEK_C4_length, 16);
 #endif
     sgx_status_t retval;
+#ifdef TIME_COST
+    struct timespec start, end;
+    long long elapsedTime;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+#endif
     sgx_status_t ret = t_SaveShareFile(global_eid, &retval, 
         ownerUserId, ownerUserIdLength,
         sharedWithUserId, sharedWithUserIdLength,
@@ -2269,6 +2306,11 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
         C_DEK_C2, C_DEK_C2_length,
         C_DEK_C3, C_DEK_C3_length,
         C_DEK_C4, C_DEK_C4_length);
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsedTime = (end.tv_sec - start.tv_sec) * 1000000000l + (end.tv_nsec - start.tv_nsec);
+    printf("t_SaveShareFile Elapsed time: %ld nanoseconds\n", elapsedTime);
+#endif
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_SaveShareFile failed.\n");
@@ -2293,7 +2335,18 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
     */
    // Get the sealed data size
     uint32_t sealed_data_size = 0;
+#ifdef TIME_COST
+    struct timespec start_getSealSize, end_getSealSize;
+    long long elapsedTime_getSealSize;
+    clock_gettime(CLOCK_MONOTONIC, &start_getSealSize);
+#endif
     ret = t_get_sealed_shareFileList_data_size(global_eid, &sealed_data_size);
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end_getSealSize);
+    elapsedTime_getSealSize = (end_getSealSize.tv_sec - start_getSealSize.tv_sec) * 1000000000l + 
+        (end_getSealSize.tv_nsec - start_getSealSize.tv_nsec);
+    printf("t_get_sealed_shareFileList_data_size Elapsed time: %ld nanoseconds\n", elapsedTime_getSealSize);
+#endif
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_get_sealed_shareFileList_data_size failed.\n");
@@ -2327,7 +2380,18 @@ int handleRequest0003(unsigned char *requestBody, size_t requestBodyLength,
                 responseMsg, p_responseMsgLength);
             return -2;
         }
+#ifdef TIME_COST
+        struct timespec start_Seal, end_Seal;
+        long long elapsedTime_Seal;
+        clock_gettime(CLOCK_MONOTONIC, &start_Seal);
+#endif
         ret = t_seal_shareFileList_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+#ifdef TIME_COST
+        clock_gettime(CLOCK_MONOTONIC, &end_Seal);
+        elapsedTime_Seal = (end_Seal.tv_sec - start_Seal.tv_sec) * 1000000000l + 
+            (end_Seal.tv_nsec - start_Seal.tv_nsec);
+        printf("t_seal_shareFileList_data Elapsed time: %ld nanoseconds\n", elapsedTime_Seal);
+#endif
         if (ret != SGX_SUCCESS)
         {
             printf("call t_seal_shareFileList_data failed\n");
@@ -2526,6 +2590,11 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     memset(TC_DEK_c3_Hex, 0x00, sizeof(TC_DEK_c3_Hex));
     memset(TC_DEK_c4_Hex, 0x00, sizeof(TC_DEK_c4_Hex));
     sgx_status_t retval;
+#ifdef TIME_COST
+    struct timespec start, end;
+    long long elapsedTime;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+#endif
     sgx_status_t ret = t_ReEnc(global_eid, &retval, 
         userId, userIdLength, 
         shareId, shareIdLength, 
@@ -2537,6 +2606,11 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
         TC_DEK_c2_Hex, sizeof(TC_DEK_c2_Hex), 
         TC_DEK_c3_Hex, sizeof(TC_DEK_c3_Hex), 
         TC_DEK_c4_Hex, sizeof(TC_DEK_c4_Hex));
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsedTime = (end.tv_sec - start.tv_sec) * 1000000000l + (end.tv_nsec - start.tv_nsec);
+    printf("t_ReEnc Elapsed time: %ld nanoseconds\n", elapsedTime);
+#endif
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_ReEnc failed.\n");
@@ -2561,7 +2635,18 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
     */
    // Get the sealed data size
     uint32_t sealed_data_size = 0;
+#ifdef TIME_COST
+    struct timespec start_getSealSize, end_getSealSize;
+    long long elapsedTime_getSealSize;
+    clock_gettime(CLOCK_MONOTONIC, &start_getSealSize);
+#endif
     ret = t_get_sealed_shareFileList_data_size(global_eid, &sealed_data_size);
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end_getSealSize);
+    elapsedTime_getSealSize = (end_getSealSize.tv_sec - start_getSealSize.tv_sec) * 1000000000l + 
+        (end_getSealSize.tv_nsec - start_getSealSize.tv_nsec);
+    printf("t_get_sealed_shareFileList_data_size Elapsed time: %ld nanoseconds\n", elapsedTime_getSealSize);
+#endif
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_get_sealed_shareFileList_data_size failed.\n");
@@ -2595,7 +2680,18 @@ int handleRequest0004(unsigned char *requestBody, size_t requestBodyLength,
                 responseMsg, p_responseMsgLength);
             return -2;
         }
+#ifdef TIME_COST
+        struct timespec start_Seal, end_Seal;
+        long long elapsedTime_Seal;
+        clock_gettime(CLOCK_MONOTONIC, &start_Seal);
+#endif
         ret = t_seal_shareFileList_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+#ifdef TIME_COST
+        clock_gettime(CLOCK_MONOTONIC, &end_Seal);
+        elapsedTime_Seal = (end_Seal.tv_sec - start_Seal.tv_sec) * 1000000000l + 
+            (end_Seal.tv_nsec - start_Seal.tv_nsec);
+        printf("t_seal_shareFileList_data Elapsed time: %ld nanoseconds\n", elapsedTime_Seal);
+#endif
         if (ret != SGX_SUCCESS)
         {
             printf("call t_seal_shareFileList_data failed\n");
@@ -2751,9 +2847,19 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
     dump_hex(revoke_sign_value, revoke_sign_valueLength, 16);
 #endif
     sgx_status_t retval;
+#ifdef TIME_COST
+    struct timespec start, end;
+    long long elapsedTime;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+#endif
     sgx_status_t ret = t_revoke(global_eid, &retval, 
         revokeUserId, revokeUserIdLength, 
         revoke_sign_value, revoke_sign_valueLength);
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsedTime = (end.tv_sec - start.tv_sec) * 1000000000l + (end.tv_nsec - start.tv_nsec);
+    printf("t_revoke Elapsed time: %ld nanoseconds\n", elapsedTime);
+#endif
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_revoke failed.\n");
@@ -2778,7 +2884,18 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
     */
    // Get the sealed data size
     uint32_t sealed_data_size = 0;
+#ifdef TIME_COST
+    struct timespec start_getSealSize, end_getSealSize;
+    long long elapsedTime_getSealSize;
+    clock_gettime(CLOCK_MONOTONIC, &start_getSealSize);
+#endif
     ret = t_get_sealed_UserRevocationList_data_size(global_eid, &sealed_data_size);
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end_getSealSize);
+    elapsedTime_getSealSize = (end_getSealSize.tv_sec - start_getSealSize.tv_sec) * 1000000000l + 
+        (end_getSealSize.tv_nsec - start_getSealSize.tv_nsec);
+    printf("t_get_sealed_UserRevocationList_data_size Elapsed time: %ld nanoseconds\n", elapsedTime_getSealSize);
+#endif
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_get_sealed_UserRevocationList_data_size failed.\n");
@@ -2812,7 +2929,18 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
                 responseMsg, p_responseMsgLength);
             return -2;
         }
+#ifdef TIME_COST
+        struct timespec start_Seal, end_Seal;
+        long long elapsedTime_Seal;
+        clock_gettime(CLOCK_MONOTONIC, &start_Seal);
+#endif
         ret = t_seal_UserRevocationList_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+#ifdef TIME_COST
+        clock_gettime(CLOCK_MONOTONIC, &end_Seal);
+        elapsedTime_Seal = (end_Seal.tv_sec - start_Seal.tv_sec) * 1000000000l + 
+            (end_Seal.tv_nsec - start_Seal.tv_nsec);
+        printf("t_seal_UserRevocationList_data Elapsed time: %ld nanoseconds\n", elapsedTime_Seal);
+#endif
         if (ret != SGX_SUCCESS)
         {
             printf("call t_seal_UserRevocationList_data failed\n");
@@ -2979,10 +3107,20 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
     unsigned char m_bytes[SHA256_DIGEST_LENGTH_32];
 
     sgx_status_t retval;
+#ifdef TIME_COST
+    struct timespec start, end;
+    long long elapsedTime;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+#endif
     sgx_status_t ret = t_Dec2(global_eid, &retval, w, wLen, 
         c1, c1Len, c2, c2Len, 
         c3, c3Len, c4, c4Len,
         m_bytes, sizeof(m_bytes));
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end);
+    elapsedTime = (end.tv_sec - start.tv_sec) * 1000000000l + (end.tv_nsec - start.tv_nsec);
+    printf("t_Dec2 Elapsed time: %ld nanoseconds\n", elapsedTime);
+#endif
     if (ret != SGX_SUCCESS)
     {
         printf("Call t_Dec2 failed.\n");
