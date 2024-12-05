@@ -1518,7 +1518,18 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
     */
    // Get the sealed data size
     uint32_t sealed_data_size = 0;
+#ifdef TIME_COST
+    struct timespec start_getSealSize, end_getSealSize;
+    long long elapsedTime_getSealSize;
+    clock_gettime(CLOCK_MONOTONIC, &start_getSealSize);
+#endif
     ret = t_get_sealed_vk_A_data_size(global_eid, &sealed_data_size);
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end_getSealSize);
+    elapsedTime_getSealSize = (end_getSealSize.tv_sec - start_getSealSize.tv_sec) * 1000000000l + 
+        (end_getSealSize.tv_nsec - start_getSealSize.tv_nsec);
+    printf("t_get_sealed_vk_A_data_size Elapsed time: %ld nanoseconds\n", elapsedTime_getSealSize);
+#endif
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
@@ -1564,7 +1575,18 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
         (*p_responseMsgLength) = offset;
         return -2;
     }
+#ifdef TIME_COST
+    struct timespec start_Seal, end_Seal;
+    long long elapsedTime_Seal;
+    clock_gettime(CLOCK_MONOTONIC, &start_Seal);
+#endif
     ret = t_seal_vk_A_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+#ifdef TIME_COST
+    clock_gettime(CLOCK_MONOTONIC, &end_Seal);
+    elapsedTime_Seal = (end_Seal.tv_sec - start_Seal.tv_sec) * 1000000000l + 
+        (end_Seal.tv_nsec - start_Seal.tv_nsec);
+    printf("t_seal_vk_A_data Elapsed time: %ld nanoseconds\n", elapsedTime_Seal);
+#endif
     if (ret != SGX_SUCCESS)
     {
         print_error_message(ret);
