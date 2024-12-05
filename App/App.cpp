@@ -1479,7 +1479,7 @@ int handleRequest0001(unsigned char *requestBody, size_t requestBodyLength,
 #endif
     sgx_status_t ret = t_Admin_Setting(global_eid, &retval, vk_A, vk_A_Length);
 #ifdef TIME_COST
-    clock_gettime(CLOCK_REALTIME, &end);
+    clock_gettime(CLOCK_MONOTONIC, &end);
     elapsedTime = (end.tv_sec - start.tv_sec) * 1000000000ll + (end.tv_nsec - start.tv_nsec);
     printf("t_Admin_Setting Elapsed time: %lld nanoseconds\n", elapsedTime);
 #endif
