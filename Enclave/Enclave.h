@@ -44,6 +44,8 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 
+// #define PRINT_DEBUG_INFO
+
 #define TEST_CHECK(status)	\
 {	\
 	if (status != SGX_SUCCESS) {	\

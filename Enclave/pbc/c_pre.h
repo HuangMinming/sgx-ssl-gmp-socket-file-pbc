@@ -6,7 +6,6 @@
 #include <pbc.h>
 #include "user_types.h" 
 
-// #define PRINT_DEBUG_INFO
 
 #define SHA256_DIGEST_LENGTH_32 32
 #define ZR_ELEMENT_LENGTH_IN_BYTES 20
