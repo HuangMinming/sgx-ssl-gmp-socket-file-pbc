@@ -3887,9 +3887,13 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     offset += TAG_SIZE;
     sgx_printf("debug 12\n");
     unsigned char ciphertext[BUFSIZ];
+    sgx_printf("debug 121\n");
     int ciphertext_len = encKeyPair_len - offset;
+    sgx_printf("debug 122\n");
     memset(ciphertext, 0x00, sizeof(ciphertext));
+    sgx_printf("debug 123\n");
     memcpy(ciphertext, encKeyPair + offset, ciphertext_len);
+    sgx_printf("debug 124\n");
     offset += ciphertext_len;
     sgx_printf("debug 13\n");
     // printf("ciphertext (len:%d) is:\n", ciphertext_len);
