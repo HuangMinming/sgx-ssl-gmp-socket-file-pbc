@@ -255,7 +255,7 @@ int aes_gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
 }
 
 
-int getDigestValue(char *digestName, char *message, 
+int getDigestValue(char *digestName, uint8_t *message, 
     unsigned char *digestValue, size_t digestValue_len) {
     EVP_MD_CTX *mdctx;
     const EVP_MD *md;

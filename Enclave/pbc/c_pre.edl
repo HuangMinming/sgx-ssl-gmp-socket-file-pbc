@@ -62,7 +62,7 @@ enclave {
 
         public uint32_t t_export_keyPairHex([in, size=password_len] const uint8_t *password, size_t password_len, 
             [out, size=encKeyPair_len] uint8_t* encKeyPair, uint32_t encKeyPair_len);
-        public sgx_status_t t_import_keyPairHex([in, size=password_len] const uint8_t *password, size_t password_len, 
+        public uint32_t t_import_keyPairHex([in, size=password_len] const uint8_t *password, size_t password_len, 
             [in, size=encKeyPairHex_len] uint8_t* encKeyPairHex, uint32_t encKeyPairHex_len);
 
     };

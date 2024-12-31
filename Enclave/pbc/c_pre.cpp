@@ -3786,7 +3786,7 @@ int getMd(uint8_t *password, size_t password_len,
     // getDigestValue("SHA1", password, MDValue, sizeof(MDValue));
     int iRet = getDigestValue("SHA256", password, MDValue, MDValue_len);
     if(iRet < 0) {
-        printf("getDigestValue error\n");
+        sgx_printf("getDigestValue error\n");
         return -1;
     }
     return 0;
@@ -3802,42 +3802,42 @@ uint32_t t_export_keyPairHex(const uint8_t *password, size_t password_len,
         sgx_printf("exportKey getMd error\n");
         return -1;
     }
-    unsigned char iv[IV_SIZE];
+    unsigned char iv[IV_LEN];
     memset(iv, 0x00, sizeof(iv));
-    RAND_bytes(iv, IV_SIZE);
+    RAND_bytes(iv, IV_LEN);
 
     unsigned char keyPair[sizeof(KeyPairHex)];
-    memset(plaintext, 0x00, sizeof(plaintext));
+    memset(keyPair, 0x00, sizeof(keyPair));
     int offset = 0;
-    memcpy(plaintext + offset, g_keyPairHex.pk_Hex, sizeof(g_keyPairHex.pk_Hex));
+    memcpy(keyPair + offset, g_keyPairHex.pk_Hex, sizeof(g_keyPairHex.pk_Hex));
     offset += sizeof(g_keyPairHex.pk_Hex);
-    memcpy(plaintext + offset, g_keyPairHex.sk_Hex, sizeof(g_keyPairHex.sk_Hex));
+    memcpy(keyPair + offset, g_keyPairHex.sk_Hex, sizeof(g_keyPairHex.sk_Hex));
     unsigned char ciphertext[BUFSIZ];
-    size_t plaintext_len = strlen(plaintext);
+    size_t keyPair_len = strlen(keyPair);
 
-    unsigned char tag[TAG_SIZE];
+    unsigned char tag[IV_LEN];
     memset(tag, 0x00, sizeof(tag));
     int ciphertext_len =
-        aes_gcm_encrypt(plaintext, plaintext_len, MDValue, iv, IV_SIZE, ciphertext, tag, TAG_SIZE);
+        aes_gcm_encrypt(keyPair, keyPair_len, MDValue, iv, IV_LEN, ciphertext, tag, IV_LEN);
 
     // printf("ciphertext (len:%d) is:\n", ciphertext_len);
 	// BIO_dump_fp(stdout, (const char *)ciphertext, ciphertext_len);
 
-    // printf("tag (len:%d) is:\n", TAG_SIZE);
-	// BIO_dump_fp(stdout, (const char *)tag, TAG_SIZE *2);
+    // printf("tag (len:%d) is:\n", IV_LEN);
+	// BIO_dump_fp(stdout, (const char *)tag, IV_LEN *2);
 
-    // printf("iv (len:%d) is:\n", IV_SIZE);
-	// BIO_dump_fp(stdout, (const char *)iv, IV_SIZE * 2);
+    // printf("iv (len:%d) is:\n", IV_LEN);
+	// BIO_dump_fp(stdout, (const char *)iv, IV_LEN * 2);
 
-    int total_size = (IV_SIZE + TAG_SIZE + ciphertext_len) * 2;
+    int total_size = (IV_LEN + IV_LEN + ciphertext_len) * 2;
     if(encKeyPair_len < total_size) {
         sgx_printf("encKeyPair_len (len:%d) is not enough, need %d:\n", encKeyPair_len, total_size);
         return -1;
     }
     unsigned char buf[BUFSIZ];
-    int offset = 0;
-    memcpy(buf + offset, iv, IV_SIZE);
-    offset += IV_SIZE;
+    offset = 0;
+    memcpy(buf + offset, iv, IV_LEN);
+    offset += IV_LEN;
     memcpy(buf + offset, tag, TAG_SIZE);
     offset += TAG_SIZE;
     memcpy(buf + offset, ciphertext, ciphertext_len);
@@ -3874,10 +3874,10 @@ uint32_t t_import_keyPairHex(const uint8_t *password, size_t password_len,
 	// BIO_dump_fp(stdout, (const char *)buf, buf_len);
     int offset = 0;
 
-    unsigned char iv[IV_SIZE];
+    unsigned char iv[IV_LEN];
     memset(iv, 0x00, sizeof(iv));
-    memcpy(iv, encKeyPair + offset, IV_SIZE);
-    offset += IV_SIZE;
+    memcpy(iv, encKeyPair + offset, IV_LEN);
+    offset += IV_LEN;
 
     unsigned char tag[TAG_SIZE];
     memset(tag, 0x00, sizeof(tag));
@@ -3896,15 +3896,15 @@ uint32_t t_import_keyPairHex(const uint8_t *password, size_t password_len,
     // printf("tag (len:%d) is:\n", TAG_SIZE);
 	// BIO_dump_fp(stdout, (const char *)tag, TAG_SIZE);
 
-    // printf("iv (len:%d) is:\n", IV_SIZE);
-	// BIO_dump_fp(stdout, (const char *)iv, IV_SIZE);
+    // printf("iv (len:%d) is:\n", IV_LEN);
+	// BIO_dump_fp(stdout, (const char *)iv, IV_LEN);
 
     unsigned char keyPair[BUFSIZ];
 
     int result =
-      aes_gcm_decrypt(ciphertext, ciphertext_len, tag, TAG_SIZE, MDValue, iv, IV_SIZE, keyPair);
+      aes_gcm_decrypt(ciphertext, ciphertext_len, tag, TAG_SIZE, MDValue, iv, IV_LEN, keyPair);
 
-    printf("keyPair (len:%d) is %s:\n", result, keyPair);
+    sgx_printf("keyPair (len:%d) is %s:\n", result, keyPair);
 
     offset = 0;
     memcpy(g_keyPairHex.pk_Hex, keyPair + offset, sizeof(g_keyPairHex.pk_Hex));
