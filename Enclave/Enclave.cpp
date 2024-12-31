@@ -370,7 +370,7 @@ int HexStrToByteStr2(const uint8_t * src_buf, int src_len,
          (dest_len < src_len / 2)
          )
 	{
-        printf("HexStrToByteStr input error\n");
+        sgx_printf("HexStrToByteStr input error\n");
         return -1;
     }	
     uint8_t highByte, lowByte;
