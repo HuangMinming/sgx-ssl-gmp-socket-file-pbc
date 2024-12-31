@@ -70,7 +70,4 @@ struct UserRevocationList_t {
 };
 
 
-// 函数声明
-
-
 #endif

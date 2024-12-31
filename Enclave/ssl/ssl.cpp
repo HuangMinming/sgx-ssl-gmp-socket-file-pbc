@@ -254,3 +254,51 @@ int aes_gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
     }
 }
 
+
+int getDigestValue(char *digestName, char *message, 
+    unsigned char *digestValue, size_t digestValue_len) {
+    EVP_MD_CTX *mdctx;
+    const EVP_MD *md;
+    // if(digestValue_len < MD5_LENGTH) {
+    //     printf("MD5Value_len too small %d\n", MD5Value_len);
+    //     return -1;
+    // }
+    unsigned int md_len, i;
+    md = EVP_get_digestbyname(digestName);
+
+    if (md == NULL) {
+        sgx_printf("Unknown message digest %s\n", digestName);
+        return -1;
+    }
+
+    mdctx = EVP_MD_CTX_new();
+    if (!EVP_DigestInit_ex(mdctx, md, NULL)) {
+        sgx_printf("Message digest initialization failed.\n");
+        EVP_MD_CTX_free(mdctx);
+        return -1;
+    }
+
+    if (!EVP_DigestUpdate(mdctx, message, strlen(message))) {
+        sgx_printf("Message digest update failed.\n");
+        EVP_MD_CTX_free(mdctx);
+        return -1;
+    }
+
+    if (!EVP_DigestFinal_ex(mdctx, digestValue, &md_len)) {
+        sgx_printf("Message digest finalization failed.\n");
+        EVP_MD_CTX_free(mdctx);
+        return -1;
+    }
+
+    EVP_MD_CTX_free(mdctx);
+    if(md_len > digestValue_len) {
+        EVP_MD_CTX_free(mdctx);
+        sgx_printf("md_len (result of md5) too big %d\n", md_len);
+        return -1;
+    }
+    sgx_printf("Digest(%d) is: ", md_len);
+    for (i = 0; i < md_len; i++)
+        sgx_printf("%02x", digestValue[i]);
+    sgx_printf("\n");
+}
+
