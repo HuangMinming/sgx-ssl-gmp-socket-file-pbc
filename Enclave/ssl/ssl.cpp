@@ -278,7 +278,7 @@ int getDigestValue(char *digestName, uint8_t *message,
         return -1;
     }
 
-    if (!EVP_DigestUpdate(mdctx, message, strlen(message))) {
+    if (!EVP_DigestUpdate(mdctx, (const char*)message, strlen(message))) {
         sgx_printf("Message digest update failed.\n");
         EVP_MD_CTX_free(mdctx);
         return -1;
