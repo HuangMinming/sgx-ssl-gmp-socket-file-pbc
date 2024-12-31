@@ -1229,7 +1229,7 @@ int importKey() {
         // sgx_destroy_enclave(global_eid);
         return false;
     }
-    sgx_status_t retval;
+    uint32_t retval;
     sgx_status_t ret = t_import_keyPairHex(global_eid, &retval, 
         (const uint8_t *)password, strlen(password),
         temp_buf, fsize);
