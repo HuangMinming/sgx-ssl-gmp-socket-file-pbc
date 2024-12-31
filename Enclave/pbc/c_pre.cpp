@@ -3802,10 +3802,11 @@ uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len,
         sgx_printf("exportKey getMd error\n");
         return -1;
     }
+    sgx_printf("debug 0\n");
     unsigned char iv[IV_LEN];
     memset(iv, 0x00, sizeof(iv));
     RAND_bytes(iv, IV_LEN);
-    sgx_printf("debug 0\n");
+    sgx_printf("debug 01\n");
     unsigned char keyPair[sizeof(KeyPairHex)];
     memset(keyPair, 0x00, sizeof(keyPair));
     int offset = 0;
