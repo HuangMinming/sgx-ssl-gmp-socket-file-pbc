@@ -3789,6 +3789,7 @@ int getMd(uint8_t *password, size_t password_len,
         sgx_printf("getDigestValue error\n");
         return -1;
     }
+    sgx_printf("getDigestValue success\n");
     return 0;
 }
 

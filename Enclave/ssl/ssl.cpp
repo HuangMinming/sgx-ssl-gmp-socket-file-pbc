@@ -300,5 +300,6 @@ int getDigestValue(char *digestName, uint8_t *message,
     for (i = 0; i < md_len; i++)
         sgx_printf("%02x", digestValue[i]);
     sgx_printf("\n");
+    return 0;
 }
 
