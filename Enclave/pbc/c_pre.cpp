@@ -3867,7 +3867,7 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
         sgx_printf("exportKey getMd error\n");
         return -1;
     }
-
+    sgx_printf("debug 0\n");
     unsigned char encKeyPair[BUFSIZ];
     memset(encKeyPair, 0x00, sizeof(encKeyPair));
     HexStrToByteStr(encKeyPairHex, encKeyPairHex_len, encKeyPair, BUFSIZ);
@@ -3875,7 +3875,7 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     // sgx_printf("encKeyPair (len:%d) is:\n", encKeyPair_len);
 	// BIO_dump_fp(stdout, (const char *)buf, buf_len);
     int offset = 0;
-
+    sgx_printf("debug 1\n");
     unsigned char iv[IV_LEN];
     memset(iv, 0x00, sizeof(iv));
     memcpy(iv, encKeyPair + offset, IV_LEN);
@@ -3902,10 +3902,10 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
 	// BIO_dump_fp(stdout, (const char *)iv, IV_LEN);
 
     unsigned char keyPair[BUFSIZ];
-
+    sgx_printf("debug 2\n");
     int result =
       aes_gcm_decrypt(ciphertext, ciphertext_len, tag, TAG_SIZE, MDValue, iv, IV_LEN, keyPair);
-
+    sgx_printf("debug 3\n");
     sgx_printf("keyPair (len:%d) is %s:\n", result, keyPair);
 
     offset = 0;
