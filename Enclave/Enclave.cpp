@@ -411,7 +411,7 @@ int ByteStrToHexStr2(const uint8_t * src_buf, int src_len,
     if(NULL == src_buf || NULL == dest_buf ||
          src_len <= 0 || dest_len < src_len * 2)
 	{
-        printf("ByteStrToHexStr input error\n");
+        sgx_printf("ByteStrToHexStr input error\n");
         return -1;
     }	
     uint8_t highHex, lowHex;
