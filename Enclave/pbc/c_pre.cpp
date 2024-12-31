@@ -3817,10 +3817,10 @@ uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len,
     unsigned char ciphertext[BUFSIZ];
     size_t keyPair_len = strlen((const char*)keyPair);
     sgx_printf("debug 1\n");
-    unsigned char tag[IV_LEN];
+    unsigned char tag[TAG_SIZE];
     memset(tag, 0x00, sizeof(tag));
     int ciphertext_len =
-        aes_gcm_encrypt(keyPair, keyPair_len, MDValue, iv, IV_LEN, ciphertext, tag, IV_LEN);
+        aes_gcm_encrypt(keyPair, keyPair_len, MDValue, iv, IV_LEN, ciphertext, tag, TAG_SIZE);
     sgx_printf("debug 2\n");
     // printf("ciphertext (len:%d) is:\n", ciphertext_len);
 	// BIO_dump_fp(stdout, (const char *)ciphertext, ciphertext_len);
@@ -3830,7 +3830,7 @@ uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len,
 
     // printf("iv (len:%d) is:\n", IV_LEN);
 	// BIO_dump_fp(stdout, (const char *)iv, IV_LEN * 2);
-
+    sgx_printf("ciphertext_len is %d \n", ciphertext_len);
     int total_size = (IV_LEN + IV_LEN + ciphertext_len) * 2;
     if(encKeyPair_len < total_size) {
         sgx_printf("encKeyPair_len (len:%d) is not enough, need %d:\n", encKeyPair_len, total_size);

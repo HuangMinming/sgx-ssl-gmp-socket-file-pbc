@@ -1188,7 +1188,7 @@ int exportKey() {
         printf("t_export_keyPairHex return error, encKeyPair_len is %d.\n", encKeyPair_len);
         return -2;
     }
-    printf("Call t_export_keyPairHex success.\n");
+    printf("Call t_export_keyPairHex success. encKeyPair_len = %d\n", encKeyPair_len);
 
     if (write_buf_to_file(C_PRE_keyPairHex_Backup, encKeyPair, encKeyPair_len, 0) == false)
     {
