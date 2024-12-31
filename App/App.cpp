@@ -1229,6 +1229,11 @@ int importKey() {
         // sgx_destroy_enclave(global_eid);
         return false;
     }
+    printf("read %d bytes from \" %s \"\n", fsize, C_PRE_keyPairHex_Backup);
+    for(int i=0;i<fsize;i++) {
+        printf("%c", temp_buf[i]);
+    }
+    printf("\n");
     uint32_t retval;
     sgx_status_t ret = t_import_keyPairHex(global_eid, &retval, 
         (uint8_t *)password, strlen(password),
