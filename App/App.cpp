@@ -63,6 +63,8 @@
 #include <strings.h>
 #include "wrap.h"
 
+#include <termios.h>
+
 #define SERV_PORT 6666
 #define MAX_USERID 1024
 #define MAX_FILEID 1024
@@ -77,6 +79,9 @@
 #define SEALED_keyPairHex_DATA_FILE "sealed_keyPairHex_data_blob.txt"
 #define SEALED_shareFileList_DATA_FILE "sealed_shareFileList_data_blob.txt"
 #define SEALED_UserRevocationList_DATA_FILE "sealed_UserRevocationList_data_blob.txt"
+
+
+#define C_PRE_keyPairHex_Backup "c_pre.key"
 
 
 /* Global EID shared by multiple threads */
@@ -1122,6 +1127,127 @@ void ssl_test()
     return;
 }
 
+void get_password(char *password)
+{
+    static struct termios old_terminal;
+    static struct termios new_terminal;
+
+    //get settings of the actual terminal
+    tcgetattr(STDIN_FILENO, &old_terminal);
+
+    // do not echo the characters
+    new_terminal = old_terminal;
+    new_terminal.c_lflag &= ~(ECHO);
+
+    // set this as the new terminal options
+    tcsetattr(STDIN_FILENO, TCSANOW, &new_terminal);
+
+    // get the password
+    // the user can add chars and delete if he puts it wrong
+    // the input process is done when he hits the enter
+    // the \n is stored, we replace it with \0
+    if (fgets(password, BUFSIZ, stdin) == NULL)
+        password[0] = '\0';
+    else
+        password[strlen(password)-1] = '\0';
+
+    // go back to the old settings
+    tcsetattr(STDIN_FILENO, TCSANOW, &old_terminal);
+}
+
+int exportKey() {
+    char password[BUFSIZ];
+    char password2[BUFSIZ];
+
+    puts("input password:");
+    get_password(password);
+    puts("input password again:");
+    get_password(password2);
+    puts(password);
+    puts(password2);
+    int result = strcmp(password, password2);
+    if(result == 0) {
+        printf("input same\n");
+    } else {
+        printf("input not same\n");
+        return -1;
+    }
+    uint8_t encKeyPair[BUFSIZ];
+    uint32_t encKeyPair_len = 0;
+    sgx_status_t ret = t_export_keyPairHex(global_eid, &encKeyPair_len, 
+        password, strlen(password),
+        encKeyPair, BUFSIZ);
+    if (ret != SGX_SUCCESS)
+    {
+        printf("Call t_export_keyPairHex failed.\n");
+        print_error_message(ret);
+        return -2;
+    }
+    else if (encKeyPair_len < 0)
+    {
+        printf("t_export_keyPairHex return error, encKeyPair_len is %d.\n", encKeyPair_len);
+        return -2;
+    }
+    printf("Call t_export_keyPairHex success.\n");
+
+    if (write_buf_to_file(C_PRE_keyPairHex_Backup, encKeyPair, encKeyPair_len, 0) == false)
+    {
+        printf("Failed to save the sealed data blob to \" %s \" \n", C_PRE_keyPairHex_Backup);
+        return -2;
+    }
+
+    printf("write_buf_to_file success.\n");
+    return 0;
+}
+
+int importKey() {
+    char password[BUFSIZ];
+    puts("input password:");
+    get_password(password);
+    puts(password);
+
+    // Read the sealed blob from the file
+    size_t fsize = get_file_size(C_PRE_keyPairHex_Backup);
+    if (fsize == (size_t)-1)
+    {
+        printf("Failed to get the file size of \" %s \"\n", C_PRE_keyPairHex_Backup);
+        printf("no keyPairHex could import\n");
+        // sgx_destroy_enclave(global_eid);
+        return -1;
+    }
+    uint8_t *temp_buf = (uint8_t *)malloc(fsize);
+    if (temp_buf == NULL)
+    {
+        printf("Out of memory\n");
+        // sgx_destroy_enclave(global_eid);
+        return -1;
+    }
+    if (read_file_to_buf(C_PRE_keyPairHex_Backup, temp_buf, fsize) == false)
+    {
+        printf("Failed to read the keyPairBackup from \" %s \"\n", C_PRE_keyPairHex_Backup);
+        free(temp_buf);
+        // sgx_destroy_enclave(global_eid);
+        return false;
+    }
+    sgx_status_t retval;
+    sgx_status_t ret = t_import_keyPairHex(global_eid, &retval, 
+        password, strlen(password),
+        temp_buf, fsize);
+    if (ret != SGX_SUCCESS)
+    {
+        printf("Call t_import_keyPairHex failed.\n");
+        print_error_message(ret);
+        return -2;
+    }
+    else if (retval < 0)
+    {
+        printf("t_import_keyPairHex return error, retval is %d.\n", retval);
+        return -2;
+    }
+    printf("Call t_import_keyPairHex success.\n");
+    return 0;
+}
+
 /* Application entry */
 int SGX_CDECL main(int argc, char *argv[])
 {
@@ -1137,6 +1263,18 @@ int SGX_CDECL main(int argc, char *argv[])
     {
         printf("initialize_enclave error, Enter a character before exit ...\n");
         return -2;
+    }
+
+    if(argc >= 2) {
+        if(strcmp(argv[1], "exportKey") == 0) {
+            printf("exportKey\n");
+            exportKey();
+        } else if (strcmp(argv[1], "importKey") == 0) {
+            printf("importKey\n");
+            importKey();
+        }
+        sgx_destroy_enclave(global_eid);
+        return 0;
     }
 
     bool b = loadSealedData();

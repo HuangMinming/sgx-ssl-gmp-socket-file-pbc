@@ -19,5 +19,7 @@ int aes_gcm_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *
 int aes_gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
                 unsigned char *tag, int tag_len, unsigned char *key, unsigned char *iv,
                 int iv_len, unsigned char *plaintext);
+int getDigestValue(char *digestName, char *message, 
+    unsigned char *digestValue, size_t digestValue_len);
 
 #endif

@@ -352,3 +352,90 @@ uint32_t HexStrToByteStr(const uint8_t * src_buf, int src_len, uint8_t * dest_bu
     }
     return 0;
 }
+
+/*
+ “233A464C52” ==>[0x23, 0x3A, 0x46, 0x4C, 0x52]
+const uint8_t * src_buf: input, point to the source
+int src_len: input, indicate the source length, should greater than 0, should be devided by 2
+uint8_t * dest_buf: output, point to the destination
+int dest_len: input, indicate the destination length, 
+        should be greater or equal than src_len / 2
+*/
+int HexStrToByteStr2(const uint8_t * src_buf, int src_len, 
+    uint8_t * dest_buf, int dest_len)
+{
+    if(NULL == src_buf || NULL == dest_buf ||
+         src_len <= 0 || 
+         (src_len % 2 != 0) ||
+         (dest_len < src_len / 2)
+         )
+	{
+        printf("HexStrToByteStr input error\n");
+        return -1;
+    }	
+    uint8_t highByte, lowByte;
+	const uint8_t * index = src_buf, * end = src_buf + src_len;
+    uint8_t * ridx = dest_buf;
+    
+    while (index < end)
+    {
+        highByte = tolower(* (index ++));
+        lowByte  = tolower(* (index ++));
+
+        if (highByte > 0x39)
+            highByte -= 0x57;
+        else
+            highByte -= 0x30;
+
+        if (lowByte > 0x39)
+            lowByte -= 0x57;
+        else
+            lowByte -= 0x30;
+
+        *ridx ++ = (highByte << 4) | lowByte;
+    }
+    return 0;
+}
+
+/*
+[0x23, 0x3A, 0x46, 0x4C, 0x52] ==> “233A464C52”
+const uint8_t * src_buf: input, point to the source
+int src_len: input, indicate the source length, should greater than 0
+uint8_t * dest_buf: output, point to the destination
+int dest_len: input, indicate the destination length, 
+        should be greater or equal than src_len * 2
+*/
+int ByteStrToHexStr2(const uint8_t * src_buf, int src_len, 
+    uint8_t * dest_buf, int dest_len)
+{
+    if(NULL == src_buf || NULL == dest_buf ||
+         src_len <= 0 || dest_len < src_len * 2)
+	{
+        printf("ByteStrToHexStr input error\n");
+        return -1;
+    }	
+    uint8_t highHex, lowHex;
+    const uint8_t * index = src_buf, * end = src_buf + src_len;
+    uint8_t * ridx = dest_buf;
+    
+    while (index < end)
+    {
+        highHex = (* index) >> 4;
+        lowHex = (* index) & 0x0F;
+        index ++;
+
+        if (highHex > 0x09)
+            highHex += 0x57;
+        else
+            highHex += 0x30;
+
+        if (lowHex > 0x09)
+            lowHex += 0x57;
+        else
+            lowHex += 0x30;
+
+        *ridx ++ = highHex;
+        *ridx ++ = lowHex;
+    }
+    return 0;
+}
