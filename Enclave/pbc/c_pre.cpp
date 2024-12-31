@@ -3880,18 +3880,18 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     memset(iv, 0x00, sizeof(iv));
     memcpy(iv, encKeyPair + offset, IV_LEN);
     offset += IV_LEN;
-
+    sgx_printf("debug 11\n");
     unsigned char tag[TAG_SIZE];
     memset(tag, 0x00, sizeof(tag));
     memcpy(tag, encKeyPair + offset, TAG_SIZE);
     offset += TAG_SIZE;
-
+    sgx_printf("debug 12\n");
     unsigned char ciphertext[BUFSIZ];
     int ciphertext_len = encKeyPair_len - offset;
     memset(ciphertext, 0x00, sizeof(ciphertext));
     memcpy(ciphertext, encKeyPair + offset, ciphertext_len);
     offset += ciphertext_len;
-
+    sgx_printf("debug 13\n");
     // printf("ciphertext (len:%d) is:\n", ciphertext_len);
 	// BIO_dump_fp(stdout, (const char *)ciphertext, ciphertext_len);
 
