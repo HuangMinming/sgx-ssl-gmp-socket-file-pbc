@@ -136,7 +136,7 @@ int aes_gcm_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *
         handleErrors("EVP_CIPHER_CTX_new");
 
     /* Initialise the encryption operation. */
-    if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL))
+    if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL))
         handleErrors("EVP_aes_256_gcm");
 
     /*
