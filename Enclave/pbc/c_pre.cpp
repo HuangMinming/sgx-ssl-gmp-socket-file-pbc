@@ -3778,7 +3778,7 @@ sgx_status_t t_unseal_UserRevocationList_data(const uint8_t *sealed_blob, size_t
 }
 
 
-int getMd(const uint8_t *password, size_t password_len, 
+int getMd(uint8_t *password, size_t password_len, 
     unsigned char *MDValue, size_t MDValue_len) {
     
     // MD5, SHA1, SHA256
@@ -3792,7 +3792,7 @@ int getMd(const uint8_t *password, size_t password_len,
     return 0;
 }
 
-uint32_t t_export_keyPairHex(const uint8_t *password, size_t password_len, 
+uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len, 
     uint8_t* encKeyPair, uint32_t encKeyPair_len)
 {
     unsigned char MDValue[EVP_MAX_MD_SIZE + 1];
@@ -3855,7 +3855,7 @@ uint32_t t_export_keyPairHex(const uint8_t *password, size_t password_len,
 
 }
 
-uint32_t t_import_keyPairHex(const uint8_t *password, size_t password_len, 
+uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len, 
     uint8_t* encKeyPairHex, uint32_t encKeyPairHex_len)
 {
     unsigned char MDValue[EVP_MAX_MD_SIZE + 1];

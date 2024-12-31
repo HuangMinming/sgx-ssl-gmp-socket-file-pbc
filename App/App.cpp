@@ -1175,7 +1175,7 @@ int exportKey() {
     uint8_t encKeyPair[BUFSIZ];
     uint32_t encKeyPair_len = 0;
     sgx_status_t ret = t_export_keyPairHex(global_eid, &encKeyPair_len, 
-        (const uint8_t *)password, strlen(password),
+        (uint8_t *)password, strlen(password),
         encKeyPair, BUFSIZ);
     if (ret != SGX_SUCCESS)
     {
@@ -1231,7 +1231,7 @@ int importKey() {
     }
     uint32_t retval;
     sgx_status_t ret = t_import_keyPairHex(global_eid, &retval, 
-        (const uint8_t *)password, strlen(password),
+        (uint8_t *)password, strlen(password),
         temp_buf, fsize);
     if (ret != SGX_SUCCESS)
     {
