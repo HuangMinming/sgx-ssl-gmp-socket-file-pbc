@@ -3815,6 +3815,7 @@ uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len,
     memcpy(keyPair + offset, g_keyPairHex.pk_Hex, sizeof(g_keyPairHex.pk_Hex));
     offset += sizeof(g_keyPairHex.pk_Hex);
     memcpy(keyPair + offset, g_keyPairHex.sk_Hex, sizeof(g_keyPairHex.sk_Hex));
+    offset += sizeof(g_keyPairHex.sk_Hex);
     unsigned char ciphertext[BUFSIZ];
     // memcpy(keyPair, "hello world", 11);
     size_t keyPair_len = offset;
