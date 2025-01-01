@@ -3793,7 +3793,7 @@ int getMd(uint8_t *password, size_t password_len,
     return iRet;
 }
 
-uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len, 
+int32_t t_export_keyPairHex(uint8_t *password, size_t password_len, 
     uint8_t* encKeyPair, uint32_t encKeyPair_len)
 {
     unsigned char MDValue[EVP_MAX_MD_SIZE + 1];
@@ -3855,7 +3855,7 @@ uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len,
 
 }
 
-uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len, 
+int32_t t_import_keyPairHex(uint8_t *password, size_t password_len, 
     uint8_t* encKeyPairHex, uint32_t encKeyPairHex_len)
 {
     unsigned char MDValue[EVP_MAX_MD_SIZE + 1];

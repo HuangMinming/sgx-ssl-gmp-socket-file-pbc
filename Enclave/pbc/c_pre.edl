@@ -60,9 +60,9 @@ enclave {
         public sgx_status_t t_seal_UserRevocationList_data([out, size=data_size] uint8_t* sealed_blob, uint32_t data_size);
         public sgx_status_t t_unseal_UserRevocationList_data([in, size=data_size] const uint8_t *sealed_blob, size_t data_size);
 
-        public uint32_t t_export_keyPairHex([in, size=password_len] uint8_t *password, size_t password_len, 
+        public int32_t t_export_keyPairHex([in, size=password_len] uint8_t *password, size_t password_len, 
             [out, size=encKeyPair_len] uint8_t* encKeyPair, uint32_t encKeyPair_len);
-        public uint32_t t_import_keyPairHex([in, size=password_len] uint8_t *password, size_t password_len, 
+        public int32_t t_import_keyPairHex([in, size=password_len] uint8_t *password, size_t password_len, 
             [in, size=encKeyPairHex_len] uint8_t* encKeyPairHex, uint32_t encKeyPairHex_len);
 
     };

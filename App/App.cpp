@@ -1173,7 +1173,7 @@ int exportKey() {
         return -1;
     }
     uint8_t encKeyPair[BUFSIZ];
-    uint32_t encKeyPair_len = 0;
+    int32_t encKeyPair_len = 0;
     sgx_status_t ret = t_export_keyPairHex(global_eid, &encKeyPair_len, 
         (uint8_t *)password, strlen(password),
         encKeyPair, BUFSIZ);
@@ -1234,7 +1234,7 @@ int importKey() {
         printf("%c", temp_buf[i]);
     }
     printf("\n");
-    uint32_t iret;
+    int32_t iret;
     sgx_status_t ret = t_import_keyPairHex(global_eid, &iret, 
         (uint8_t *)password, strlen(password),
         temp_buf, fsize);
@@ -1244,7 +1244,7 @@ int importKey() {
         print_error_message(ret);
         return -2;
     }
-    if (iret < 0)
+    else if (iret < 0)
     {
         printf("t_import_keyPairHex return error, iret is %d.\n", iret);
         return -2;
