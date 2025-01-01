@@ -3799,7 +3799,7 @@ uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len,
     unsigned char MDValue[EVP_MAX_MD_SIZE + 1];
     int md_len = 0;
     memset(MDValue, 0x00, sizeof(MDValue));
-    int md_len = getMd(password, password_len, MDValue, sizeof(MDValue));
+    md_len = getMd(password, password_len, MDValue, sizeof(MDValue));
     if(md_len < 0) {
         sgx_printf("exportKey getMd error\n");
         return -1;
@@ -3864,7 +3864,7 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     unsigned char MDValue[EVP_MAX_MD_SIZE + 1];
     int md_len = 0;
     memset(MDValue, 0x00, sizeof(MDValue));
-    int md_len = getMd(password, password_len, MDValue, sizeof(MDValue));
+    md_len = getMd(password, password_len, MDValue, sizeof(MDValue));
     if(md_len < 0) {
         sgx_printf("exportKey getMd error\n");
         return -1;
