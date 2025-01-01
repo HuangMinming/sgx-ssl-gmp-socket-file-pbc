@@ -1249,7 +1249,7 @@ int importKey() {
         printf("t_import_keyPairHex return error, iret is %d.\n", iret);
         return -2;
     }
-    printf("Call t_import_keyPairHex success.\n");
+    printf("Call t_import_keyPairHex success. iret is %d\n", iret);
 
     /*
     seal keyPairHex data
