@@ -3832,7 +3832,7 @@ uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len,
     // printf("iv (len:%d) is:\n", IV_LEN);
 	// BIO_dump_fp(stdout, (const char *)iv, IV_LEN * 2);
     sgx_printf("ciphertext_len is %d \n", ciphertext_len);
-    int total_size = (IV_LEN + IV_LEN + ciphertext_len) * 2;
+    int total_size = (IV_LEN + TAG_SIZE + ciphertext_len) * 2;
     sgx_printf("total_size is %d \n", total_size);
     if(encKeyPair_len < total_size) {
         sgx_printf("encKeyPair_len (len:%d) is not enough, need %d:\n", encKeyPair_len, total_size);
