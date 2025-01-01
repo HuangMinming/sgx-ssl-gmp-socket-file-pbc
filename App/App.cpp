@@ -1234,8 +1234,8 @@ int importKey() {
         printf("%c", temp_buf[i]);
     }
     printf("\n");
-    uint32_t retval;
-    sgx_status_t ret = t_import_keyPairHex(global_eid, &retval, 
+    uint32_t iret;
+    sgx_status_t ret = t_import_keyPairHex(global_eid, &iret, 
         (uint8_t *)password, strlen(password),
         temp_buf, fsize);
     if (ret != SGX_SUCCESS)
@@ -1244,9 +1244,9 @@ int importKey() {
         print_error_message(ret);
         return -2;
     }
-    else if (retval < 0)
+    else if (iret < 0)
     {
-        printf("t_import_keyPairHex return error, retval is %d.\n", retval);
+        printf("t_import_keyPairHex return error, iret is %d.\n", iret);
         return -2;
     }
     printf("Call t_import_keyPairHex success.\n");
@@ -1275,6 +1275,7 @@ int importKey() {
         printf("Out of memory\n");
         return -2;
     }
+    sgx_status_t retval;
     ret = t_seal_keyPairHex_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
     if (ret != SGX_SUCCESS)
     {
