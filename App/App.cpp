@@ -1329,6 +1329,8 @@ int SGX_CDECL main(int argc, char *argv[])
         } else if (strcmp(argv[1], "importKey") == 0) {
             printf("importKey\n");
             importKey();
+        } else {
+            printf("unknown argument\n");
         }
         sgx_destroy_enclave(global_eid);
         return 0;

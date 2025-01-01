@@ -3804,11 +3804,9 @@ uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len,
         sgx_printf("exportKey getMd error\n");
         return -1;
     }
-    sgx_printf("debug 0\n");
     unsigned char iv[IV_LEN];
     memset(iv, 0x00, sizeof(iv));
     RAND_bytes(iv, IV_LEN);
-    sgx_printf("debug 01\n");
     unsigned char keyPair[sizeof(KeyPairHex)];
     memset(keyPair, 0x00, sizeof(keyPair));
     int offset = 0;
@@ -3819,12 +3817,10 @@ uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len,
     unsigned char ciphertext[BUFSIZ];
     // memcpy(keyPair, "hello world", 11);
     size_t keyPair_len = offset;
-    sgx_printf("debug 1\n");
     unsigned char tag[TAG_SIZE];
     memset(tag, 0x00, sizeof(tag));
     int ciphertext_len =
         aes_gcm_encrypt(keyPair, keyPair_len, MDValue, md_len, iv, IV_LEN, ciphertext, tag, TAG_SIZE);
-    sgx_printf("debug 2\n");
     // printf("ciphertext (len:%d) is:\n", ciphertext_len);
 	// BIO_dump_fp(stdout, (const char *)ciphertext, ciphertext_len);
 
@@ -3870,7 +3866,6 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
         sgx_printf("exportKey getMd error\n");
         return -1;
     }
-    sgx_printf("debug 0\n");
     unsigned char encKeyPair[BUFSIZ];
     memset(encKeyPair, 0x00, sizeof(encKeyPair));
     HexStrToByteStr(encKeyPairHex, encKeyPairHex_len, encKeyPair, BUFSIZ);
@@ -3883,27 +3878,19 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     // sgx_printf("encKeyPair (len:%d) is:\n", encKeyPair_len);
 	// BIO_dump_fp(stdout, (const char *)buf, buf_len);
     int offset = 0;
-    sgx_printf("debug 1\n");
     unsigned char iv[IV_LEN];
     memset(iv, 0x00, sizeof(iv));
     memcpy(iv, encKeyPair + offset, IV_LEN);
     offset += IV_LEN;
-    sgx_printf("debug 11\n");
     unsigned char tag[TAG_SIZE];
     memset(tag, 0x00, sizeof(tag));
     memcpy(tag, encKeyPair + offset, TAG_SIZE);
     offset += TAG_SIZE;
-    sgx_printf("debug 12\n");
     unsigned char ciphertext[BUFSIZ];
-    sgx_printf("debug 121\n");
     int ciphertext_len = encKeyPair_len - offset;
-    sgx_printf("debug 122\n");
     memset(ciphertext, 0x00, sizeof(ciphertext));
-    sgx_printf("debug 123\n");
     memcpy(ciphertext, encKeyPair + offset, ciphertext_len);
-    sgx_printf("debug 124\n");
     offset += ciphertext_len;
-    sgx_printf("debug 13\n");
     sgx_printf("ciphertext (len:%d) \n", ciphertext_len);
 	// BIO_dump_fp(stdout, (const char *)ciphertext, ciphertext_len);
 
@@ -3914,10 +3901,8 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
 	// BIO_dump_fp(stdout, (const char *)iv, IV_LEN);
 
     unsigned char keyPair[BUFSIZ];
-    sgx_printf("debug 2\n");
     int result =
       aes_gcm_decrypt(ciphertext, ciphertext_len, tag, TAG_SIZE, MDValue, md_len, iv, IV_LEN, keyPair);
-    sgx_printf("debug 3\n");
     sgx_printf("keyPair (len:%d) is %s:\n", result, keyPair);
 
     offset = 0;
