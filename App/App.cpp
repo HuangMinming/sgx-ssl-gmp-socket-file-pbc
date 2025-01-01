@@ -1250,6 +1250,57 @@ int importKey() {
         return -2;
     }
     printf("Call t_import_keyPairHex success.\n");
+
+    /*
+    seal keyPairHex data
+    */
+   // Get the sealed data size
+    uint32_t sealed_data_size = 0;
+    ret = t_get_sealed_keyPairHex_data_size(global_eid, &sealed_data_size);
+    if (ret != SGX_SUCCESS)
+    {
+        print_error_message(ret);
+        printf("t_get_sealed_keyPairHex_data_size return error, ret is %d.\n", ret);
+        return -3;
+    }
+    else if (sealed_data_size == UINT32_MAX)
+    {
+        printf("t_get_sealed_keyPairHex_data_size out of memory.\n");
+        return -3;
+    }
+
+    uint8_t *temp_sealed_buf = (uint8_t *)malloc(sealed_data_size);
+    if (temp_sealed_buf == NULL)
+    {
+        printf("Out of memory\n");
+        return -2;
+    }
+    ret = t_seal_keyPairHex_data(global_eid, &retval, temp_sealed_buf, sealed_data_size);
+    if (ret != SGX_SUCCESS)
+    {
+        print_error_message(ret);
+        free(temp_sealed_buf);
+        printf("t_seal_keyPairHex_data return error %d\n", ret);
+        return -3;
+    }
+    else if (retval != SGX_SUCCESS)
+    {
+        print_error_message(retval);
+        free(temp_sealed_buf);
+        printf("t_seal_keyPairHex_data return error retval = %d\n", retval);
+        return -3;
+    }
+
+    if (write_buf_to_file(SEALED_keyPairHex_DATA_FILE, temp_sealed_buf, sealed_data_size, 0) == false)
+    {
+        printf("Failed to save the sealed data blob to \" %s \" \n", SEALED_keyPairHex_DATA_FILE);
+        free(temp_sealed_buf);
+        return -2;
+    }
+
+    free(temp_sealed_buf);
+    printf("Sealing data succeeded.\n");
+
     return 0;
 }
 
