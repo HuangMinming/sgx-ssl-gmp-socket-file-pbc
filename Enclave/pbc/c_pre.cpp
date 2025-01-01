@@ -3527,7 +3527,7 @@ sgx_status_t t_ReEnc(
     uint8_t rk_Byte[256 + 1];
     memset(rk_Byte, 0x00, sizeof(rk_Byte));
     iRet = aes_gcm_decrypt(C_rk_Byte, 256, 
-        tag, TAG_SIZE, DEK_rk, iv, IV_LEN, rk_Byte);
+        tag, TAG_SIZE, DEK_rk, 16, iv, IV_LEN, rk_Byte);
     if(iRet < 0) {
         sgx_printf("t_ReEnc aes_gcm_decrypt error, iRet = %d\n", iRet);
         return SGX_ERROR_INVALID_PARAMETER;
@@ -3790,16 +3790,17 @@ int getMd(uint8_t *password, size_t password_len,
         return -1;
     }
     sgx_printf("getDigestValue success\n");
-    return 0;
+    return iRet;
 }
 
 uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len, 
     uint8_t* encKeyPair, uint32_t encKeyPair_len)
 {
     unsigned char MDValue[EVP_MAX_MD_SIZE + 1];
+    int md_len = 0;
     memset(MDValue, 0x00, sizeof(MDValue));
-    int iRet = getMd(password, password_len, MDValue, sizeof(MDValue));
-    if(iRet < 0) {
+    int md_len = getMd(password, password_len, MDValue, sizeof(MDValue));
+    if(md_len < 0) {
         sgx_printf("exportKey getMd error\n");
         return -1;
     }
@@ -3821,7 +3822,7 @@ uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len,
     unsigned char tag[TAG_SIZE];
     memset(tag, 0x00, sizeof(tag));
     int ciphertext_len =
-        aes_gcm_encrypt(keyPair, keyPair_len, MDValue, iv, IV_LEN, ciphertext, tag, TAG_SIZE);
+        aes_gcm_encrypt(keyPair, keyPair_len, MDValue, md_len, iv, IV_LEN, ciphertext, tag, TAG_SIZE);
     sgx_printf("debug 2\n");
     // printf("ciphertext (len:%d) is:\n", ciphertext_len);
 	// BIO_dump_fp(stdout, (const char *)ciphertext, ciphertext_len);
@@ -3861,9 +3862,10 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     uint8_t* encKeyPairHex, uint32_t encKeyPairHex_len)
 {
     unsigned char MDValue[EVP_MAX_MD_SIZE + 1];
+    int md_len = 0;
     memset(MDValue, 0x00, sizeof(MDValue));
-    int iRet = getMd(password, password_len, MDValue, sizeof(MDValue));
-    if(iRet < 0) {
+    int md_len = getMd(password, password_len, MDValue, sizeof(MDValue));
+    if(md_len < 0) {
         sgx_printf("exportKey getMd error\n");
         return -1;
     }
@@ -3913,7 +3915,7 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     unsigned char keyPair[BUFSIZ];
     sgx_printf("debug 2\n");
     int result =
-      aes_gcm_decrypt(ciphertext, ciphertext_len, tag, TAG_SIZE, MDValue, iv, IV_LEN, keyPair);
+      aes_gcm_decrypt(ciphertext, ciphertext_len, tag, TAG_SIZE, MDValue, md_len, iv, IV_LEN, keyPair);
     sgx_printf("debug 3\n");
     sgx_printf("keyPair (len:%d) is %s:\n", result, keyPair);
 

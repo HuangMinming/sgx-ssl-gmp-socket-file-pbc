@@ -123,8 +123,10 @@ int ecdsa_verify(char * public_key, size_t public_key_len,
 }
 
 
-int aes_gcm_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
-                unsigned char *iv, int iv_len, unsigned char *ciphertext,
+int aes_gcm_encrypt(unsigned char *plaintext, int plaintext_len, 
+                unsigned char *key, int key_len,
+                unsigned char *iv, int iv_len, 
+                unsigned char *ciphertext,
                 unsigned char *tag, int tag_len)
 {
     EVP_CIPHER_CTX *ctx;
@@ -134,10 +136,17 @@ int aes_gcm_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *
     /* Create and initialise the context */
     if (!(ctx = EVP_CIPHER_CTX_new()))
         handleErrors("EVP_CIPHER_CTX_new");
-
+    const EVP_CIPHER *cipher_type = NULL;
+    if(key_len == 16) {
+        cipher_type = EVP_aes_128_gcm();
+    } else if(key_len == 32) {
+        cipher_type = EVP_aes_256_gcm();
+    } else {
+        handleErrors("error key length");
+    }
     /* Initialise the encryption operation. */
-    if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL))
-        handleErrors("EVP_aes_256_gcm");
+    if (1 != EVP_EncryptInit_ex(ctx, cipher_type, NULL, NULL, NULL))
+        handleErrors("cipher_type");
 
     /*
      * Set IV length if default 12 bytes (96 bits) is not appropriate
@@ -186,8 +195,10 @@ int aes_gcm_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *
 }
 
 int aes_gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
-                unsigned char *tag, int tag_len, unsigned char *key, unsigned char *iv,
-                int iv_len, unsigned char *plaintext)
+                unsigned char *tag, int tag_len, 
+                unsigned char *key, int key_len,
+                unsigned char *iv, int iv_len, 
+                unsigned char *plaintext)
 {
     EVP_CIPHER_CTX *ctx;
     int len;
@@ -198,10 +209,18 @@ int aes_gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
     if (!(ctx = EVP_CIPHER_CTX_new()))
         handleErrors("EVP_CIPHER_CTX_new");
 
+    const EVP_CIPHER *cipher_type = NULL;
+    if(key_len == 16) {
+        cipher_type = EVP_aes_128_gcm();
+    } else if(key_len == 32) {
+        cipher_type = EVP_aes_256_gcm();
+    } else {
+        handleErrors("error key length");
+    }
     /* Initialise the decryption operation. */
-    if (!EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL)) {
+    if (!EVP_DecryptInit_ex(ctx, cipher_type, NULL, NULL, NULL)) {
         EVP_CIPHER_CTX_free(ctx);
-        handleErrors("EVP_aes_256_gcm");
+        handleErrors("cipher_type");
     }
 
     /* Set IV length. Not necessary if this is 12 bytes (96 bits) */
@@ -300,6 +319,6 @@ int getDigestValue(char *digestName, uint8_t *message,
     for (i = 0; i < md_len; i++)
         sgx_printf("%02x", digestValue[i]);
     sgx_printf("\n");
-    return 0;
+    return md_len;
 }
 

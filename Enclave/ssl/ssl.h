@@ -13,12 +13,16 @@ void handleErrors(char *x);
 int ecdsa_verify(char * public_key, size_t public_key_len, 
     char *msg, size_t msg_len, 
     u_char *sigHex, size_t sigHex_len);
-int aes_gcm_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
-                unsigned char *iv, int iv_len, unsigned char *ciphertext,
+int aes_gcm_encrypt(unsigned char *plaintext, int plaintext_len, 
+                unsigned char *key, int key_len,
+                unsigned char *iv, int iv_len, 
+                unsigned char *ciphertext,
                 unsigned char *tag, int tag_len);
 int aes_gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
-                unsigned char *tag, int tag_len, unsigned char *key, unsigned char *iv,
-                int iv_len, unsigned char *plaintext);
+                unsigned char *tag, int tag_len, 
+                unsigned char *key, int key_len,
+                unsigned char *iv, int iv_len, 
+                unsigned char *plaintext);
 int getDigestValue(char *digestName, uint8_t *message, 
     unsigned char *digestValue, size_t digestValue_len);
 
