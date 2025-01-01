@@ -199,7 +199,7 @@ int aes_gcm_decrypt(unsigned char *ciphertext, int ciphertext_len,
         handleErrors("EVP_CIPHER_CTX_new");
 
     /* Initialise the decryption operation. */
-    if (!EVP_DecryptInit_ex(ctx, EVP_aes_128_gcm(), NULL, NULL, NULL)) {
+    if (!EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL)) {
         EVP_CIPHER_CTX_free(ctx);
         handleErrors("EVP_aes_256_gcm");
     }
