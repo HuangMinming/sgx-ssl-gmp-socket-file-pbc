@@ -315,10 +315,12 @@ int getDigestValue(char *digestName, uint8_t *message,
         sgx_printf("md_len (result of md5) too big %d\n", md_len);
         return -1;
     }
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("Digest(%d) is: ", md_len);
     for (i = 0; i < md_len; i++)
         sgx_printf("%02x", digestValue[i]);
     sgx_printf("\n");
+#endif
     return md_len;
 }
 

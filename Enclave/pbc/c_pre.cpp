@@ -3784,13 +3784,15 @@ int getMd(uint8_t *password, size_t password_len,
     // MD5, SHA1, SHA256
     // getDigestValue("MD5", password, MDValue, sizeof(MDValue));
     // getDigestValue("SHA1", password, MDValue, sizeof(MDValue));
-    int iRet = getDigestValue("SHA256", password, MDValue, MDValue_len);
-    if(iRet < 0) {
-        sgx_printf("getDigestValue error\n");
+    int len = getDigestValue("SHA256", password, MDValue, MDValue_len);
+    if(len < 0) {
+        sgx_printf("getDigestValue error, len = %d\n", len);
         return -1;
     }
+#ifdef PRINT_DEBUG_INFO
     sgx_printf("getDigestValue success\n");
-    return iRet;
+#endif
+    return len;
 }
 
 int32_t t_export_keyPairHex(uint8_t *password, size_t password_len, 
@@ -3903,7 +3905,7 @@ int32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     unsigned char keyPair[BUFSIZ];
     int result =
       aes_gcm_decrypt(ciphertext, ciphertext_len, tag, TAG_SIZE, MDValue, md_len, iv, IV_LEN, keyPair);
-    sgx_printf("keyPair (len:%d) is %s:\n", result, keyPair);
+    sgx_printf("keyPair (len:%d)\n", result);
     if(result < 0) {
         sgx_printf("decrypt error\n");
         return -1;
