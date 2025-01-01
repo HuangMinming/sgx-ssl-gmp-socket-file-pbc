@@ -3904,7 +3904,10 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     int result =
       aes_gcm_decrypt(ciphertext, ciphertext_len, tag, TAG_SIZE, MDValue, md_len, iv, IV_LEN, keyPair);
     sgx_printf("keyPair (len:%d) is %s:\n", result, keyPair);
-
+    if(result < 0) {
+        sgx_printf("decrypt error\n");
+        return -1;
+    }
     offset = 0;
     memcpy(g_keyPairHex.pk_Hex, keyPair + offset, sizeof(g_keyPairHex.pk_Hex));
     offset += sizeof(g_keyPairHex.pk_Hex);
