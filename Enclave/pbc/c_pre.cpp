@@ -3848,7 +3848,6 @@ uint32_t t_export_keyPairHex(uint8_t *password, size_t password_len,
     offset += ciphertext_len;
     // sgx_printf("encKeyPair (len:%d) is:\n", offset);
 	// BIO_dump_fp(stdout, (const char *)buf, offset);
-
     unsigned char buf_hex[BUFSIZ];
     ByteStrToHexStr2(buf, offset, buf_hex, BUFSIZ);
     buf_hex[offset * 2] = '\0';
@@ -3873,6 +3872,11 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     memset(encKeyPair, 0x00, sizeof(encKeyPair));
     HexStrToByteStr(encKeyPairHex, encKeyPairHex_len, encKeyPair, BUFSIZ);
     int encKeyPair_len = encKeyPairHex_len / 2;
+    sgx_printf("encKeyPair is:\n");
+    for(int i=0;i<encKeyPair_len;i++) {
+        sgx_printf("%02x", encKeyPair[i]);
+    }
+    sgx_printf("\n");
     // sgx_printf("encKeyPair (len:%d) is:\n", encKeyPair_len);
 	// BIO_dump_fp(stdout, (const char *)buf, buf_len);
     int offset = 0;
@@ -3897,7 +3901,7 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     sgx_printf("debug 124\n");
     offset += ciphertext_len;
     sgx_printf("debug 13\n");
-    // printf("ciphertext (len:%d) is:\n", ciphertext_len);
+    printf("ciphertext (len:%d) \n", ciphertext_len);
 	// BIO_dump_fp(stdout, (const char *)ciphertext, ciphertext_len);
 
     // printf("tag (len:%d) is:\n", TAG_SIZE);
