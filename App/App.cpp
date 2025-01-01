@@ -1244,7 +1244,7 @@ int importKey() {
         print_error_message(ret);
         return -2;
     }
-    else if (iret < 0)
+    if (iret < 0)
     {
         printf("t_import_keyPairHex return error, iret is %d.\n", iret);
         return -2;
