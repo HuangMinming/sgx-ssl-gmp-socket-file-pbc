@@ -3901,7 +3901,7 @@ uint32_t t_import_keyPairHex(uint8_t *password, size_t password_len,
     sgx_printf("debug 124\n");
     offset += ciphertext_len;
     sgx_printf("debug 13\n");
-    printf("ciphertext (len:%d) \n", ciphertext_len);
+    sgx_printf("ciphertext (len:%d) \n", ciphertext_len);
 	// BIO_dump_fp(stdout, (const char *)ciphertext, ciphertext_len);
 
     // printf("tag (len:%d) is:\n", TAG_SIZE);
