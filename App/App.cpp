@@ -1156,6 +1156,14 @@ void get_password(char *password)
 }
 
 int exportKey() {
+    bool b = false;
+    // loadSealed_bList_U_Data();
+    b = loadSealed_keyPairHex_Data();
+    if(!b) {
+        printf("loadSealed_Vk_Data error\n");
+        return -1;
+    }
+
     char password[BUFSIZ];
     char password2[BUFSIZ];
 
