@@ -2789,6 +2789,21 @@ sgx_status_t t_Trusted_Setup(unsigned char *pk, size_t pk_Length)
     return SGX_SUCCESS;
 }
 
+/*
+return pk
+*/
+
+sgx_status_t t_RetrieveEkTee(unsigned char *pk, size_t pk_Length)
+{
+    if(pk_Length < sizeof(g_keyPairHex.pk_Hex))
+    {
+        sgx_printf("t_RetrieveEkTee pk_Length = %d is not enough to save pk, error\n", pk_Length);
+        return SGX_ERROR_INVALID_PARAMETER;
+    }
+    memcpy(pk, g_keyPairHex.pk_Hex, pk_Hex_len);
+    return SGX_SUCCESS;
+}
+
 
 
 /*

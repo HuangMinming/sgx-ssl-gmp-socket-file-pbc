@@ -3355,6 +3355,91 @@ int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
     return 0;
 }
 
+int handleRequest1002(unsigned char *requestBody, size_t requestBodyLength,
+    unsigned char *responseMsg, size_t * p_responseMsgLength) {
+    
+    /*
+    input:
+    userid Length(4 bytes) + userid(<=20 bytes)
+    */
+   
+   size_t userIdLength;
+   char userIdLengthStr[5];
+   unsigned char userId[20];
+   int offset = 0;
+
+   memset(userIdLengthStr, 0x00, sizeof(userIdLengthStr));
+   memcpy(userIdLengthStr, requestBody, 4);
+   userIdLength = atoi(userIdLengthStr);
+   if(userIdLength <= 0 || userIdLength > sizeof(userId))
+    {
+        printf("error userId length, userId is %d \n", userIdLength);
+        int len = strlen(ERRORMSG_REQUEST_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0101", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_REQUEST_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -1;
+    }
+    memcpy(userId, requestBody + 4, userIdLength);
+#ifdef PRINT_DEBUG_INFO
+    printf("userIdLength is %d, userId is :\n", userIdLength);
+    dump_hex(userId, userIdLength, 16);
+#endif
+    sgx_status_t retval;
+    unsigned char ek_TEE[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    sgx_status_t ret = t_RetrieveEkTee(global_eid, &retval, ek_TEE, sizeof(ek_TEE));
+    if (ret != SGX_SUCCESS)
+    {
+        printf("Call t_RetrieveEkTee failed.\n");
+        print_error_message(ret);
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -2;
+    }
+    else if (retval != SGX_SUCCESS)
+    {
+        print_error_message(retval);
+        int len = strlen(ERRORMSG_SGX_ERROR);
+        offset = 0;
+        memcpy(responseMsg + offset, "0103", 4);
+        offset += 4;
+        sprintf((char *)(responseMsg + offset), "%04d", len);
+        offset += 4;
+        memcpy(responseMsg + offset, ERRORMSG_SGX_ERROR, len);
+        offset += len;
+        (*p_responseMsgLength) = offset;
+        return -2;
+    }
+
+    // sgx_destroy_enclave(global_eid);
+    // add return msg
+    offset = 0;
+    memcpy(responseMsg + offset, "0000", 4);
+    offset += 4;
+    sprintf((char *)(responseMsg + offset), "%04d", (sizeof(ek_TEE) + 4));
+    offset += 4;
+    sprintf((char *)(responseMsg + offset), "%04d", sizeof(ek_TEE));
+    offset += 4;
+    memcpy(responseMsg + offset, ek_TEE, sizeof(ek_TEE));
+    offset += sizeof(ek_TEE);
+    (*p_responseMsgLength) = offset;
+
+    printf("handleRequest1002 succeeded.\n");
+    return 0;
+}
+
 int access_control(char *user_id, char *file_id)
 {
     /* Initialize the enclave */

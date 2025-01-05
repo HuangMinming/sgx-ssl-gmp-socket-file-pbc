@@ -83,6 +83,8 @@ int handleRequest0005(unsigned char *requestBody, size_t requestBodyLength,
     unsigned char *responseBody, size_t * responseBodyLength);
 int handleRequest1001(unsigned char *requestBody, size_t requestBodyLength,
     unsigned char *responseBody, size_t * responseBodyLength);
+int handleRequest1002(unsigned char *requestBody, size_t requestBodyLength,
+    unsigned char *responseMsg, size_t * p_responseMsgLength);
 // the same as pre.h c_pre.h
 #define ZR_ELEMENT_LENGTH_IN_BYTES 20
 #define G1_ELEMENT_LENGTH_IN_BYTES 128
