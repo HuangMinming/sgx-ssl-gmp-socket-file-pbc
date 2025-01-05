@@ -2795,7 +2795,8 @@ return pk
 
 sgx_status_t t_RetrieveEkTee(unsigned char *pk, size_t pk_Length)
 {
-    if(pk_Length < sizeof(g_keyPairHex.pk_Hex))
+    int pk_Hex_len = sizeof(g_keyPairHex.pk_Hex);
+    if(pk_Length < pk_Hex_len)
     {
         sgx_printf("t_RetrieveEkTee pk_Length = %d is not enough to save pk, error\n", pk_Length);
         return SGX_ERROR_INVALID_PARAMETER;
