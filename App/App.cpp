@@ -1599,7 +1599,13 @@ int handleRequest(unsigned char *requestMsg, size_t requestMsgLen, int fd,
         iret = handleRequest1001(requestBody, requestBodyLength, 
             responseMsg, p_responseMsgLen);
         
-    } 
+    }
+    else if(memcmp(requestCode, "1002", 4) == 0) {
+        memset(responseBody, 0x00, sizeof(responseBody));
+        memset(responseMsg, 0x00, sizeof(responseMsg));
+        iret = handleRequest1002(requestBody, requestBodyLength, 
+            responseMsg, p_responseMsgLen);
+    }
     else {
         char errMsg[BUFSIZ];
         responseBodyLength = sprintf(errMsg, "error request msg, unknown request code: %s\n", requestCode);
