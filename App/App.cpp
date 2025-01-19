@@ -1018,6 +1018,7 @@ bool loadSealed_UserRevocationList_Data() {
     sgx_status_t ret;
 
     // Read the sealed blob from the file
+    printf("debug 1\n");
     size_t fsize = get_file_size(SEALED_UserRevocationList_DATA_FILE);
     printf("fsize is %d\n", fsize);
     if (fsize == (size_t)-1)
