@@ -1389,6 +1389,7 @@ int SGX_CDECL main(int argc, char *argv[])
     FD_SET(listenfd, &allset); /*构造select监控文件描述符集*/
 
     printf("======waiting for client's request======\n");
+    fflush(stdout);
 
     while (1)
     {
@@ -1445,6 +1446,7 @@ int SGX_CDECL main(int argc, char *argv[])
 #endif
                         Write(i, responseMsg, responseMsgLen);
                     }
+                    fflush(stdout);
                     // memset(user_id, 0x00, sizeof(user_id));
                     // memset(file_id, 0x00, sizeof(file_id));
                     // sscanf(msg, "%s %s", user_id, file_id);
