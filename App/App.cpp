@@ -1076,17 +1076,17 @@ bool loadSealedData() {
     // loadSealed_bList_U_Data();
     b = loadSealed_keyPairHex_Data();
     if(!b) {
-        printf("loadSealed_Vk_Data error\n");
+        printf("loadSealed_keyPairHex_Data error\n");
         return false;
     }
     b = loadSealed_shareFileList_Data();
     if(!b) {
-        printf("loadSealed_Vk_Data error\n");
+        printf("loadSealed_shareFileList_Data error\n");
         return false;
     }
     b = loadSealed_UserRevocationList_Data();
     if(!b) {
-        printf("loadSealed_Vk_Data error\n");
+        printf("loadSealed_UserRevocationList_Data error\n");
         return false;
     }
 
