@@ -351,7 +351,7 @@ static size_t get_file_size(const char *filename)
     std::ifstream ifs(filename, std::ios::in | std::ios::binary);
     if (!ifs.good())
     {
-        std::cout << "Failed to open the file \"" << filename << "\"" << std::endl;
+        printf("Fail to open the file \" %s \"\n", filename);
         return -1;
     }
     ifs.seekg(0, std::ios::end);
