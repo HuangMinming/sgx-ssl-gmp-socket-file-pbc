@@ -1019,6 +1019,7 @@ bool loadSealed_UserRevocationList_Data() {
 
     // Read the sealed blob from the file
     size_t fsize = get_file_size(SEALED_UserRevocationList_DATA_FILE);
+    printf("fsize is %d\n", fsize);
     if (fsize == (size_t)-1)
     {
         printf("Failed to get the file size of \" %s \"\n", SEALED_UserRevocationList_DATA_FILE);
