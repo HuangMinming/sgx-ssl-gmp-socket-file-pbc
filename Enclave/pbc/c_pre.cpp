@@ -2590,6 +2590,55 @@ void ReEncTest_2()
 
 }
 
+void ReKeyGenTest() 
+{
+    //start to test ReKeyGen
+    uint8_t pk_i_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t sk_i_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];
+    int pk_i_Hex_len = sizeof(pk_i_Hex);
+    int sk_i_Hex_len = sizeof(sk_i_Hex);
+    memcpy(pk_i_Hex, "6552d0097d1d726d863af0a3a2931d6e13e7e9f8368fac45044ec0437ff2965a337fafbb719b7180dc95b5cef48f823b4e5ecb11113c660c17369403836fbd216b7442d061f0f818cfee493f2f5bf0a2e9bc2bc648003e2ec1f4072c74ebde12cc5cf0901024e3d01f902222bc0c49453af20cd5eae3c3d0e0c5678856cb66b8", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(sk_i_Hex, "2bc7881c4cd1dd9eaaf79682b41e53c2662e4149", ZR_ELEMENT_LENGTH_IN_BYTES * 2);
+    
+
+    uint8_t *w=(uint8_t *)"136test24.txt";
+    int w_len = strlen((char *)w);
+    uint8_t c1_i_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t c2_i_Hex[GT_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t c3_i_Hex[SHA256_DIGEST_LENGTH_32 * 8 * 2];
+    uint8_t c4_i_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+
+
+    uint8_t pk_j_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t sk_j_Hex[ZR_ELEMENT_LENGTH_IN_BYTES * 2];
+    int pk_j_Hex_len = sizeof(pk_j_Hex);
+    int sk_j_Hex_len = sizeof(sk_j_Hex);
+    memcpy(pk_j_Hex, "6552d0097d1d726d863af0a3a2931d6e13e7e9f8368fac45044ec0437ff2965a337fafbb719b7180dc95b5cef48f823b4e5ecb11113c660c17369403836fbd216b7442d061f0f818cfee493f2f5bf0a2e9bc2bc648003e2ec1f4072c74ebde12cc5cf0901024e3d01f902222bc0c49453af20cd5eae3c3d0e0c5678856cb66b8", G1_ELEMENT_LENGTH_IN_BYTES * 2);
+    memcpy(sk_j_Hex, "2bc7881c4cd1dd9eaaf79682b41e53c2662e4149", ZR_ELEMENT_LENGTH_IN_BYTES * 2);
+    
+
+    uint8_t rk1_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t rk2_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+
+    ReKeyGen(pk_j_Hex, pk_j_Hex_len, sk_i_Hex, sk_i_Hex_len, pk_i_Hex, pk_i_Hex_len, 
+            w, w_len, rk1_Hex, sizeof(rk1_Hex), rk2_Hex, sizeof(rk2_Hex));
+    
+    sgx_printf("ReKeyGen: rk1_Hex = \n");
+    for(int i=0;i<sizeof(rk1_Hex);i++)
+    {
+        sgx_printf("%c", rk1_Hex[i]);
+    }
+    sgx_printf("\n");
+
+    sgx_printf("ReKeyGen: rk2_Hex = \n");
+    for(int i=0;i<sizeof(rk2_Hex);i++)
+    {
+        sgx_printf("%c", rk2_Hex[i]);
+    }
+    sgx_printf("\n");
+
+}
+
 int c_pre_main_test() {
 
     sgx_printf("==========================\n");
@@ -2605,7 +2654,7 @@ int c_pre_main_test() {
     sgx_printf("==========================\n");
     sgx_printf("=======ReEncTest==========\n");
     sgx_printf("==========================\n");
-    ReEncTest();
+    // ReEncTest();
 
     sgx_printf("==========================\n");
     sgx_printf("=======Enc2Test===========\n");
@@ -2638,6 +2687,11 @@ int c_pre_main_test() {
         m_bytes, 32
     );
     sgx_printf("t_SaveShareFile idebug is %d, m_bytes is %s\n", idebug, m_bytes);
+
+    sgx_printf("==========================\n");
+    sgx_printf("=======ReKeyGenTest==========\n");
+    sgx_printf("==========================\n");
+    ReKeyGenTest();
 
 
     return 0;
