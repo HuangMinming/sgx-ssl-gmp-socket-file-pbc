@@ -1359,6 +1359,181 @@ int Enc2(uint8_t *pk_Hex, int pk_Hex_len,
     return iRet;
 }
 
+// set R fix element
+int Enc2_debug(uint8_t *pk_Hex, int pk_Hex_len, 
+    uint8_t *m_bytes, int m_bytes_len, 
+    uint8_t *w, int w_len, 
+    uint8_t *c1_Hex, int c1_Hex_len,
+    uint8_t *c2_Hex, int c2_Hex_len,
+    uint8_t *c3_Hex, int c3_Hex_len,
+    uint8_t *c4_Hex, int c4_Hex_len
+    )
+{
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("********************************\n");
+    sgx_printf("**********Enc2 start************\n");
+    sgx_printf("********************************\n");
+#endif
+    if( NULL == pk_Hex || pk_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 ||
+        NULL == m_bytes || m_bytes_len != SHA256_DIGEST_LENGTH_32 ||
+        NULL == w || w_len <= 0 ||
+        NULL == c1_Hex || c1_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2 ||
+        NULL == c2_Hex || c2_Hex_len < GT_ELEMENT_LENGTH_IN_BYTES * 2 ||
+        NULL == c3_Hex || c3_Hex_len < SHA256_DIGEST_LENGTH_32 * 8 * 2 ||
+        NULL == c4_Hex || c4_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2)
+    {
+        sgx_printf("Enc2 input error \n");
+        sgx_printf("NULL == pk_Hex = %d\n", NULL == pk_Hex);
+        sgx_printf("pk_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, pk_Hex_len = %d\n", 
+            pk_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2, pk_Hex_len);
+        sgx_printf("NULL == m_bytes = %d\n", NULL == m_bytes);
+        sgx_printf("m_bytes_len != SHA256_DIGEST_LENGTH_32 = %d, m_bytes_len = %d\n", 
+            m_bytes_len != SHA256_DIGEST_LENGTH_32, m_bytes_len);
+        sgx_printf("NULL == w = %d\n", NULL == w);
+        sgx_printf("w_len <= 0 = %d, w_len = %d\n", w_len <= 0, w_len);
+        sgx_printf("NULL == c1_Hex = %d\n", NULL == c1_Hex);
+        sgx_printf("c1_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c1_Hex_len = %d\n", 
+            c1_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2, c1_Hex_len);
+        sgx_printf("NULL == c2_Hex = %d\n", NULL == c2_Hex);
+        sgx_printf("c2_Hex_len < GT_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c2_Hex_len = %d\n", 
+            c2_Hex_len < GT_ELEMENT_LENGTH_IN_BYTES * 2, c2_Hex_len);
+        sgx_printf("NULL == c3_Hex = %d\n", NULL == c3_Hex);
+        sgx_printf("c3_Hex_len < SHA256_DIGEST_LENGTH_32 * 8 * 2 = %d, c3_Hex_len = %d\n", 
+            c3_Hex_len < SHA256_DIGEST_LENGTH_32 * 8 * 2, c3_Hex_len);
+        sgx_printf("NULL == c4_Hex = %d\n", NULL == c4_Hex);
+        sgx_printf("c4_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, c4_Hex_len = %d\n", 
+            c4_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2, c4_Hex_len);
+        return -1;
+    }
+
+    int iRet = -1;
+
+    //先把m_bytes转成0和1组成的bit,
+    int m_len = m_bytes_len * 8;
+    uint8_t *m = (uint8_t *)malloc(m_len);
+    bytes_to_bits(m_bytes, m_bytes_len, m, m_len);
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("Enc2 m=\n");
+    for(int i=0;i<m_len;)
+    {
+        sgx_printf("%c%c ", m[i], m[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+#endif
+    pairing_t pairing;
+    element_t g;
+    element_t Z;
+    KeyPair keypair;
+    iRet = Setup(pairing, g, Z);
+    if(iRet != 0) 
+    {
+        sgx_printf("Enc2 Setup return %d, exit", iRet);
+        return -1;
+    }
+
+    //import pk
+    element_init_G1(keypair.pk, pairing);
+    importKeyPair(&keypair, pk_Hex, pk_Hex_len, NULL, 0);
+
+
+    CipherText ciphertext;
+    element_init_G1(ciphertext.c1, pairing);
+    element_init_GT(ciphertext.c2, pairing);
+    element_init_G1(ciphertext.c4, pairing);
+
+    // 为 ciphertext.c3 分配内存
+    int c3_len = SHA256_DIGEST_LENGTH_32 * 8;
+    ciphertext.c3 = (uint8_t *) malloc(c3_len);
+    element_t R, r, hash2result, eresult, hash4result;
+    element_init_GT(R, pairing);
+    // element_random(R);
+    element_set_si(R, 3);
+    //r在调用Hash1前需要完成初始化
+    element_init_Zr(r, pairing);
+    
+    //m是以\0结束的字符串
+    Hash1(r, m, m_len, R); 
+
+    //get c1
+    element_pow_zn(ciphertext.c1, g, r);
+
+    //hash2result在调用Hash2前需要完成初始化，w是以\0结束的字符串(已经指定长度，不用此限制)
+    element_init_G1(hash2result, pairing);
+    Hash2(hash2result, keypair.pk, w, w_len);
+
+
+    element_init_GT(eresult, pairing);
+    element_pairing(eresult, keypair.pk, hash2result);
+    element_pow_zn(eresult, eresult, r);
+    //get c2
+    element_mul(ciphertext.c2, R, eresult);
+    
+
+    int hash3result_len = SHA256_DIGEST_LENGTH_32 * 8;
+    uint8_t *hash3result = (uint8_t *) malloc(hash3result_len);
+    Hash3(hash3result, hash3result_len, R);
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("Enc2 hash3result: \n");
+    for(int i=0;i<hash3result_len;)
+    {
+        sgx_printf("%c%c ", hash3result[i], hash3result[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+#endif
+    //get c3
+    xor_bitstrings(ciphertext.c3, m, m_len, hash3result, hash3result_len);
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("Enc2 length(ciphertext.c3) = %d, ciphertext.c3 =\n", c3_len);
+    for(int i=0;i<c3_len;)
+    {
+        sgx_printf("%c%c ", ciphertext.c3[i], ciphertext.c3[i+1]);
+        i += 2;
+    }
+    sgx_printf("\n");
+#endif
+    //hash4result在调用Hash4前需要完成初始化
+    element_init_G1(hash4result, pairing);
+    Hash4(hash4result, ciphertext.c1, ciphertext.c2, ciphertext.c3, c3_len);
+    //get c4
+    element_pow_zn(ciphertext.c4, hash4result, r);
+
+    //c1, c2, c4 conver to bytes
+    iRet = exportCipherText(&ciphertext, c1_Hex, c1_Hex_len,
+            c2_Hex, c2_Hex_len, 
+            c3_Hex, c3_Hex_len, 
+            c4_Hex, c4_Hex_len);
+    if(iRet != 0) 
+    {
+        sgx_printf("Enc2 exportCipherText return = %d\n", iRet);
+    }
+    free(m);
+    element_clear(R);
+    element_clear(r);
+    element_clear(hash2result);
+    element_clear(eresult);
+    element_clear(hash4result);
+    free(hash3result);
+
+    element_clear(ciphertext.c4);
+    free(ciphertext.c3);
+    element_clear(ciphertext.c2);
+    element_clear(ciphertext.c1);
+    element_clear(keypair.pk);
+    element_clear(Z);
+    element_clear(g);
+    pairing_clear(pairing);
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("********************************\n");
+    sgx_printf("**********Enc2 end************\n");
+    sgx_printf("********************************\n");
+#endif
+
+    return iRet;
+}
+
+
 
 /*
 
@@ -2715,7 +2890,7 @@ void ReEncTest3()
 
     uint8_t *m=(uint8_t *)"89cdefghij12345678901234567890ab";
     int m_len = strlen((char *)m);
-    Enc2(pk_i_Hex, pk_i_Hex_len, m, m_len, w, w_len,  
+    Enc2_debug(pk_i_Hex, pk_i_Hex_len, m, m_len, w, w_len,  
         c1_i_Hex, sizeof(c1_i_Hex), 
         c2_i_Hex, sizeof(c2_i_Hex), 
         c3_i_Hex, sizeof(c3_i_Hex), 
