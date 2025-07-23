@@ -1371,7 +1371,7 @@ int Enc2_debug(uint8_t *pk_Hex, int pk_Hex_len,
 {
 #ifdef PRINT_DEBUG_INFO
     sgx_printf("********************************\n");
-    sgx_printf("**********Enc2 start************\n");
+    sgx_printf("**********Enc2_debug start************\n");
     sgx_printf("********************************\n");
 #endif
     if( NULL == pk_Hex || pk_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 ||
@@ -1382,7 +1382,7 @@ int Enc2_debug(uint8_t *pk_Hex, int pk_Hex_len,
         NULL == c3_Hex || c3_Hex_len < SHA256_DIGEST_LENGTH_32 * 8 * 2 ||
         NULL == c4_Hex || c4_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2)
     {
-        sgx_printf("Enc2 input error \n");
+        sgx_printf("Enc2_debug input error \n");
         sgx_printf("NULL == pk_Hex = %d\n", NULL == pk_Hex);
         sgx_printf("pk_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, pk_Hex_len = %d\n", 
             pk_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2, pk_Hex_len);
@@ -1413,7 +1413,7 @@ int Enc2_debug(uint8_t *pk_Hex, int pk_Hex_len,
     uint8_t *m = (uint8_t *)malloc(m_len);
     bytes_to_bits(m_bytes, m_bytes_len, m, m_len);
 #ifdef PRINT_DEBUG_INFO
-    sgx_printf("Enc2 m=\n");
+    sgx_printf("Enc2_debug m=\n");
     for(int i=0;i<m_len;)
     {
         sgx_printf("%c%c ", m[i], m[i+1]);
@@ -1428,7 +1428,7 @@ int Enc2_debug(uint8_t *pk_Hex, int pk_Hex_len,
     iRet = Setup(pairing, g, Z);
     if(iRet != 0) 
     {
-        sgx_printf("Enc2 Setup return %d, exit", iRet);
+        sgx_printf("Enc2_debug Setup return %d, exit", iRet);
         return -1;
     }
 
@@ -1474,7 +1474,7 @@ int Enc2_debug(uint8_t *pk_Hex, int pk_Hex_len,
     uint8_t *hash3result = (uint8_t *) malloc(hash3result_len);
     Hash3(hash3result, hash3result_len, R);
 #ifdef PRINT_DEBUG_INFO
-    sgx_printf("Enc2 hash3result: \n");
+    sgx_printf("Enc2_debug hash3result: \n");
     for(int i=0;i<hash3result_len;)
     {
         sgx_printf("%c%c ", hash3result[i], hash3result[i+1]);
@@ -1485,7 +1485,7 @@ int Enc2_debug(uint8_t *pk_Hex, int pk_Hex_len,
     //get c3
     xor_bitstrings(ciphertext.c3, m, m_len, hash3result, hash3result_len);
 #ifdef PRINT_DEBUG_INFO
-    sgx_printf("Enc2 length(ciphertext.c3) = %d, ciphertext.c3 =\n", c3_len);
+    sgx_printf("Enc2_debug length(ciphertext.c3) = %d, ciphertext.c3 =\n", c3_len);
     for(int i=0;i<c3_len;)
     {
         sgx_printf("%c%c ", ciphertext.c3[i], ciphertext.c3[i+1]);
@@ -1506,7 +1506,7 @@ int Enc2_debug(uint8_t *pk_Hex, int pk_Hex_len,
             c4_Hex, c4_Hex_len);
     if(iRet != 0) 
     {
-        sgx_printf("Enc2 exportCipherText return = %d\n", iRet);
+        sgx_printf("Enc2_debug exportCipherText return = %d\n", iRet);
     }
     free(m);
     element_clear(R);
@@ -1526,7 +1526,7 @@ int Enc2_debug(uint8_t *pk_Hex, int pk_Hex_len,
     pairing_clear(pairing);
 #ifdef PRINT_DEBUG_INFO
     sgx_printf("********************************\n");
-    sgx_printf("**********Enc2 end************\n");
+    sgx_printf("**********Enc2_debug end************\n");
     sgx_printf("********************************\n");
 #endif
 
