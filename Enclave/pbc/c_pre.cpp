@@ -2590,7 +2590,7 @@ void ReEncTest_2()
 
 }
 
-void ReKeyGenTest() 
+void ReEncTest3() 
 {
     //start to test ReKeyGen
     uint8_t pk_i_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
@@ -2607,6 +2607,14 @@ void ReKeyGenTest()
     uint8_t c2_i_Hex[GT_ELEMENT_LENGTH_IN_BYTES * 2];
     uint8_t c3_i_Hex[SHA256_DIGEST_LENGTH_32 * 8 * 2];
     uint8_t c4_i_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+
+    uint8_t *m=(uint8_t *)"89cdefghij12345678901234567890ab";
+    int m_len = strlen((char *)m);
+    Enc2(pk_i_Hex, pk_i_Hex_len, m, m_len, w, w_len,  
+        c1_i_Hex, sizeof(c1_i_Hex), 
+        c2_i_Hex, sizeof(c2_i_Hex), 
+        c3_i_Hex, sizeof(c3_i_Hex), 
+        c4_i_Hex, sizeof(c4_i_Hex));
 
 
     uint8_t pk_j_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
@@ -2636,6 +2644,35 @@ void ReKeyGenTest()
         sgx_printf("%c", rk2_Hex[i]);
     }
     sgx_printf("\n");
+
+    uint8_t c1_j_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t c2_j_Hex[GT_ELEMENT_LENGTH_IN_BYTES * 2];
+    uint8_t c3_j_Hex[SHA256_DIGEST_LENGTH_32 * 8 * 2];
+    uint8_t c4_j_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
+
+    ReEnc(c1_i_Hex, sizeof(c1_i_Hex), 
+        c2_i_Hex, sizeof(c2_i_Hex),
+        c3_i_Hex, sizeof(c3_i_Hex),
+        c4_i_Hex, sizeof(c4_i_Hex),
+        rk1_Hex, sizeof(rk1_Hex),
+        rk2_Hex, sizeof(rk2_Hex),
+        c1_j_Hex, sizeof(c1_j_Hex),
+        c2_j_Hex, sizeof(c2_j_Hex),
+        c3_j_Hex, sizeof(c3_j_Hex),
+        c4_j_Hex, sizeof(c4_j_Hex));
+    
+    uint8_t m_bytes[SHA256_DIGEST_LENGTH_32];
+    Dec1(pk_j_Hex, sizeof(pk_j_Hex), sk_j_Hex, sizeof(sk_j_Hex),
+        c1_j_Hex, sizeof(c1_j_Hex), c2_j_Hex, sizeof(c2_j_Hex),
+        c3_j_Hex, sizeof(c3_j_Hex), c4_j_Hex, sizeof(c4_j_Hex),
+        m_bytes, sizeof(m_bytes));
+    sgx_printf("ReEncTest: m_bytes = \n");
+    for(int i=0;i<sizeof(m_bytes);i++)
+    {
+        sgx_printf("%c", m_bytes[i]);
+    }
+    sgx_printf("\n");
+
 
 }
 
