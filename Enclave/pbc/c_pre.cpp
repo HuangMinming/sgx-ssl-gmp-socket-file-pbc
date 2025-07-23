@@ -2726,9 +2726,9 @@ int c_pre_main_test() {
     sgx_printf("t_SaveShareFile idebug is %d, m_bytes is %s\n", idebug, m_bytes);
 
     sgx_printf("==========================\n");
-    sgx_printf("=======ReKeyGenTest==========\n");
+    sgx_printf("=======ReEncTest3==========\n");
     sgx_printf("==========================\n");
-    ReKeyGenTest();
+    ReEncTest3();
 
 
     return 0;
