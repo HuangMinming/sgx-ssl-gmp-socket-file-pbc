@@ -2605,7 +2605,7 @@ int c_pre_main_test() {
     sgx_printf("==========================\n");
     sgx_printf("=======ReEncTest==========\n");
     sgx_printf("==========================\n");
-    // ReEncTest();
+    ReEncTest();
 
     sgx_printf("==========================\n");
     sgx_printf("=======Enc2Test===========\n");
