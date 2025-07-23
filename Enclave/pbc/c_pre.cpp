@@ -1688,6 +1688,109 @@ int ReKeyGen(uint8_t *pk_j_Hex, int pk_j_Hex_len,
     return 0;
 }
 
+// set s a fix number
+int ReKeyGen_debug(uint8_t *pk_j_Hex, int pk_j_Hex_len, 
+    uint8_t *sk_i_Hex, int sk_i_Hex_len, 
+    uint8_t *pk_i_Hex, int pk_i_Hex_len, 
+    uint8_t *w, int w_len,
+    uint8_t *rk1_Hex, int rk1_Hex_len,
+    uint8_t *rk2_Hex, int rk2_Hex_len)
+{
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("********************************\n");
+    sgx_printf("**********ReKeyGen start************\n");
+    sgx_printf("********************************\n");
+#endif
+    if( NULL == pk_j_Hex || pk_j_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 ||
+        NULL == sk_i_Hex || sk_i_Hex_len != ZR_ELEMENT_LENGTH_IN_BYTES * 2 ||
+        NULL == pk_i_Hex || pk_i_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 ||
+        NULL == w || w_len <= 0 ||
+        NULL == rk1_Hex || rk1_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2 ||
+        NULL == rk2_Hex || rk2_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2)
+    {
+        sgx_printf("ReKeyGen input error \n");
+        sgx_printf("NULL == pk_j_Hex = %d\n", NULL == pk_j_Hex);
+        sgx_printf("pk_j_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, pk_j_Hex_len = %d\n", 
+            pk_j_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2, pk_j_Hex_len);
+        sgx_printf("NULL == sk_i_Hex = %d\n", NULL == sk_i_Hex);
+        sgx_printf("sk_i_Hex_len != ZR_ELEMENT_LENGTH_IN_BYTES * 2 = %d, sk_i_Hex_len = %d\n", 
+            sk_i_Hex_len != ZR_ELEMENT_LENGTH_IN_BYTES * 2, sk_i_Hex_len);
+        sgx_printf("NULL == pk_i_Hex = %d\n", NULL == pk_i_Hex);
+        sgx_printf("pk_i_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, pk_i_Hex_len = %d\n", 
+            pk_i_Hex_len != G1_ELEMENT_LENGTH_IN_BYTES * 2, pk_i_Hex_len);
+        sgx_printf("NULL == w = %d\n", NULL == w);
+        sgx_printf("w_len <= 0 = %d, w_len = %d\n", w_len <= 0, w_len);
+        sgx_printf("NULL == rk1_Hex = %d\n", NULL == rk1_Hex);
+        sgx_printf("rk1_Hex_len <= G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, rk1_Hex_len = %d\n", 
+            rk1_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2, rk1_Hex_len);
+        sgx_printf("NULL == rk2_Hex = %d\n", NULL == rk2_Hex);
+        sgx_printf("rk2_Hex_len <= G1_ELEMENT_LENGTH_IN_BYTES * 2 = %d, rk2_Hex_len = %d\n", 
+            rk2_Hex_len < G1_ELEMENT_LENGTH_IN_BYTES * 2, rk2_Hex_len);
+        return -1;
+    }
+
+    int iRet = -1;
+
+    pairing_t pairing;
+    element_t g;
+    element_t Z;
+    iRet = Setup(pairing, g, Z);
+    if(iRet != 0) 
+    {
+        sgx_printf("ReKeyGen Setup return %d, exit", iRet);
+        return -1;
+    }
+
+    //import pk, sk，需要先完成初始化
+    KeyPair keypair_i, keypair_j;
+    element_init_Zr(keypair_i.sk, pairing);
+    element_init_G1(keypair_i.pk, pairing);
+    element_init_G1(keypair_j.pk, pairing);
+    importKeyPair(&keypair_i, pk_i_Hex, pk_i_Hex_len, sk_i_Hex, sk_i_Hex_len);
+    importKeyPair(&keypair_j, pk_j_Hex, pk_j_Hex_len, NULL, 0);
+
+    ReKeyPair rk_ij;
+    element_init_G1(rk_ij.rk1, pairing);
+    element_init_G1(rk_ij.rk2, pairing);
+    element_t hash2result, powresult, s, negski;
+    element_init_G1(powresult, pairing);
+    element_init_G1(hash2result, pairing);
+    element_init_Zr(negski, pairing);
+    element_init_Zr(s, pairing);
+    // element_random(s);
+    element_set_si(s, 2);
+    Hash2(hash2result, keypair_i.pk, w, w_len);
+    element_pow_zn(powresult, keypair_j.pk, s);
+    element_mul(rk_ij.rk1, hash2result, powresult);
+    element_neg(negski, keypair_i.sk);
+    element_pow_zn(rk_ij.rk1, rk_ij.rk1, negski);
+    element_pow_zn(rk_ij.rk2, keypair_i.pk, s);
+
+    //convert rk_ij to Hex
+    exportReKeyPair(&rk_ij, rk1_Hex, rk1_Hex_len, rk2_Hex, rk2_Hex_len);
+
+
+    element_clear(negski);
+    element_clear(s);
+    element_clear(powresult);
+    element_clear(hash2result);
+    element_clear(rk_ij.rk1);
+    element_clear(rk_ij.rk2);
+    element_clear(keypair_i.pk);
+    element_clear(keypair_i.sk);
+    element_clear(keypair_j.pk);
+    element_clear(Z);
+    element_clear(g);
+    pairing_clear(pairing);	
+
+#ifdef PRINT_DEBUG_INFO
+    sgx_printf("********************************\n");
+    sgx_printf("**********ReKeyGen end************\n");
+    sgx_printf("********************************\n");
+#endif
+    return 0;
+}
+
 /*
 reEncrypt c_i to c_j with ReKeyPair rk
 
@@ -1892,6 +1995,8 @@ int ReEnc(uint8_t *c1_i_Hex, int c1_i_Hex_len,
     return iRet;
     
 }
+
+
 
 
 //m是AES-GCM key，长度是256bit，32字节
@@ -2628,7 +2733,7 @@ void ReEncTest3()
     uint8_t rk1_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
     uint8_t rk2_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
 
-    ReKeyGen(pk_j_Hex, pk_j_Hex_len, sk_i_Hex, sk_i_Hex_len, pk_i_Hex, pk_i_Hex_len, 
+    ReKeyGen_debug(pk_j_Hex, pk_j_Hex_len, sk_i_Hex, sk_i_Hex_len, pk_i_Hex, pk_i_Hex_len, 
             w, w_len, rk1_Hex, sizeof(rk1_Hex), rk2_Hex, sizeof(rk2_Hex));
     
     sgx_printf("ReKeyGen: rk1_Hex = \n");
