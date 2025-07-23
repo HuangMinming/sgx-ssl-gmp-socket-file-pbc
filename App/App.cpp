@@ -1322,7 +1322,7 @@ int SGX_CDECL main(int argc, char *argv[])
     // pairing_test();
     // seal_test();
     // unseal_test();
-    // c_pre_test();
+    c_pre_test();
     // ssl_test();
 
     /* Initialize the enclave , set global_eid*/
