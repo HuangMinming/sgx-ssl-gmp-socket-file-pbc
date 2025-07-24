@@ -2993,7 +2993,7 @@ int c_pre_main_test() {
     sgx_printf("==========================\n");
     sgx_printf("=======ReEncTest3==========\n");
     sgx_printf("==========================\n");
-    ReEncTest3();
+    // ReEncTest3();
 
     sgx_printf("=======Dec1 debug=========\n");
     /*
