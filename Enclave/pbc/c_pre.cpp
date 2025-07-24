@@ -2888,7 +2888,7 @@ void ReEncTest3()
     uint8_t c3_i_Hex[SHA256_DIGEST_LENGTH_32 * 8 * 2];
     uint8_t c4_i_Hex[G1_ELEMENT_LENGTH_IN_BYTES * 2];
 
-    uint8_t *m=(uint8_t *)"1234567890ABCDEF09876543D21FEDCBA";
+    uint8_t *m=(uint8_t *)"1234567890ABCDEF0987654321FEDCBA";
     int m_len = strlen((char *)m);
     Enc2_debug(pk_i_Hex, pk_i_Hex_len, m, m_len, w, w_len,  
         c1_i_Hex, sizeof(c1_i_Hex), 
